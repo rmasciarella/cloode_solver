@@ -32,7 +32,7 @@ def add_task_duration_constraints(
         - interval variable spans from start to end with duration
 
     """
-    if problem.is_template_based:
+    if problem.is_template_based and problem.job_template:
         # Template-based: iterate over instances and template tasks
         for instance in problem.job_instances:
             for template_task in problem.job_template.template_tasks:

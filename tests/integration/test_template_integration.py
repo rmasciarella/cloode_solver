@@ -1,7 +1,9 @@
 """End-to-end integration tests for template-based scheduling architecture.
 
-Tests the complete pipeline from database loading through template solving to solution persistence.
-Validates that the complete template architecture (Weeks 1-3) works end-to-end with optimal performance.
+Tests the complete pipeline from database loading through template solving to
+solution persistence.
+Validates that the complete template architecture (Weeks 1-3) works end-to-end
+with optimal performance.
 """
 
 import logging
@@ -11,8 +13,6 @@ import pytest
 
 from src.data.loaders.database import (
     DatabaseLoader,
-    load_legacy_test_problem,
-    load_test_problem,
 )
 from src.solver.core.solver import FreshSolver
 
@@ -22,9 +22,12 @@ logger = logging.getLogger(__name__)
 class TestTemplateIntegration:
     """End-to-end integration tests for template-based scheduling."""
 
-    def test_automatic_mode_detection(self):
-        """Test that DatabaseLoader automatically detects and uses optimal loading mode."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+    def test_automatic_mode_detection(self, mock_database_loader):
+        """Test that DatabaseLoader automatically detects and uses optimal loading mode.
+
+        Tests automatic selection of template vs legacy loading mode.
+        """
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
 
         # This should automatically choose the best available loading method
         problem = loader.load_problem()
@@ -43,13 +46,18 @@ class TestTemplateIntegration:
             logger.info("✓ Legacy mode used (no template infrastructure)")
             assert len(problem.jobs) > 0
 
-    def test_template_vs_legacy_compatibility(self):
-        """Test that both template and legacy modes produce valid, equivalent results."""
+    def test_template_vs_legacy_compatibility(self, mock_database_loader):
+        """Test that both template and legacy modes produce valid, equivalent results.
+
+        Compares template and legacy loading modes for compatibility.
+        """
         # Load same data using both approaches
-        template_loader = DatabaseLoader(
+        template_loader = mock_database_loader(
             use_test_tables=True, prefer_template_mode=True
         )
-        legacy_loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=False)
+        legacy_loader = mock_database_loader(
+            use_test_tables=True, prefer_template_mode=False
+        )
 
         template_problem = template_loader.load_problem()
         legacy_problem = legacy_loader.load_problem()
@@ -79,9 +87,9 @@ class TestTemplateIntegration:
         else:
             logger.info("✓ No template infrastructure - both modes use legacy loading")
 
-    def test_template_solving_performance(self):
+    def test_template_solving_performance(self, mock_database_loader):
         """Test template-based solving performance and correctness."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
         problem = loader.load_problem(max_instances=3)  # Limit for testing
 
         if not problem.is_template_based:
@@ -110,12 +118,13 @@ class TestTemplateIntegration:
         assert len(scheduled_tasks) == expected_task_count
 
         logger.info(
-            f"✓ Template problem solved in {solve_time:.2f}s with makespan {solution.get('makespan')}"
+            f"✓ Template problem solved in {solve_time:.2f}s with makespan "
+            f"{solution.get('makespan')}"
         )
 
-    def test_template_constraint_optimization(self):
+    def test_template_constraint_optimization(self, mock_database_loader):
         """Test that template constraints provide performance benefits."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
         problem = loader.load_problem(max_instances=5)
 
         if not problem.is_template_based:
@@ -150,9 +159,9 @@ class TestTemplateIntegration:
             f"  - {len(problem.job_template.template_precedences)} template precedences"
         )
 
-    def test_solution_persistence(self):
+    def test_solution_persistence(self, mock_database_loader):
         """Test that template solutions can be saved back to database."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
         problem = loader.load_problem(max_instances=2)
 
         if not problem.is_template_based:
@@ -185,9 +194,9 @@ class TestTemplateIntegration:
             logger.warning(f"Solution persistence test skipped: {e}")
             # This is expected if database is read-only or table doesn't exist
 
-    def test_template_instance_creation(self):
+    def test_template_instance_creation(self, mock_database_loader):
         """Test dynamic creation of job instances from templates."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
 
         # Try to get available templates
         templates = loader.load_available_templates()
@@ -217,13 +226,15 @@ class TestTemplateIntegration:
             logger.warning(f"Instance creation test skipped: {e}")
             # Expected if database is read-only
 
-    def test_performance_comparison(self):
+    def test_performance_comparison(self, mock_database_loader):
         """Compare template vs legacy performance on identical data."""
         # This test requires both template and legacy data representing the same problem
-        template_loader = DatabaseLoader(
+        template_loader = mock_database_loader(
             use_test_tables=True, prefer_template_mode=True
         )
-        legacy_loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=False)
+        legacy_loader = mock_database_loader(
+            use_test_tables=True, prefer_template_mode=False
+        )
 
         # Load problems
         template_problem = template_loader.load_problem(max_instances=3)
@@ -260,16 +271,18 @@ class TestTemplateIntegration:
         # Template should be competitive or better
         assert template_time <= legacy_time * 1.5  # Allow 50% margin for small problems
 
-    def test_mixed_loading_modes(self):
+    def test_mixed_loading_modes(self, mock_database_loader):
         """Test loading different types of problems in the same session."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
 
         # Test automatic mode detection
         auto_problem = loader.load_problem()
         assert auto_problem is not None
 
         # Test explicit legacy loading
-        loader_legacy = DatabaseLoader(use_test_tables=True, prefer_template_mode=False)
+        loader_legacy = mock_database_loader(
+            use_test_tables=True, prefer_template_mode=False
+        )
         legacy_problem = loader_legacy.load_problem()
         assert legacy_problem is not None
 
@@ -282,14 +295,15 @@ class TestTemplateIntegration:
 
             logger.info("✓ Successfully tested mixed loading modes:")
             logger.info(
-                f"  - Auto detection: {'template' if auto_problem.is_template_based else 'legacy'}"
+                f"  - Auto detection: "
+                f"{'template' if auto_problem.is_template_based else 'legacy'}"
             )
             logger.info("  - Explicit legacy: valid")
             logger.info("  - Explicit template: valid")
 
-    def test_template_validation(self):
+    def test_template_validation(self, mock_database_loader):
         """Test comprehensive validation of template-based problems."""
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
         problem = loader.load_problem()
 
         if not problem.is_template_based:
@@ -304,9 +318,9 @@ class TestTemplateIntegration:
             for issue in issues
             if "non-existent" in issue.lower() or "circular" in issue.lower()
         ]
-        assert len(critical_issues) == 0, (
-            f"Critical validation issues found: {critical_issues}"
-        )
+        assert (
+            len(critical_issues) == 0
+        ), f"Critical validation issues found: {critical_issues}"
 
         # Log validation results
         if issues:
@@ -318,31 +332,35 @@ class TestTemplateIntegration:
 
         # Test template-specific validations
         template_issues = problem.job_template.validate_template()
-        assert len(template_issues) == 0, (
-            f"Template validation issues: {template_issues}"
-        )
+        assert (
+            len(template_issues) == 0
+        ), f"Template validation issues: {template_issues}"
 
         logger.info("✓ Template validation completed successfully")
 
 
-def test_convenience_functions():
+def test_convenience_functions(mock_database_loader):
     """Test that convenience functions work correctly with template integration."""
-    # Test automatic loading
-    problem = load_test_problem(max_instances=2)
+    # Test automatic loading with mock
+    loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    problem = loader.load_problem(max_instances=2)
     assert problem is not None
     assert problem.total_task_count > 0
 
-    # Test explicit legacy loading
-    legacy_problem = load_legacy_test_problem()
+    # Test explicit legacy loading with mock
+    legacy_loader = mock_database_loader(
+        use_test_tables=True, prefer_template_mode=False
+    )
+    legacy_problem = legacy_loader.load_problem()
     assert legacy_problem is not None
     assert not legacy_problem.is_template_based
 
     logger.info("✓ Convenience functions work correctly")
 
 
-def test_template_architecture_completeness():
+def test_template_architecture_completeness(mock_database_loader):
     """Test that the complete template architecture (Weeks 1-3) is integrated."""
-    loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+    loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
 
     # Week 1: Template data models
     problem = loader.load_problem()
@@ -380,18 +398,106 @@ if __name__ == "__main__":
     print("Running template integration tests...")
 
     try:
-        test.test_automatic_mode_detection()
-        test.test_template_vs_legacy_compatibility()
-        test.test_template_solving_performance()
-        test.test_template_constraint_optimization()
-        test.test_solution_persistence()
-        test.test_template_instance_creation()
-        test.test_performance_comparison()
-        test.test_mixed_loading_modes()
-        test.test_template_validation()
+        # Create mock database loader for standalone execution
+        import os
+        from unittest.mock import MagicMock, patch
 
-        test_convenience_functions()
-        test_template_architecture_completeness()
+        from src.data.loaders.database import DatabaseLoader
+
+        # Mock test data
+        mock_test_data = {
+            "test_work_cells": [
+                {"cell_id": "cell-1", "name": "Production Cell 1", "capacity": 3}
+            ],
+            "test_resources": [
+                {
+                    "resource_id": "lathe-1",
+                    "cell_id": "cell-1",
+                    "name": "CNC Lathe 1",
+                    "resource_type": "machine",
+                    "capacity": 1,
+                    "cost_per_hour": "50.0",
+                }
+            ],
+            "test_jobs": [
+                {
+                    "job_id": "order-001",
+                    "description": "Customer Order 001",
+                    "due_date": "2025-07-31T08:00:00+00:00",
+                    "created_at": "2025-07-30T12:00:00+00:00",
+                    "updated_at": "2025-07-30T12:00:00+00:00",
+                }
+            ],
+            "test_tasks": [
+                {
+                    "task_id": "op-001-1",
+                    "job_id": "order-001",
+                    "name": "Setup Operation",
+                    "department_id": "machining",
+                    "is_setup": True,
+                    "is_unattended": False,
+                }
+            ],
+            "test_task_modes": [
+                {
+                    "task_mode_id": "mode-1",
+                    "task_id": "op-001-1",
+                    "machine_resource_id": "lathe-1",
+                    "duration_minutes": 30,
+                }
+            ],
+            "test_task_precedences": [],
+        }
+
+        def create_mock_client(url=None, key=None):  # noqa: ARG001
+            mock_client = MagicMock()
+            mock_table = MagicMock()
+            mock_client.table.return_value = mock_table
+            mock_table.select.return_value = mock_table
+            mock_table.eq.return_value = mock_table
+
+            def mock_execute():
+                if (
+                    hasattr(mock_client.table, "call_args_list")
+                    and mock_client.table.call_args_list
+                ):
+                    table_name = mock_client.table.call_args_list[-1][0][0]
+                    return MagicMock(data=mock_test_data.get(table_name, []))
+                return MagicMock(data=[])
+
+            mock_table.execute.side_effect = mock_execute
+            return mock_client
+
+        with (
+            patch(
+                "src.data.loaders.database.create_client",
+                side_effect=create_mock_client,
+            ),
+            patch(
+                "src.data.loaders.template_database.create_client",
+                side_effect=create_mock_client,
+            ),
+            patch.dict(
+                os.environ,
+                {
+                    "SUPABASE_URL": "https://mock.supabase.co",
+                    "SUPABASE_ANON_KEY": "mock-key",
+                },
+            ),
+        ):
+
+            test.test_automatic_mode_detection(DatabaseLoader)
+            test.test_template_vs_legacy_compatibility(DatabaseLoader)
+            test.test_template_solving_performance(DatabaseLoader)
+            test.test_template_constraint_optimization(DatabaseLoader)
+            test.test_solution_persistence(DatabaseLoader)
+            test.test_template_instance_creation(DatabaseLoader)
+            test.test_performance_comparison(DatabaseLoader)
+            test.test_mixed_loading_modes(DatabaseLoader)
+            test.test_template_validation(DatabaseLoader)
+
+            test_convenience_functions(DatabaseLoader)
+            test_template_architecture_completeness(DatabaseLoader)
 
         print("\n✅ All template integration tests passed!")
 

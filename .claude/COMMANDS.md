@@ -533,11 +533,182 @@ Solution: Use interval variables and global constraints
 
 ---
 
+## Template Development Commands ⚡
+
+### `/template-benchmark <template_id> [--instances <count>] [--params-file <path>]`
+**Purpose**: Comprehensive performance analysis of template across multiple scales
+
+**When triggered**: User wants to analyze template performance at different scales
+
+**Claude's Response**:
+1. Execute enhanced `validate_template_performance.py` with JSON output
+2. Format results in performance table showing:
+   - Instance count vs solve time
+   - Template vs legacy comparison
+   - Complexity analysis (theoretical improvement)
+   - Memory efficiency metrics
+
+**Example Output**:
+```
+Template Performance Analysis: manufacturing_job_v2
+
+| Instances | Template Time | Legacy Time | Speedup | Complexity Reduction |
+|-----------|---------------|-------------|---------|---------------------|
+| 3         | 0.8s         | 2.1s        | 2.6x    | 15x                 |
+| 5         | 1.2s         | 8.4s        | 7.0x    | 125x                |
+| 10        | 2.1s         | 45.2s       | 21.5x   | 1000x               |
+
+Template Efficiency: ✅ 5-8x improvement validated
+Scalability: ✅ Sub-linear scaling confirmed
+Memory: ✅ O(template × instances) complexity achieved
+```
+
+### `/template-optimize-params <template_id>`
+**Purpose**: Interactive parameter tuning workflow for template
+
+**When triggered**: User wants to optimize CP-SAT parameters for specific template
+
+**Claude's Response Process**:
+1. Run baseline benchmark with default parameters
+2. Test key parameter variations:
+   - `num_search_workers`: 1, 4, 8, max_cores
+   - `linearization_level`: 0, 1, 2
+   - `search_branching`: AUTOMATIC, FIXED_SEARCH
+3. Apply statistical analysis to find robust parameter set
+4. Generate optimized parameters JSON file
+5. Suggest `/template-promote-params` to persist
+
+**Example Output**:
+```
+Parameter Optimization for template: manufacturing_job_v2
+
+Testing parameter combinations...
+✅ Baseline (default): 3.2s
+⚡ num_search_workers=8: 1.8s (1.8x speedup)
+⚡ linearization_level=1: 1.9s (1.7x speedup)
+⚡ search_branching=FIXED: 1.6s (2.0x speedup)
+
+Optimal combination: 1.1s (2.9x speedup)
+- num_search_workers: 8
+- linearization_level: 1
+- search_branching: FIXED_SEARCH
+- max_time_in_seconds: 60
+
+Generated: manufacturing_job_v2_params.json
+Next: /template-promote-params manufacturing_job_v2 manufacturing_job_v2_params.json
+```
+
+### `/template-promote-params <template_id> <params_file.json>`
+**Purpose**: Store blessed parameters for production use
+
+**When triggered**: User wants to make optimized parameters permanent
+
+**Claude's Response**:
+1. Validate parameter file format
+2. Update job_templates table with solver_parameters JSON
+3. Verify integration with FreshSolver parameter loading
+4. Confirm production system will use blessed parameters
+
+**Example Output**:
+```
+Promoting parameters for template: manufacturing_job_v2
+
+✅ Parameter file validated: manufacturing_job_v2_params.json
+✅ Database updated: job_templates.solver_parameters
+✅ FreshSolver integration verified
+✅ Production deployment ready
+
+Parameters now active:
+- All new instances will use optimized parameters
+- 2.9x performance improvement expected
+- Rollback available via: /template-revert-params manufacturing_job_v2
+```
+
+### `/template-add-symmetry <strategy>`
+**Purpose**: Generate symmetry breaking constraints for common patterns
+
+**When triggered**: User wants to add symmetry breaking to reduce equivalent solutions
+
+**Strategies Available**:
+- `job_lex_order`: Lexicographical ordering for identical jobs
+- `machine_precedence`: Resource assignment ordering
+- `task_start_order`: Time-based symmetry breaking
+
+**Example Output**:
+```python
+# Symmetry breaking for identical jobs (strategy: job_lex_order)
+def add_job_lexicographical_symmetry_constraints(
+    model: cp_model.CpModel,
+    task_starts: TaskStartDict,
+    problem: SchedulingProblem
+) -> None:
+    """Add lexicographical ordering constraints for identical job instances."""
+    if not problem.is_template_based:
+        return
+        
+    instances = sorted(problem.job_instances, key=lambda x: x.instance_id)
+    
+    for i in range(len(instances) - 1):
+        curr_instance = instances[i]
+        next_instance = instances[i + 1]
+        
+        # First task of current instance must start no later than first task of next
+        first_task = problem.job_template.template_tasks[0]
+        curr_key = (curr_instance.instance_id, first_task.template_task_id)
+        next_key = (next_instance.instance_id, first_task.template_task_id)
+        
+        if curr_key in task_starts and next_key in task_starts:
+            model.Add(task_starts[curr_key] <= task_starts[next_key])
+```
+
+### `/template-regression-test`
+**Purpose**: Run comprehensive regression testing across all templates
+
+**When triggered**: User wants to validate all templates after system changes
+
+**Claude's Response**:
+1. Identify all templates with blessed parameters
+2. Execute standardized test suite for each template
+3. Flag performance regressions > 20%
+4. Report parameter drift or constraint conflicts
+5. Generate regression report with recommendations
+
+**Example Output**:
+```
+Template Regression Test Results:
+
+📊 Templates Tested: 3/3
+⏱️  Total Test Time: 45.2s
+
+✅ manufacturing_job_v2: PASSED
+   - Performance: 1.1s (expected: 1.1s ±0.2s)
+   - Parameters: Optimal
+   - Constraints: All satisfied
+
+⚠️  logistics_route_v1: DEGRADED
+   - Performance: 8.4s (expected: 5.2s ±1.0s)
+   - Regression: 61% slower than baseline
+   - Recommendation: Re-optimize parameters
+
+❌ packaging_sequence_v3: FAILED
+   - Error: Infeasible model
+   - Issue: New constraints conflict with template structure
+   - Action: Review recent constraint changes
+
+Summary:
+- 1/3 templates performing optimally
+- 1/3 templates need parameter re-optimization
+- 1/3 templates need constraint review
+```
+
+---
+
 ## Command Shortcuts (Aliases)
 
 For faster development, these shortcuts are available:
 
 ```bash
+# Legacy OR-Tools Commands  
 /ac  →  /add-constraint
 /tc  →  /test-constraint  
 /cc  →  /check-constraint
@@ -553,6 +724,13 @@ For faster development, these shortcuts are available:
 /tb  →  /tighten-bounds
 /os  →  /optimize-search
 /cx  →  /analyze-complexity
+
+# Template Commands ⚡
+/tb-tpl  →  /template-benchmark
+/opt-tpl →  /template-optimize-params
+/prm-tpl →  /template-promote-params
+/sym-tpl →  /template-add-symmetry
+/reg-tpl →  /template-regression-test
 ```
 
 ## Workflow Commands (Compound)

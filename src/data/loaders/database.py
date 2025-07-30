@@ -64,7 +64,8 @@ class DatabaseLoader:
     def load_problem(self, max_instances: int | None = None) -> SchedulingProblem:
         """Load complete scheduling problem using optimal loading strategy.
 
-        Automatically detects template availability and uses the most efficient loading method:
+        Automatically detects template availability and uses the most efficient
+        loading method:
         - Template mode: 5-8x faster for identical job patterns
         - Legacy mode: Full compatibility with existing job structures
 
@@ -79,7 +80,7 @@ class DatabaseLoader:
 
         # Check if template infrastructure is available and preferred
         if self.prefer_template_mode and self._has_template_tables():
-            return self._load_template_problem(max_instances)
+            return self._load_template_problem(None, max_instances)
         else:
             return self._load_legacy_problem()
 
@@ -147,7 +148,7 @@ class DatabaseLoader:
     def _load_template_problem(
         self, template_id: str | None = None, max_instances: int | None = None
     ) -> SchedulingProblem:
-        """Load problem using template-based optimization with explicit template selection."""
+        """Load problem using template-based optimization with explicit selection."""
         if not template_id:
             # List available templates for user selection
             templates = self.load_available_templates()

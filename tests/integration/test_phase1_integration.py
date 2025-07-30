@@ -22,17 +22,33 @@ from src.solver.models.problem import (
 class TestPhase1FullIntegration:
     """Test complete Phase 1 integration."""
 
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_full_pipeline_with_mocked_db(self, mock_create_client):
+    def test_full_pipeline_with_mocked_db(
+        self, mock_create_client, mock_template_create_client
+    ):
         """Test complete pipeline from DB load to solution."""
         # GIVEN: Mock database with complete test data
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
 
+        # Mock template client as well
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table
         mock_table.select.return_value = mock_table
         mock_table.eq.return_value = mock_table
+
+        # Mock template table access
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.eq.return_value = mock_template_table
+
+        # Template loader should return empty templates (use legacy mode)
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         # Complete test data
         mock_responses = {
@@ -320,7 +336,8 @@ class TestPhase1FullIntegration:
                 # Check no overlaps
                 for i in range(len(schedule) - 1):
                     assert schedule[i][1] <= schedule[i + 1][0], (
-                        f"Overlap on {machine}: {schedule[i][2]} and {schedule[i + 1][2]}"
+                        f"Overlap on {machine}: {schedule[i][2]} and "
+                        f"{schedule[i + 1][2]}"
                     )
 
     def test_phase1_validation_errors(self):

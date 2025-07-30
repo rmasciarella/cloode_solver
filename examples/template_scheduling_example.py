@@ -35,6 +35,7 @@ class TemplateSchedulingDemo:
     """Demonstrates template-based scheduling capabilities."""
 
     def __init__(self):
+        """Initialize the template scheduling demonstration."""
         self.template_loader = TemplateDatabaseLoader()
         self.legacy_loader = DatabaseLoader()
         self.solver = FreshSolver()
@@ -123,7 +124,8 @@ class TemplateSchedulingDemo:
             speedup = legacy_time / template_time if template_time > 0 else float("inf")
 
             print(
-                f"{instance_count:<8} {template_time:<15.1f} {legacy_time:<15.1f} {speedup:<10.1f}x"
+                f"{instance_count:<8} {template_time:<15.1f} "
+                f"{legacy_time:<15.1f} {speedup:<10.1f}x"
             )
 
         print()
@@ -203,7 +205,8 @@ class TemplateSchedulingDemo:
             print("\n  SOLVING PERFORMANCE SUMMARY")
             print(f"  {'-' * 50}")
             print(
-                f"  {'Size':<8} {'Jobs':<6} {'Load':<8} {'Solve':<8} {'Total':<8} {'Makespan':<10}"
+                f"  {'Size':<8} {'Jobs':<6} {'Load':<8} {'Solve':<8} "
+                f"{'Total':<8} {'Makespan':<10}"
             )
             print(f"  {'-' * 50}")
 
@@ -251,7 +254,8 @@ class TemplateSchedulingDemo:
 
             print("Efficiency Analysis:")
             print(
-                f"- Theoretical minimum (sequential): {theoretical_min * len(problem.jobs)} time units"
+                f"- Theoretical minimum (sequential): "
+                f"{theoretical_min * len(problem.jobs)} time units"
             )
             print(f"- Actual makespan: {solution.makespan} time units")
             print(f"- Parallel efficiency: {efficiency:.1f}%")
@@ -275,10 +279,13 @@ class TemplateSchedulingDemo:
             f"- Memory efficiency: {len(problem.jobs)} jobs share 1 template structure"
         )
         print(
-            f"- Constraint reuse: {len(problem.precedences)} precedences from {len(template.template_precedences)} template rules"
+            f"- Constraint reuse: {len(problem.precedences)} precedences from "
+            f"{len(template.template_precedences)} template rules"
         )
         print(
-            f"- Mode sharing: All jobs use same {sum(len(task.modes) for task in template.template_tasks)} mode definitions"
+            f"- Mode sharing: All jobs use same "
+            f"{sum(len(task.modes) for task in template.template_tasks)} "
+            f"mode definitions"
         )
 
         # Save solution to database (demonstration)
@@ -292,22 +299,20 @@ class TemplateSchedulingDemo:
     ) -> float:
         """Benchmark template-based loading."""
         start_time = time.time()
-        problem = self.template_loader.load_template_problem(
-            template_id, instance_count
-        )
+        self.template_loader.load_template_problem(template_id, instance_count)
         return (time.time() - start_time) * 1000  # Return milliseconds
 
     def _benchmark_legacy_loading(self) -> float:
         """Benchmark legacy loading (for comparison)."""
         start_time = time.time()
         try:
-            problem = self.legacy_loader.load_problem()
+            self.legacy_loader.load_problem()
             return (time.time() - start_time) * 1000  # Return milliseconds
-        except:
+        except Exception:
             return 100.0  # Default if legacy data doesn't exist
 
     def _analyze_machine_utilization(
-        self, problem: SchedulingProblem, solution
+        self, problem: SchedulingProblem, _solution
     ) -> dict[str, float]:
         """Analyze machine utilization from solution."""
         machine_usage = {}
@@ -321,7 +326,7 @@ class TemplateSchedulingDemo:
         return machine_usage
 
     def _extract_solution_data(
-        self, problem: SchedulingProblem, solution
+        self, problem: SchedulingProblem, _solution
     ) -> dict[str, any]:
         """Extract solution data for saving."""
         solution_data = {}
@@ -334,9 +339,9 @@ class TemplateSchedulingDemo:
                     "mode_id": task.modes[0].task_mode_id if task.modes else None,
                     "start_time": 0,  # Would be actual start time
                     "end_time": task.modes[0].duration_minutes if task.modes else 60,
-                    "machine_id": task.modes[0].machine_resource_id
-                    if task.modes
-                    else None,
+                    "machine_id": (
+                        task.modes[0].machine_resource_id if task.modes else None
+                    ),
                 }
 
         return solution_data

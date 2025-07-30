@@ -308,7 +308,8 @@ class JobTemplate:
         for prec in self.template_precedences:
             if prec.predecessor_template_task_id == prec.successor_template_task_id:
                 issues.append(
-                    f"Circular precedence on template task {prec.predecessor_template_task_id}"
+                    f"Circular precedence on template task "
+                    f"{prec.predecessor_template_task_id}"
                 )
 
         return issues
@@ -465,16 +466,16 @@ class SchedulingProblem:
                 for mode in template_task.modes:
                     if mode.machine_resource_id not in self.machine_lookup:
                         issues.append(
-                            f"Template task {template_task.name} references non-existent machine "
-                            f"{mode.machine_resource_id}"
+                            f"Template task {template_task.name} references "
+                            f"non-existent machine {mode.machine_resource_id}"
                         )
 
             # Validate job instances reference valid template
             for instance in self.job_instances:
                 if instance.template_id != self.job_template.template_id:
                     issues.append(
-                        f"Job instance {instance.instance_id} references invalid template "
-                        f"{instance.template_id}"
+                        f"Job instance {instance.instance_id} references "
+                        f"invalid template {instance.template_id}"
                     )
         else:
             # Legacy validation
@@ -530,7 +531,8 @@ class SchedulingProblem:
             machines: Available machines
             work_cells: Work cell definitions
             jobs: Generated jobs (optional, will be empty for pure template)
-            precedences: Generated precedences (optional, will be empty for pure template)
+            precedences: Generated precedences (optional, will be empty for
+                pure template)
 
         Returns:
             SchedulingProblem configured for template-based scheduling

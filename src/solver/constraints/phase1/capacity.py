@@ -43,7 +43,7 @@ def add_machine_capacity_constraints(
         intervals = []
         demands = []
 
-        if problem.is_template_based:
+        if problem.is_template_based and problem.job_template:
             # Template-based: iterate over instances and template tasks
             for instance in problem.job_instances:
                 for template_task in problem.job_template.template_tasks:

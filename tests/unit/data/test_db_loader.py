@@ -66,12 +66,24 @@ class TestDatabaseLoader:
             # THEN: No table prefix
             assert loader.table_prefix == ""
 
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_load_problem_success(self, mock_create_client):
+    def test_load_problem_success(
+        self, mock_create_client, mock_template_create_client
+    ):
         """Test successful problem loading."""
         # GIVEN: Mock Supabase responses
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         # Setup mock responses for each table
         mock_table = MagicMock()
@@ -149,12 +161,24 @@ class TestDatabaseLoader:
             assert len(problem.precedences) == 1
             assert problem.jobs[0].job_id == "j1"
 
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_load_problem_empty_database(self, mock_create_client):
+    def test_load_problem_empty_database(
+        self, mock_create_client, mock_template_create_client
+    ):
         """Test loading from empty database."""
         # GIVEN: Empty database responses
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table
@@ -178,13 +202,25 @@ class TestDatabaseLoader:
             assert len(problem.machines) == 0
             assert problem.total_task_count == 0
 
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    @patch("builtins.print")
-    def test_load_problem_validation_warnings(self, mock_print, mock_create_client):
+    @patch("src.data.loaders.database.logger")
+    def test_load_problem_validation_warnings(
+        self, mock_logger, mock_create_client, mock_template_create_client
+    ):
         """Test that validation warnings are printed."""
         # GIVEN: Data that will cause validation warnings
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table
@@ -226,29 +262,25 @@ class TestDatabaseLoader:
             loader = DatabaseLoader()
             loader.load_problem()
 
-            # THEN: Warning printed
-            warning_printed = False
-            all_prints = []
+            # THEN: Warning logged
+            mock_logger.warning.assert_any_call("Problem validation issues found:")
 
-            for call in mock_print.call_args_list:
-                if call[0]:  # Check if there are arguments
-                    message = str(call[0][0])
-                    all_prints.append(message)
-                    if "WARNING" in message:
-                        warning_printed = True
-
-            # Debug: Show all print calls if assertion fails
-            if not warning_printed:
-                print(f"DEBUG: All print calls: {all_prints}")
-
-            assert warning_printed, f"Expected WARNING but got: {all_prints}"
-
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_data_associations(self, mock_create_client):
+    def test_data_associations(self, mock_create_client, mock_template_create_client):
         """Test that data associations are correctly built."""
         # GIVEN: Related data
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table
@@ -333,12 +365,22 @@ class TestDatabaseLoader:
             assert len(problem.jobs[0].tasks[0].modes) == 2
             assert problem.jobs[0].tasks[1].modes == []  # No modes for t2
 
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_timezone_handling(self, mock_create_client):
+    def test_timezone_handling(self, mock_create_client, mock_template_create_client):
         """Test that datetimes are properly converted to timezone-aware."""
         # GIVEN: Date strings from database
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table

@@ -48,6 +48,22 @@ def add_precedence_constraints(
         model.Add(task_starts[(job2, task2)] >= task_ends[(job1, task1)])
 ```
 
+### Code Formatting Standards
+1. **Line Length**: Maximum 88 characters per line (ruff/black standard)
+   - Use `ruff format .` to automatically handle line breaks
+   - Type annotations often cause line length violations - ruff will fix these
+   - For complex type annotations, use multi-line format:
+   ```python
+   def complex_function(
+       very_long_parameter_name: Dict[Tuple[str, str], cp_model.IntVar],
+       another_parameter: List[Tuple[TaskKey, MachineKey]]
+   ) -> Optional[Dict[str, int]]:
+   ```
+
+2. **Import Organization**: Use ruff to organize imports automatically
+3. **String Formatting**: Prefer f-strings for readability
+4. **Trailing Commas**: Use trailing commas in multi-line structures
+
 ### Constraint Function Rules
 1. Each function adds ONE type of constraint
 2. Function name starts with `add_` followed by constraint type
@@ -55,6 +71,7 @@ def add_precedence_constraints(
 4. Docstring must list what constraints are added
 5. Maximum 30 lines of actual code (excluding docstring)
 6. **REQUIRED**: Must pass mypy type checking with 0 errors
+7. **REQUIRED**: Must comply with 88-character line length limit
 
 ## 2. Development Workflow
 
@@ -136,6 +153,7 @@ def test_phase_1_integration():
 - [ ] **REQUIRED**: Passes mypy type checking (`make lint`)
 - [ ] **REQUIRED**: Uses centralized type aliases from TEMPLATES.md
 - [ ] **REQUIRED**: All OR-Tools objects properly typed
+- [ ] **REQUIRED**: All lines ≤ 88 characters (run `ruff format .` to auto-fix)
 
 ### Phase Completion Review
 - [ ] All planned constraints implemented

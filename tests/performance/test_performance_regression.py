@@ -164,9 +164,9 @@ class TestPerformanceRegression:
         assert solve_time < 1.0, f"Tiny dataset took {solve_time:.2f}s, expected < 1s"
 
         # Check regression
-        assert metrics.check_regression("tiny_dataset_solve_time"), (
-            f"Performance regression detected: {solve_time:.2f}s vs baseline"
-        )
+        assert metrics.check_regression(
+            "tiny_dataset_solve_time"
+        ), f"Performance regression detected: {solve_time:.2f}s vs baseline"
 
     def test_small_dataset_performance(self, metrics):
         """Test performance on small dataset (5 jobs, 50 tasks total)."""
@@ -180,14 +180,14 @@ class TestPerformanceRegression:
         assert solution is not None, "Failed to find solution for small dataset"
 
         metrics.record_metric("small_dataset_solve_time", solve_time)
-        assert solve_time < 10.0, (
-            f"Small dataset took {solve_time:.2f}s, expected < 10s"
-        )
+        assert (
+            solve_time < 10.0
+        ), f"Small dataset took {solve_time:.2f}s, expected < 10s"
 
         # Check regression
-        assert metrics.check_regression("small_dataset_solve_time"), (
-            f"Performance regression detected: {solve_time:.2f}s vs baseline"
-        )
+        assert metrics.check_regression(
+            "small_dataset_solve_time"
+        ), f"Performance regression detected: {solve_time:.2f}s vs baseline"
 
     @pytest.mark.slow
     def test_medium_dataset_performance(self, metrics):
@@ -202,14 +202,14 @@ class TestPerformanceRegression:
         assert solution is not None, "Failed to find solution for medium dataset"
 
         metrics.record_metric("medium_dataset_solve_time", solve_time)
-        assert solve_time < 60.0, (
-            f"Medium dataset took {solve_time:.2f}s, expected < 60s"
-        )
+        assert (
+            solve_time < 60.0
+        ), f"Medium dataset took {solve_time:.2f}s, expected < 60s"
 
         # Check regression
-        assert metrics.check_regression("medium_dataset_solve_time"), (
-            f"Performance regression detected: {solve_time:.2f}s vs baseline"
-        )
+        assert metrics.check_regression(
+            "medium_dataset_solve_time"
+        ), f"Performance regression detected: {solve_time:.2f}s vs baseline"
 
     @pytest.mark.skip(reason="psutil not installed")
     def test_solver_memory_usage(self, metrics):
@@ -236,9 +236,9 @@ class TestPerformanceRegression:
         metrics.record_metric("memory_increase_mb", memory_increase)
 
         # Memory shouldn't increase by more than 100MB
-        assert memory_increase < 100, (
-            f"Memory increased by {memory_increase:.2f}MB, expected < 100MB"
-        )
+        assert (
+            memory_increase < 100
+        ), f"Memory increased by {memory_increase:.2f}MB, expected < 100MB"
 
     def test_constraint_scaling(self, metrics):
         """Test how constraint addition time scales with problem size."""
@@ -267,9 +267,9 @@ class TestPerformanceRegression:
         metrics.record_metric("constraint_scaling_factor", growth_rate)
 
         # Should be less than quadratic growth (25x)
-        assert growth_rate < 15, (
-            f"Constraint creation time grew by {growth_rate:.2f}x for 5x problem size"
-        )
+        assert (
+            growth_rate < 15
+        ), f"Constraint creation time grew by {growth_rate:.2f}x for 5x problem size"
 
 
 @pytest.mark.parametrize("save_baseline", [False])

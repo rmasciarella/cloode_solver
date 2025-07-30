@@ -26,6 +26,7 @@ class PerformanceValidator:
     """Validates template architecture performance improvements."""
 
     def __init__(self):
+        """Initialize the performance validator."""
         self.results: dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "tests": {},
@@ -90,7 +91,8 @@ class PerformanceValidator:
                     # Validate expected performance improvement
                     if count >= 3 and speedup < 2.0:
                         logger.warning(
-                            f"    ⚠️ Expected >2x speedup for {count} instances, got {speedup:.1f}x"
+                            f"    ⚠️ Expected >2x speedup for {count} instances, "
+                            f"got {speedup:.1f}x"
                         )
                     elif speedup >= 2.0:
                         logger.info("    ✅ Performance improvement validated")
@@ -163,7 +165,8 @@ class PerformanceValidator:
         logger.info(f"  Constraint generation: {constraint_time:.3f}s")
         logger.info(f"  Total: {total_time:.3f}s")
         logger.info(
-            f"  Template complexity: O({template_tasks} × {instances}) = {template_complexity}"
+            f"  Template complexity: O({template_tasks} × {instances}) = "
+            f"{template_complexity}"
         )
         logger.info(f"  Naive complexity: O({total_tasks}³) = {naive_complexity:,}")
         logger.info(f"  Theoretical improvement: {complexity_improvement:.0f}x")
@@ -284,11 +287,13 @@ class PerformanceValidator:
 
             if time_ratio <= task_ratio * 2:  # Allow 2x overhead for scaling
                 logger.info(
-                    f"  ✅ Good scalability: {task_ratio:.1f}x tasks, {time_ratio:.1f}x time"
+                    f"  ✅ Good scalability: {task_ratio:.1f}x tasks, "
+                    f"{time_ratio:.1f}x time"
                 )
             else:
                 logger.warning(
-                    f"  ⚠️ Scalability concern: {task_ratio:.1f}x tasks, {time_ratio:.1f}x time"
+                    f"  ⚠️ Scalability concern: {task_ratio:.1f}x tasks, "
+                    f"{time_ratio:.1f}x time"
                 )
 
         self.results["tests"]["scalability"] = scalability_results
@@ -323,7 +328,7 @@ class PerformanceValidator:
             # Step 5: Extract results
             extract_start = time.time()
             task_schedule = solution.get("task_schedule", {})
-            machine_utilization = solution.get("machine_utilization", {})
+            _machine_utilization = solution.get("machine_utilization", {})
             extract_time = time.time() - extract_start
 
             total_time = time.time() - pipeline_start
@@ -421,7 +426,8 @@ class PerformanceValidator:
         # Generate recommendations
         if summary["template_infrastructure_available"]:
             summary["recommendations"].append(
-                "✅ Template architecture operational and delivering performance benefits"
+                "✅ Template architecture operational and delivering "
+                "performance benefits"
             )
 
             if summary["key_metrics"].get("average_loading_speedup", 0) >= 3:
@@ -448,10 +454,12 @@ class PerformanceValidator:
 
         else:
             summary["recommendations"].append(
-                "ℹ️ Template infrastructure not detected - using legacy compatibility mode"
+                "ℹ️ Template infrastructure not detected - using legacy "
+                "compatibility mode"
             )
             summary["recommendations"].append(
-                "💡 Consider running template migration to enable performance optimizations"
+                "💡 Consider running template migration to enable "
+                "performance optimizations"
             )
 
         self.results["summary"] = summary
@@ -467,7 +475,7 @@ class PerformanceValidator:
         try:
             loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
             return loader._has_template_tables()
-        except:
+        except Exception:
             return False
 
     def _measure_template_loading(self, instance_count: int) -> dict[str, Any]:
@@ -481,9 +489,9 @@ class PerformanceValidator:
             "load_time": load_time,
             "total_tasks": problem.total_task_count,
             "instances": problem.instance_count if problem.is_template_based else 1,
-            "template_tasks": problem.template_task_count
-            if problem.is_template_based
-            else 0,
+            "template_tasks": (
+                problem.template_task_count if problem.is_template_based else 0
+            ),
             "is_template_based": problem.is_template_based,
         }
 
@@ -528,7 +536,8 @@ def main():
             key_metrics = summary.get("key_metrics", {})
             if "average_loading_speedup" in key_metrics:
                 print(
-                    f"📈 Average loading speedup: {key_metrics['average_loading_speedup']:.1f}x"
+                    f"📈 Average loading speedup: "
+                    f"{key_metrics['average_loading_speedup']:.1f}x"
                 )
 
             if "solve_time" in key_metrics:

@@ -51,7 +51,8 @@ def main():
     )
 
     logger.info(
-        f"Created problem: {problem.instance_count} instances, {problem.template_task_count} template tasks"
+        f"Created problem: {problem.instance_count} instances, "
+        f"{problem.template_task_count} template tasks"
     )
     logger.info(f"Total tasks: {problem.total_task_count}")
     logger.info(f"Is template-based: {problem.is_template_based}")
@@ -63,7 +64,8 @@ def main():
     # Test variable creation
     solver.create_variables()
     logger.info(
-        f"Variables created: {len(solver.task_starts)} start vars, {len(solver.task_assigned)} assignment vars"
+        f"Variables created: {len(solver.task_starts)} start vars, "
+        f"{len(solver.task_assigned)} assignment vars"
     )
 
     # Test constraint addition

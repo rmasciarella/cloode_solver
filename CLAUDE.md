@@ -1,244 +1,126 @@
 # CLAUDE.md
 @.claude/STANDARDS.md
-@.claude/COMMANDS.md
+@.claude/COMMANDS.md  
 @.claude/CONTEXT.md
 @.claude/TEMPLATES.md
 @.claude/WORKFLOWS.md
 @.claude/PROMPTS.md
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+@.claude/DEVELOPMENT.md
+@.claude/TROUBLESHOOTING.md
 
-## Commands
+This file provides concise guidance to Claude Code when working with this OR-Tools constraint programming solver optimized for template-based scheduling.
 
-**IMPORTANT**: This project uses UV for Python package management. All Python commands must be prefixed with `uv run` (e.g., `uv run python script.py`, `uv run python -m pytest`).
+## Essential Commands
 
-### Running Tests
+**CRITICAL**: Use UV prefix for all Python commands: `uv run python script.py`
+
 ```bash
-# Run all tests with coverage
-uv run python run_tests.py
+# Core Development Workflow
+make lint                    # Complete quality check: ruff + black + mypy (REQUIRED)
+uv run python run_tests.py   # Run all tests with coverage
+uv run python solver.py      # Run solver with test data
 
-# Run specific test file
-uv run python -m pytest tests/unit/test_constraints.py -v
-
-# Run single test
-uv run python -m pytest tests/unit/test_solver.py::test_solver_init -v
+# Template Development (5-8x Performance Gains)
+uv run python scripts/validate_template_performance.py  # Benchmark templates
+/template-benchmark <template_id>                       # Claude command for analysis
 ```
 
-### Running the Solver
-```bash
-# Run with test data from database
-uv run python solver.py
+## Project Architecture ⚡
 
-# Load test data into database
-uv run python populate_test_data.py
+**Template-First Constraint Programming Solver** using Google OR-Tools CP-SAT for parallel identical job scheduling with 5-8x performance improvements over legacy approaches.
+
+- **Primary**: Template-based optimization (current focus)
+- **Legacy**: Traditional job-shop scheduling (backward compatibility)
+- **Framework**: OR-Tools CP-SAT with 100% type safety (mypy)
+
+## Template Development Workflow (NEW STANDARD)
+
+All development follows template-first methodology for optimal performance:
+
+1. **Create Template**: Use `TemplateDatabaseLoader` with existing database structure
+2. **Benchmark**: Validate with `scripts/validate_template_performance.py`
+3. **Optimize**: Tune CP-SAT parameters using `/template-optimize-params`
+4. **Deploy**: Store blessed parameters with `/template-promote-params`
+
+### Template Optimization Priority
+1. **Symmetry Breaking** (highest impact): Manual lexicographical ordering
+2. **Parameter Tuning** (medium impact): `num_search_workers`, `search_branching`
+3. **Solution Hinting** (specialized): Template re-solving scenarios
+
+### Performance Targets
+- Simple Templates (5-10 tasks): < 1s for 10+ instances
+- Medium Templates (20-50 tasks): < 10s for 5+ instances
+- Complex Templates (100+ tasks): < 60s for 3+ instances
+
+## Cross-Session Context Preservation
+
+**Template Development Sessions** - Always preserve optimization history:
+
+```
+"Continue template optimization for {template_id}.
+Last session: {baseline_time}s → {current_time}s ({speedup}x improvement)
+Techniques applied: {optimization_list}
+Current focus: {next_optimization_area}"
+
+Checkpoint every 30 minutes:
+"Template {template_id} checkpoint:
+- Performance: {baseline} → {current} ({improvement}x)
+- Status: {blessed|experimental|testing}
+- Next: {pending_optimizations}"
 ```
 
-### Development Commands
-```bash
-# Code Quality Tools (Complete Type Safety Pipeline)
-make lint                      # Complete quality check: ruff + black + mypy (REQUIRED before commits)
-ruff check .                   # Run linting only
-ruff check . --fix             # Auto-fix linting issues
-black .                        # Format all Python files
-black --check .                # Check formatting without changes
-mypy src/                      # Type check the source code (must pass with 0 errors)
+## Quick Command Reference
 
-# Individual tools for debugging
-ruff format .                  # Format files and handle type annotation line lengths
+See `.claude/COMMANDS.md` for complete list. Essential shortcuts:
+```bash
+# Constraint Development
+/ac <name>     # Add constraint following STANDARDS.md
+/tc <name>     # Generate unit tests
+/cc <function> # Check against standards
+
+# Template Optimization ⚡
+/template-benchmark <template_id>    # Performance analysis
+/template-optimize-params <template_id>  # Parameter tuning
+/template-promote-params <template_id> <params.json>  # Deploy to production
+
+# Debugging
+/ti            # Trace infeasible model
+/ps            # Profile solver performance
+/debug-slow    # Complete performance workflow
 ```
 
-## Architecture
+## Type Safety (100% Compliance)
 
-This is a constraint programming scheduling solver using Google OR-Tools CP-SAT framework. The project follows a phased development approach:
+All code must pass `mypy src/` with 0 errors. Use centralized type aliases from `.claude/TEMPLATES.md`.
 
-- **Phase 1** (current): Basic job-shop scheduling with timing, precedence, and machine assignment
-- **Future phases**: Resource capacity, skills matching, shift constraints, etc.
+```python
+# Standard imports for constraint functions
+from ortools.sat.python import cp_model
+from .types import TaskStartDict, TaskEndDict, TaskKey  # Centralized aliases
+```
 
-### Core Components
+## Key Standards
 
-1. **Data Models** (`data_models.py`): Dataclasses for Job, Task, Machine, SchedulingProblem
-   - All time durations are stored as 15-minute intervals
-   - Validation happens in `__post_init__` methods
+**All functions must follow STANDARDS.md:**
+- Constraint functions: max 30 lines, single responsibility  
+- Variable naming: `task_starts[(job_id, task_id)]`
+- Type safety: 100% mypy compliance required
+- Time units: 15-minute intervals throughout
+- Testing: GIVEN-WHEN-THEN pattern
 
-2. **Constraint Functions** (`constraints.py`): Modular functions that each add one type of constraint
-   - Follow strict naming: `add_<constraint_type>_constraints()`
-   - Maximum 30 lines per function
-   - Must document constraints added in docstring
+## Architecture Files Reference
 
-3. **Solver** (`solver.py`): Main FreshSolver class orchestrates the solving process
-   - Creates decision variables (task_starts, task_ends, task_assigned, etc.)
-   - Applies constraints in dependency order
-   - Uses search strategies for performance
-
-4. **Database Integration** (`db_loader.py`): Supabase client for loading/saving data
-   - Uses environment variables for connection
-   - Test data setup via SQL scripts
-
-5. **Type Safety** (`typing` integration): Comprehensive mypy coverage
-   - 100% type safety maintained (0 mypy errors across 34 source files)
-   - Centralized type aliases for OR-Tools structures
-   - ortools-stubs for proper CP-SAT typing
-
-### Key Design Patterns
-
-1. **Variable Naming Convention**:
-   ```python
-   task_starts[(job_id, task_id)]  # When task starts
-   task_ends[(job_id, task_id)]    # When task ends
-   task_assigned[(job_id, task_id, machine_id)]  # Boolean assignment
-   ```
-
-2. **Time Handling**: All durations converted to 15-minute intervals
-   - Horizon includes 20% buffer
-   - Use `solver_utils.py` for time calculations
-
-3. **Performance Requirements**:
-   - Tiny dataset (2 jobs, 10 tasks): < 1 second
-   - Small dataset (5 jobs, 50 tasks): < 10 seconds
-   - Medium dataset (20 jobs, 500 tasks): < 60 seconds
-
-### Testing Strategy
-
-- Unit tests for each constraint function
-- Integration tests for complete phases
-- Performance benchmarks with different dataset sizes
-- Test fixtures in `tests/conftest.py`
-
-## Important Standards
-
-Refer to `STANDARDS.md` for comprehensive coding standards including:
-- Constraint function rules (one constraint type per function, max 30 lines)
-- Variable naming conventions
-- **Type safety requirements (all functions must be fully typed)**
-- Testing patterns
-- Error handling approaches
-- Performance optimization techniques
+- **Development Details**: `.claude/DEVELOPMENT.md` - Core components, design patterns, testing
+- **Troubleshooting**: `.claude/TROUBLESHOOTING.md` - Debug workflows, common issues
+- **Complete Workflows**: `.claude/WORKFLOWS.md` - Step-by-step development processes
+- **Standards**: `.claude/STANDARDS.md` - Coding standards, type safety, performance
+- **Commands**: `.claude/COMMANDS.md` - Complete OR-Tools command system
+- **Templates**: `.claude/TEMPLATES.md` - Code generation templates with type aliases
+- **Context**: `.claude/CONTEXT.md` - Domain knowledge, edge cases, performance insights
+- **Prompts**: `.claude/PROMPTS.md` - Effective prompt patterns
 
 ## Dependencies
 
-- Python 3.x
-- ortools (Google OR-Tools)
-- ortools-stubs (type annotations for mypy)
-- supabase (for database)
-- python-dotenv (environment variables)
-- pytest (testing)
+Install: `uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`
 
-Install with: `uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`
-
-**Note**: ortools-stubs provides proper type hints for OR-Tools CP-SAT framework, essential for achieving 100% type safety.
-
-## Custom Commands for OR-Tools Development
-
-Claude is configured with specialized commands that transform it into an OR-Tools development expert. These commands provide structured, consistent guidance following best practices.
-
-### Command System Overview
-- **Implementation**: `.claude/commands/ortools_commands.py`
-- **Documentation**: `.claude/COMMANDS.md`, `.claude/COMMAND_REFERENCE.md`
-- **Examples**: `.claude/COMMAND_EXAMPLES.md`
-
-### Constraint Development Commands
-- `/add-constraint <name>` or `/ac <name>` - Generate constraint function following STANDARDS.md
-- `/test-constraint <name>` or `/tc <name>` - Create comprehensive unit tests
-- `/check-constraint <function>` or `/cc <function>` - Validate against standards
-- `/list-constraints` or `/lc` - Show all constraints in model
-
-### Solver Debugging Commands
-- `/trace-infeasible` or `/ti` - Systematic infeasibility analysis
-- `/explain-solution` or `/es` - Business-friendly solution explanation
-- `/profile-solver` or `/ps` - Performance bottleneck analysis
-- `/debug-variables` or `/dv` - Variable state inspection
-
-### Performance Optimization Commands
-- `/suggest-redundant` or `/sr` - Identify helpful redundant constraints
-- `/tighten-bounds` or `/tb` - Optimize variable bounds
-- `/optimize-search` or `/os` - Search strategy recommendations
-- `/analyze-complexity` or `/cx` - Big O complexity analysis
-
-### Workflow Commands (Compound)
-- `/dev-flow <name>` - Complete development cycle (add → test → check)
-- `/debug-slow` - Performance optimization (profile → bounds → redundant)
-- `/fix-infeasible` - Infeasibility resolution (trace → explain)
-
-### Command Usage Examples
-```bash
-# Quick constraint development
-/ac maintenance_window
-/tc maintenance_window
-/cc add_maintenance_window_constraints
-
-# Performance debugging
-/ps                    # Profile to find bottlenecks
-/tb                    # Get bound tightening suggestions
-/sr                    # Add redundant constraints
-
-# Using aliases for speed
-/ac shift_schedule     # Same as /add-constraint
-/ti                    # Same as /trace-infeasible
-```
-
-### How Commands Work
-1. Claude recognizes command patterns (e.g., `/command-name args`)
-2. Executes appropriate analysis or code generation
-3. Returns formatted, actionable output
-4. Suggests logical next commands
-5. Maintains context between related commands
-
-## Claude Workflow Optimizations
-
-### Incremental Development Pattern
-When implementing new features:
-1. Ask Claude to first analyze existing code structure: "Analyze the current constraint structure before adding X"
-2. Request constraint formulation before implementation: "Formulate the mathematical constraints for X"
-3. Generate tests before writing constraint code: "Create unit tests for the X constraint"
-4. Use continuity phrases: "Continue from the precedence constraints we discussed..."
-
-### Context Window Management
-- **Break large tasks into phases**: "This is phase 1 of 3: Create decision variables for resource constraints"
-- **Use explicit checkpoints**: "Checkpoint: All variables created successfully. Now moving to constraints."
-- **Reference previous work**: "Building on the task_assigned variables from earlier..."
-- **Maintain state**: "Let's continue where we left off with the machine intervals"
-
-### Effective File References
-Instead of vague references:
-- ❌ "Update the constraint file"
-- ✅ "In src/solver/constraints/timing.py, after line 45 in add_precedence_constraints..."
-
-### Requesting Code Reviews
-- "Validate this constraint against STANDARDS.md"
-- "Check if this follows our 30-line limit and naming conventions"
-- "Ensure this matches our variable naming pattern: task_*[(job_id, task_id)]"
-
-## Troubleshooting Guide
-
-### Model Infeasibility
-**Symptom**: Solver returns INFEASIBLE status
-**Solution**: Ask Claude: "Help me trace infeasibility by systematically disabling constraints. Start with the most restrictive ones like narrow time windows or tight precedences."
-
-### Slow Solver Performance
-**Symptom**: Solver takes > 60 seconds on medium datasets
-**Solutions**:
-1. "Profile my model with solver.SolveWithSolutionCallback and identify bottlenecks"
-2. "Analyze my variable bounds - are any unnecessarily large?"
-3. "Suggest redundant constraints that could help prune the search space"
-
-### Memory Issues
-**Symptom**: Out of memory errors with large datasets
-**Solution**: "Analyze my variable creation patterns and suggest ways to reduce variable count. Consider interval variables vs boolean arrays."
-
-### Constraint Conflicts
-**Symptom**: Valid business rules create unsolvable model
-**Solution**: "Help me identify conflicting constraints by creating a minimal reproduction case"
-
-### No Solution Found (Timeout)
-**Symptom**: Solver times out without finding solution
-**Solutions**:
-1. "Suggest a search strategy based on my problem structure"
-2. "Help me add solver hints for likely good solutions"
-3. "Identify if I should increase time limit or refactor model"
-
-### Unit Test Failures
-**Symptom**: Constraint tests fail after changes
-**Solution**: "Debug why this constraint test fails. Check if the test assumptions still match the implementation."
-
-### Integration Issues
-**Symptom**: Individual constraints work but fail when combined
-**Solution**: "Create an integration test that reproduces this issue with minimal constraints"
+**Note**: `ortools-stubs` essential for 100% type safety with OR-Tools CP-SAT framework.

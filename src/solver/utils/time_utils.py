@@ -229,7 +229,7 @@ def extract_solution(
     total_lateness = 0
     now = datetime.now(UTC)
 
-    if problem.is_template_based:
+    if problem.is_template_based and problem.job_template:
         # Template-based solution extraction
         for instance in problem.job_instances:
             instance_end_time = 0

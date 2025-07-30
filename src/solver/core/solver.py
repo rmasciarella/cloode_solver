@@ -93,7 +93,8 @@ class FreshSolver:
         instances = self.problem.job_instances
 
         logger.info(
-            f"Creating template variables for {len(instances)} instances of {template.task_count} tasks"
+            f"Creating template variables for {len(instances)} instances of "
+            f"{template.task_count} tasks"
         )
 
         # For each job instance, create variables for each template task
@@ -348,7 +349,7 @@ class FreshSolver:
         # Find the maximum end time across all tasks
         all_ends = []
 
-        if self.problem.is_template_based:
+        if self.problem.is_template_based and self.problem.job_template:
             # Template-based: collect all instance task end times
             for instance in self.problem.job_instances:
                 for template_task in self.problem.job_template.template_tasks:
@@ -375,7 +376,7 @@ class FreshSolver:
 
         if has_high_capacity:
             # Calculate theoretical minimum for informational purposes
-            if self.problem.is_template_based:
+            if self.problem.is_template_based and self.problem.job_template:
                 # Template-based calculation
                 template_min_work = sum(
                     min(mode.duration_time_units for mode in template_task.modes)
@@ -421,6 +422,9 @@ class FreshSolver:
 
     def _add_template_search_strategy(self) -> None:
         """Add optimized search strategy for template-based problems."""
+        if not self.problem.job_template:
+            return
+
         has_high_capacity = any(m.capacity > 1 for m in self.problem.machines)
         has_precedences = len(self.problem.job_template.template_precedences) > 0
 
@@ -446,7 +450,8 @@ class FreshSolver:
         # Strategy: Schedule template tasks in order, with symmetry breaking
         for _i, task_group in enumerate(template_task_groups):
             if has_high_capacity and not has_precedences:
-                # For parallel machines without precedences, schedule all instances concurrently
+                # For parallel machines without precedences, schedule all instances
+                # concurrently
                 self.model.AddDecisionStrategy(
                     task_group, cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE
                 )
@@ -457,8 +462,9 @@ class FreshSolver:
                 )
 
         logger.info(
-            f"Search strategy: template-based scheduling for {len(self.problem.job_instances)} "
-            f"instances with {len(template_task_groups)} template tasks"
+            f"Search strategy: template-based scheduling for "
+            f"{len(self.problem.job_instances)} instances with "
+            f"{len(template_task_groups)} template tasks"
         )
 
     def _add_legacy_search_strategy(self) -> None:

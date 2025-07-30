@@ -1,5 +1,79 @@
 # Development Workflows for OR-Tools Projects
 
+## 0. Template Development Session Management (NEW PRIORITY)
+
+### Template-First Development Session Pattern
+For this template-optimized architecture delivering 5-8x performance improvements:
+
+```
+Session Start: "Continue template optimization for {template_id}. 
+Last session performance: {baseline_time}s → {optimized_time}s. 
+Current focus: {optimization_area}"
+
+Key Context to Preserve:
+- Template ID and instance count being optimized
+- Baseline performance metrics from previous sessions  
+- Current parameter tuning status (blessed vs experimental)
+- Identified performance bottlenecks and applied solutions
+- Pending optimization strategies from previous sessions
+```
+
+### Template Development Session Checkpoints
+```
+Every 30 Minutes or Major Milestone:
+
+"Checkpoint - Template {template_id}:
+- Baseline: {original_performance}
+- Current: {current_performance} 
+- Improvement: {speedup_factor}x speedup
+- Techniques Applied: {optimization_techniques}
+- Next Steps: {pending_optimizations}
+- Parameters Status: {blessed|experimental|testing}"
+```
+
+### Template Context Preservation Structure
+Store optimization history in this format for cross-session continuity:
+
+```json
+{
+  "template_id": "manufacturing_job_v2",
+  "optimization_sessions": [
+    {
+      "date": "2024-01-15",
+      "focus": "symmetry_breaking", 
+      "baseline_time": 12.3,
+      "optimized_time": 3.2,
+      "improvement_factor": "3.8x",
+      "techniques_applied": ["job_lex_order", "machine_precedence"],
+      "blessed_parameters": {
+        "num_search_workers": 8,
+        "search_branching": "FIXED_SEARCH"
+      },
+      "next_session_focus": "parameter_tuning_linearization"
+    }
+  ],
+  "current_status": {
+    "performance_target": "< 2.0s for 10 instances",
+    "current_performance": "3.2s for 10 instances", 
+    "gap_to_target": "37% slower than target",
+    "priority_optimizations": ["linearization_level", "redundant_constraints"]
+  }
+}
+```
+
+### Session End Documentation
+```
+"Template {template_id} session complete:
+- Started: {baseline_metrics}
+- Achieved: {final_metrics}
+- Total Improvement: {total_speedup_factor}x
+- Techniques Applied: {all_techniques}
+- Performance vs Target: {target_comparison}
+- Blessed Parameters: {parameter_status}
+- Next Session Priority: {next_focus_areas}
+- Ready for Production: {yes|no - reason}"
+```
+
 ## 1. New Constraint Implementation Workflow
 
 ### Step 1: Analysis and Planning
@@ -402,6 +476,31 @@ You: "Test that type safety doesn't break functionality"
 3. Verify 91% coverage maintained
 4. Check that solver performance is unchanged
 ```
+
+## Claude Workflow Optimizations
+
+### Incremental Development Pattern
+When implementing new features:
+1. Ask Claude to first analyze existing code structure: "Analyze the current constraint structure before adding X"
+2. Request constraint formulation before implementation: "Formulate the mathematical constraints for X"
+3. Generate tests before writing constraint code: "Create unit tests for the X constraint"
+4. Use continuity phrases: "Continue from the precedence constraints we discussed..."
+
+### Context Window Management
+- **Break large tasks into phases**: "This is phase 1 of 3: Create decision variables for resource constraints"
+- **Use explicit checkpoints**: "Checkpoint: All variables created successfully. Now moving to constraints."
+- **Reference previous work**: "Building on the task_assigned variables from earlier..."
+- **Maintain state**: "Let's continue where we left off with the machine intervals"
+
+### Effective File References
+Instead of vague references:
+- ❌ "Update the constraint file"
+- ✅ "In src/solver/constraints/timing.py, after line 45 in add_precedence_constraints..."
+
+### Requesting Code Reviews
+- "Validate this constraint against STANDARDS.md"
+- "Check if this follows our 30-line limit and naming conventions"
+- "Ensure this matches our variable naming pattern: task_*[(job_id, task_id)]"
 
 ## Best Practices for All Workflows
 

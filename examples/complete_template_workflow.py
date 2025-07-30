@@ -46,7 +46,8 @@ def demonstrate_automatic_loading():
     print(f"✅ Problem loaded in {load_time:.3f}s")
     print("📊 Problem statistics:")
     print(
-        f"   - Architecture: {'Template-based' if problem.is_template_based else 'Legacy'}"
+        f"   - Architecture: "
+        f"{'Template-based' if problem.is_template_based else 'Legacy'}"
     )
     print(f"   - Total tasks: {problem.total_task_count}")
     print(f"   - Machines: {problem.total_machine_count}")
@@ -56,7 +57,8 @@ def demonstrate_automatic_loading():
         print(f"   - Template tasks: {problem.template_task_count}")
         print(f"   - Job instances: {problem.instance_count}")
         print(
-            f"   - Template precedences: {len(problem.job_template.template_precedences)}"
+            f"   - Template precedences: "
+            f"{len(problem.job_template.template_precedences)}"
         )
 
         # Show efficiency gain
@@ -227,10 +229,12 @@ def demonstrate_template_constraints():
 
     print("\n📊 Complexity Analysis:")
     print(
-        f"   Template approach: O({problem.template_task_count} × {problem.instance_count}) = {template_complexity}"
+        f"   Template approach: O({problem.template_task_count} × "
+        f"{problem.instance_count}) = {template_complexity}"
     )
     print(
-        f"   Naive approach: O({problem.total_task_count}³) = {naive_precedence_complexity:,}"
+        f"   Naive approach: O({problem.total_task_count}³) = "
+        f"{naive_precedence_complexity:,}"
     )
 
     if template_complexity > 0:
@@ -258,7 +262,8 @@ def demonstrate_solution_analysis(problem: SchedulingProblem, solution: dict[str
     print("📈 Solution Quality:")
     print(f"   Status: {solution.get('status')}")
     print(
-        f"   Makespan: {solution.get('makespan')} time units ({solution.get('makespan', 0) * 15} minutes)"
+        f"   Makespan: {solution.get('makespan')} time units "
+        f"({solution.get('makespan', 0) * 15} minutes)"
     )
     print(f"   Total tasks: {len(solution.get('task_schedule', {}))}")
 
@@ -272,7 +277,8 @@ def demonstrate_solution_analysis(problem: SchedulingProblem, solution: dict[str
             total_time = utilization.get("total_time", 1)
 
             print(
-                f"   {machine_id}: {util_percent:.1f}% ({active_time}/{total_time} time units)"
+                f"   {machine_id}: {util_percent:.1f}% "
+                f"({active_time}/{total_time} time units)"
             )
 
     # Template-specific analysis

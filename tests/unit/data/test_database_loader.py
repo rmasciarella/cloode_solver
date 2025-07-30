@@ -254,11 +254,23 @@ class TestDatabaseLoader:
         os.environ,
         {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_ANON_KEY": "test_key"},
     )
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_load_problem_complete(self, mock_create_client, _mock_print):
+    def test_load_problem_complete(
+        self, mock_create_client, mock_template_create_client, _mock_print
+    ):
         """Test loading complete problem with associations."""
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         # Mock all table responses
         mock_table = mock_client.table
@@ -362,16 +374,28 @@ class TestDatabaseLoader:
         assert len(problem.work_cells[0].machines) == 1
         assert problem.total_task_count == 1
 
-    @patch("src.data.loaders.database.print")
+    @patch("src.data.loaders.database.logger")
     @patch.dict(
         os.environ,
         {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_ANON_KEY": "test_key"},
     )
+    @patch("src.data.loaders.template_database.create_client")
     @patch("src.data.loaders.database.create_client")
-    def test_load_problem_with_validation_issues(self, mock_create_client, mock_print):
+    def test_load_problem_with_validation_issues(
+        self, mock_create_client, mock_template_create_client, mock_logger
+    ):
         """Test loading problem with validation issues."""
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
+
+        # Mock template client to return empty templates (use legacy mode)
+        mock_template_client = MagicMock()
+        mock_template_create_client.return_value = mock_template_client
+        mock_template_table = MagicMock()
+        mock_template_client.table.return_value = mock_template_table
+        mock_template_table.select.return_value = mock_template_table
+        mock_template_table.limit.return_value = mock_template_table
+        mock_template_table.execute.return_value = MagicMock(data=[])
 
         # Set up minimal mock data that will cause validation issues
         mock_table = mock_client.table
@@ -425,8 +449,8 @@ class TestDatabaseLoader:
 
         # Should still return a problem, but with issues printed
         assert problem is not None
-        # Check that warning was printed
-        mock_print.assert_any_call("WARNING: Problem validation issues found:")
+        # Check that warning was logged
+        mock_logger.warning.assert_any_call("Problem validation issues found:")
 
 
 def test_load_test_problem():

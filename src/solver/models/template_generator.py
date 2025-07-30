@@ -289,13 +289,13 @@ def create_small_template_problem() -> SchedulingProblem:
 
 
 def create_medium_template_problem() -> SchedulingProblem:
-    """Create a medium template-based problem for performance testing (50 identical jobs)."""
+    """Create a medium template-based problem for testing (50 identical jobs)."""
     template = create_manufacturing_job_template()
     return create_template_problem(template, num_instances=50)
 
 
 def create_large_template_problem() -> SchedulingProblem:
-    """Create a large template-based problem for scalability testing (200 identical jobs)."""
+    """Create a large template-based problem for scalability (200 identical jobs)."""
     template = create_manufacturing_job_template()
     return create_template_problem(template, num_instances=200)
 

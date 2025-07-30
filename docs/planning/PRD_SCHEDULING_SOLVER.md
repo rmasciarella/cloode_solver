@@ -38,6 +38,8 @@ The system currently provides:
 3. **Meet Delivery Commitments**: Ensure 95%+ on-time delivery through deadline awareness
 4. **Reduce Operational Costs**: Optimize for cost-efficiency in resource allocation
 5. **Enable Real-time Adaptability**: Support schedule updates within 5 minutes
+6. **Maximize Equipment Utilization**: Strategic weekend scheduling for long unattended processes (24-72 hours)
+7. **Enforce Physical Constraints**: Respect WorkCell capacity limits for space, utilities, and safety
 
 ## User Personas
 
@@ -97,7 +99,22 @@ The system currently provides:
      - [x] Setup times reflected in schedule
      - [x] Total setup time metrics (UI/reporting complete)
 
-~~3. As a shop floor supervisor, I need to respect machine maintenance windows~~ - **DESCOPED**
+3. As a production planner, I need to schedule unattended tasks that can run outside business hours - **CRITICAL**
+   - **Acceptance Criteria**:
+     - [ ] Unattended tasks require operator setup during business hours (Mon-Fri 7am-4pm)
+     - [ ] Machine execution continues 24/7 after setup for unattended tasks
+     - [ ] Strategic scheduling of long tasks (24+ hours) to utilize weekends
+     - [ ] Dual resource modeling: labor setup + machine execution intervals
+     - [ ] Performance optimization for 72-hour processes
+
+4. As a shop floor supervisor, I need to enforce WorkCell capacity limits for physical locations
+   - **Acceptance Criteria**:
+     - [ ] WorkCell capacity constraints independent of individual machine availability
+     - [ ] Maximum simultaneous machines per WorkCell enforced
+     - [ ] Integration with existing machine assignment constraints
+     - [ ] Support for shared utilities and space limitations per WorkCell
+
+~~5. As a shop floor supervisor, I need to respect machine maintenance windows~~ - **DESCOPED**
    - *Rationale: Not required for current use case; maintenance windows were not part of the original model*
 
 ### Phase 2: Resource and Skill Constraints (Sprint 4-5)
@@ -254,6 +271,12 @@ The system currently provides:
 - ✅ Setup time constraints working (completed with full UI visualization)
 - ✅ Documentation system established (CLAUDE.md)
 
+### Phase 1.3-1.4 (Weeks 3-4) - CRITICAL EXTENSIONS
+- [ ] Unattended task constraints operational (business hours setup, 24/7 execution)
+- [ ] WorkCell capacity limits enforced (physical location constraints)
+- [ ] Weekend scheduling optimization for long processes (24+ hour tasks)
+- [ ] Dual resource modeling functional (labor + machine intervals)
+
 ### Phase 2-3 (Weeks 3-5)
 - Skill-based scheduling operational
 - Multi-objective optimization functional
@@ -276,6 +299,9 @@ The system currently provides:
 2. **Python**: Backend implementation in Python 3.8+
 3. **Supabase**: PostgreSQL database via Supabase
 4. **Time Granularity**: 15-minute intervals for all scheduling
+5. **Business Hours**: Standard operating hours Mon-Fri 7am-4pm for operator availability
+6. **Dual Resource Modeling**: Unattended tasks require both labor (setup) and machine (execution) resources
+7. **WorkCell Physical Limits**: Machine capacity constrained by physical workspace limitations
 
 ## Dependencies
 

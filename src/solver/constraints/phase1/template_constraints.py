@@ -133,7 +133,7 @@ def add_template_no_overlap_constraints(
     machine_intervals: dict,
     problem: SchedulingProblem,
 ) -> None:
-    """Add no-overlap constraints for template-based problems on single-capacity machines.
+    """Add no-overlap constraints for template-based problems on single machines.
 
     Prevents multiple tasks from running simultaneously on the same machine.
     Only applies to machines with capacity = 1.
@@ -254,7 +254,7 @@ def add_symmetry_breaking_constraints(
 
 def add_template_redundant_constraints(
     model: cp_model.CpModel,
-    task_starts: dict,
+    _task_starts: dict,
     task_ends: dict,
     problem: SchedulingProblem,
     horizon: int,

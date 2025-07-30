@@ -78,7 +78,8 @@ def test_template_solver_small() -> dict:
     )
 
     logger.info(
-        f"Created template problem: {num_instances} instances × {template.task_count} tasks = {problem.total_task_count} total tasks"
+        f"Created template problem: {num_instances} instances × "
+        f"{template.task_count} tasks = {problem.total_task_count} total tasks"
     )
 
     # Solve with template-optimized solver
@@ -121,7 +122,8 @@ def test_template_solver_medium() -> dict:
     )
 
     logger.info(
-        f"Created template problem: {num_instances} instances × {template.task_count} tasks = {problem.total_task_count} total tasks"
+        f"Created template problem: {num_instances} instances × "
+        f"{template.task_count} tasks = {problem.total_task_count} total tasks"
     )
 
     # Solve with template-optimized solver
@@ -171,7 +173,7 @@ def validate_symmetry_breaking(solution: dict) -> dict:
     symmetry_violations = 0
     total_template_tasks = len(template_task_starts)
 
-    for template_task_id, instances in template_task_starts.items():
+    for _template_task_id, instances in template_task_starts.items():
         # Sort by job_id and check if start times are non-decreasing
         instances.sort(key=lambda x: x[0])  # Sort by job_id
 
@@ -188,10 +190,11 @@ def validate_symmetry_breaking(solution: dict) -> dict:
         "symmetry_broken": symmetry_broken,
         "template_tasks_checked": total_template_tasks,
         "violations": symmetry_violations,
-        "effectiveness": (total_template_tasks - symmetry_violations)
-        / total_template_tasks
-        if total_template_tasks > 0
-        else 0,
+        "effectiveness": (
+            (total_template_tasks - symmetry_violations) / total_template_tasks
+            if total_template_tasks > 0
+            else 0
+        ),
     }
 
 
@@ -215,7 +218,8 @@ def analyze_template_performance(results: list[dict]) -> None:
         if result["solution"].get("schedule"):
             symmetry_result = validate_symmetry_breaking(result["solution"])
             logger.info(
-                f"  Symmetry Breaking: {'✓' if symmetry_result['symmetry_broken'] else '✗'}"
+                f"  Symmetry Breaking: "
+                f"{'✓' if symmetry_result['symmetry_broken'] else '✗'}"
             )
             logger.info(
                 f"  Symmetry Effectiveness: {symmetry_result['effectiveness']:.1%}"

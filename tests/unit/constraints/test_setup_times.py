@@ -139,9 +139,9 @@ def test_setup_time_constraints_basic():
 
     # Since we forced task0 before task1, task1 should start at least
     # 5 units after task0 ends
-    assert task1_start >= task0_end + 5, (
-        f"Task 1 starts at {task1_start}, but should start at least at {task0_end + 5}"
-    )
+    assert (
+        task1_start >= task0_end + 5
+    ), f"Task 1 starts at {task1_start}, but should start at least at {task0_end + 5}"
 
 
 def test_setup_time_constraints_different_machines():

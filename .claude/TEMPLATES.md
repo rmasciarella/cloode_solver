@@ -26,6 +26,60 @@ MachineIntervalDict = Dict[MachineKey, List[cp_model.IntervalVar]]
 # Problem data types
 PrecedenceList = List[Tuple[TaskKey, TaskKey]]
 SetupTimeDict = Dict[AssignmentKey, int]  # Setup time in time units
+
+# Template-specific type aliases for 5-8x performance optimizations
+TemplateKey = str  # Template identifier
+InstanceKey = str  # Job instance identifier  
+TemplateTaskKey = str  # Template task identifier
+InstanceTaskKey = Tuple[InstanceKey, TemplateTaskKey]  # (instance_id, template_task_id)
+TemplateAssignmentKey = Tuple[InstanceKey, TemplateTaskKey, MachineKey]  # Template assignment
+
+# Template variable collections optimized for template-based scheduling
+TemplateTaskStartDict = Dict[InstanceTaskKey, cp_model.IntVar]
+TemplateTaskEndDict = Dict[InstanceTaskKey, cp_model.IntVar]
+TemplateTaskDurationDict = Dict[InstanceTaskKey, cp_model.IntVar]
+TemplateTaskIntervalDict = Dict[InstanceTaskKey, cp_model.IntervalVar]
+TemplateTaskAssignmentDict = Dict[TemplateAssignmentKey, cp_model.IntVar]
+
+# Template problem data structures
+TemplatePrecedenceList = List[Tuple[TemplateTaskKey, TemplateTaskKey]]
+TemplateSetupTimeDict = Dict[Tuple[TemplateTaskKey, TemplateTaskKey, MachineKey], int]
+```
+
+### Template Type Safety Patterns
+
+For template-based constraints, use these specialized type patterns for optimal performance:
+
+```python
+# Template-aware constraint function signature
+def add_template_{constraint_type}_constraints(
+    model: cp_model.CpModel,
+    task_starts: TemplateTaskStartDict,
+    task_ends: TemplateTaskEndDict,
+    problem: SchedulingProblem  # Contains template and instances
+) -> None:
+    """Template-optimized constraint function for 5-8x performance."""
+    # Leverage template structure for O(template_size × instances) complexity
+    
+# Template iteration pattern (preferred for performance)
+for instance in problem.job_instances:
+    for template_task in problem.job_template.template_tasks:
+        instance_task_key = (instance.instance_id, template_task.template_task_id)
+        # Process template task instance...
+
+# Legacy compatibility check pattern
+def add_hybrid_{constraint_type}_constraints(
+    model: cp_model.CpModel,
+    task_starts: Union[TaskStartDict, TemplateTaskStartDict],
+    problem: SchedulingProblem
+) -> None:
+    """Hybrid constraint supporting both legacy and template modes."""
+    if problem.is_template_based:
+        # Use template-optimized path
+        _add_template_logic(model, task_starts, problem)
+    else:
+        # Use legacy path for backward compatibility
+        _add_legacy_logic(model, task_starts, problem)
 ```
 
 ### Usage Example

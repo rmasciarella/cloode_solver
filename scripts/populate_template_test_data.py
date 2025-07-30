@@ -19,7 +19,7 @@ from src.data.loaders.template_database import TemplateDatabaseLoader
 
 
 def setup_database_connection() -> Client:
-    """Setup Supabase connection."""
+    """Set up Supabase connection."""
     load_dotenv()
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_ANON_KEY")
@@ -243,7 +243,10 @@ def create_manufacturing_template(supabase: Client) -> str:
                     "template_task_id": task_ids["Machine Cleanup"],
                     "machine_resource_id": machine_lookup[machine_name],
                     "duration_minutes": duration,
-                    "mode_name": f"cleanup_{machine_name.lower().replace(' ', '_').replace('#', '')}",
+                    "mode_name": (
+                        f"cleanup_"
+                        f"{machine_name.lower().replace(' ', '_').replace('#', '')}"
+                    ),
                 }
             )
 
@@ -471,7 +474,7 @@ def populate_template_statistics(supabase: Client, template_id: str):
 
 
 def main():
-    """Main population script."""
+    """Run main population script."""
     print("Populating template-based test data...")
 
     supabase = setup_database_connection()
@@ -561,7 +564,8 @@ def main():
         print(f"Successfully loaded {len(available_templates)} templates:")
         for template in available_templates:
             print(
-                f"  - {template.name}: {template.task_count} tasks, {len(template.template_precedences)} precedences"
+                f"  - {template.name}: {template.task_count} tasks, "
+                f"{len(template.template_precedences)} precedences"
             )
 
         # Test problem loading
@@ -571,7 +575,8 @@ def main():
                 test_template.template_id, max_instances=3
             )
             print(
-                f"\nTest problem loaded: {len(problem.jobs)} jobs, {problem.total_task_count} tasks"
+                f"\nTest problem loaded: {len(problem.jobs)} jobs, "
+                f"{problem.total_task_count} tasks"
             )
 
         print("\nTemplate system ready for use!")

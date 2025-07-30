@@ -7,6 +7,7 @@ Achieves O(template_size × instances) performance instead of O(n³).
 import logging
 import os
 from datetime import datetime
+from typing import Any
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
@@ -427,7 +428,7 @@ class TemplateDatabaseLoader:
             cell.machines = machine_by_cell.get(cell.cell_id, [])
 
     def save_solution_assignments(
-        self, problem: SchedulingProblem, solution_data: dict[str, any]
+        self, problem: SchedulingProblem, solution_data: dict[str, Any]
     ) -> None:
         """Save solved task assignments back to database.
 
@@ -468,8 +469,9 @@ class TemplateDatabaseLoader:
             instance_ids = [job.job_id for job in problem.jobs]
 
             try:
-                # First clear existing assignments for these instances in atomic operation
-                delete_response = (
+                # First clear existing assignments for these instances in atomic
+                # operation
+                _delete_response = (
                     self.supabase.table("instance_task_assignments")
                     .delete()
                     .in_("instance_id", instance_ids)
@@ -477,7 +479,8 @@ class TemplateDatabaseLoader:
                 )
 
                 # Then insert all new assignments
-                # Note: If this fails, assignments are cleared but database is in consistent state
+                # Note: If this fails, assignments are cleared but database is in
+                # consistent state
                 insert_response = (
                     self.supabase.table("instance_task_assignments")
                     .insert(assignments)
@@ -527,7 +530,8 @@ if __name__ == "__main__":
         # Load problem from first template
         problem = loader.load_template_problem(templates[0].template_id)
         print(
-            f"\nLoaded problem with {len(problem.jobs)} jobs, {problem.total_task_count} tasks"
+            f"\nLoaded problem with {len(problem.jobs)} jobs, "
+            f"{problem.total_task_count} tasks"
         )
     else:
         print("No templates found. Run migration script to create templates.")
