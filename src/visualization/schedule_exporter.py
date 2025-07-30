@@ -5,7 +5,7 @@ to various formats suitable for visualization, including JSON and CSV.
 """
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -60,7 +60,7 @@ class ScheduleVisualization:
     machines: list[MachineVisualization]
     metadata: dict[str, Any]
     capacity_warnings: list[dict[str, Any]]
-    setups: list[SetupVisualization] = None
+    setups: list[SetupVisualization] = field(default_factory=list)
 
 
 class ScheduleExporter:
@@ -127,7 +127,7 @@ class ScheduleExporter:
         """
         return json.dumps(self.to_dict(), indent=indent)
 
-    def to_file(self, output_path: Path, format: str = "json"):
+    def to_file(self, output_path: Path, format: str = "json") -> None:
         """Export schedule to file.
 
         Args:
@@ -153,7 +153,7 @@ class ScheduleExporter:
         """
         tasks = []
         machines = []
-        capacity_warnings = []
+        capacity_warnings: list[dict[str, Any]] = []
 
         # Extract schedule from solution
         schedule_list = self.solution.get("schedule", [])
@@ -246,11 +246,12 @@ class ScheduleExporter:
         self._assign_lanes_to_tasks(tasks, machine_dict)
 
         # Group tasks by machine for capacity checking
-        tasks_by_machine = {}
-        for task in tasks:
-            if task.machine not in tasks_by_machine:
-                tasks_by_machine[task.machine] = []
-            tasks_by_machine[task.machine].append(task)
+        tasks_by_machine: dict[str, list[TaskVisualization]] = {}
+        task_viz: TaskVisualization
+        for task_viz in tasks:
+            if task_viz.machine not in tasks_by_machine:
+                tasks_by_machine[task_viz.machine] = []
+            tasks_by_machine[task_viz.machine].append(task_viz)
 
         # Check for capacity violations by analyzing concurrent tasks
         capacity_warnings = []
@@ -260,16 +261,18 @@ class ScheduleExporter:
 
                 # Find all unique time points
                 time_points = set()
-                for task in machine_tasks:
-                    time_points.add(task.start)
-                    time_points.add(task.end)
+                task_viz2: TaskVisualization
+                for task_viz2 in machine_tasks:
+                    time_points.add(task_viz2.start)
+                    time_points.add(task_viz2.end)
 
                 # Check concurrent tasks at each time point
                 for t in sorted(time_points):
                     concurrent_tasks = []
-                    for task in machine_tasks:
-                        if task.start <= t < task.end:
-                            concurrent_tasks.append(task)
+                    task_viz3: TaskVisualization
+                    for task_viz3 in machine_tasks:
+                        if task_viz3.start <= t < task_viz3.end:
+                            concurrent_tasks.append(task_viz3)
 
                     if len(concurrent_tasks) > capacity:
                         capacity_warnings.append(
@@ -278,21 +281,21 @@ class ScheduleExporter:
                                 "time": t,
                                 "capacity": capacity,
                                 "concurrent": len(concurrent_tasks),
-                                "tasks": [task.id for task in concurrent_tasks],
+                                "tasks": [task_viz.id for task_viz in concurrent_tasks],
                             }
                         )
 
         # Calculate machine utilization
         makespan = self.solution.get("objective", 100)
-        for i, machine in enumerate(machines):
+        for i, machine_viz in enumerate(machines):
             total_task_time = sum(
-                task.duration for task in tasks if task.machine == machine.id
+                task_viz.duration for task_viz in tasks if task_viz.machine == machine_viz.id
             )
-            if makespan > 0 and machine.capacity > 0:
-                machine.utilization = (
-                    total_task_time / (makespan * machine.capacity)
+            if makespan > 0 and machine_viz.capacity > 0:
+                machine_viz.utilization = (
+                    total_task_time / (makespan * machine_viz.capacity)
                 ) * 100
-            machines[i] = machine
+            machines[i] = machine_viz
 
         # Create metadata
         metadata = {
@@ -305,7 +308,7 @@ class ScheduleExporter:
             "timestamp": datetime.now().isoformat(),
             "statistics": {
                 "machine_utilization": {
-                    machine.id: machine.utilization for machine in machines
+                    machine_viz.id: machine_viz.utilization for machine_viz in machines
                 },
                 "max_concurrent_per_machine": self._calculate_max_concurrent(
                     tasks_by_machine
@@ -318,7 +321,7 @@ class ScheduleExporter:
             metadata["setup_time_metrics"] = self.solution["setup_time_metrics"]
 
         # Create setup visualizations if setup times are present
-        setups = []
+        setups: list[SetupVisualization] = []
         if "setup_time_metrics" in self.solution:
             setup_instances = self.solution["setup_time_metrics"].get(
                 "setup_instances", []
@@ -340,7 +343,7 @@ class ScheduleExporter:
             machines=machines,
             metadata=metadata,
             capacity_warnings=capacity_warnings,
-            setups=setups if setups else None,
+            setups=setups,
         )
 
     def _assign_lanes_to_tasks(
@@ -354,7 +357,7 @@ class ScheduleExporter:
 
         """
         # Group tasks by machine
-        tasks_by_machine = {}
+        tasks_by_machine: dict[str, list[TaskVisualization]] = {}
         for task in tasks:
             if task.machine not in tasks_by_machine:
                 tasks_by_machine[task.machine] = []
@@ -370,7 +373,7 @@ class ScheduleExporter:
             capacity = machine.capacity if machine else 1
 
             # Track occupied lanes: list of lists of (start, end) tuples
-            lanes = []
+            lanes: list[list[tuple[int, int]]] = []
 
             for task in machine_tasks:
                 # Find first available lane

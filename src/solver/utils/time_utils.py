@@ -230,6 +230,10 @@ def extract_solution(
             start_datetime = now + timedelta(minutes=start_time * 15)
             end_datetime = now + timedelta(minutes=end_time * 15)
 
+            # Get machine name safely
+            machine_obj = problem.get_machine(assigned_machine) if assigned_machine else None
+            machine_name = machine_obj.name if machine_obj else None
+
             schedule.append(
                 {
                     "job_id": job.job_id,
@@ -241,11 +245,7 @@ def extract_solution(
                     "end_datetime": end_datetime.isoformat(),
                     "duration_minutes": (end_time - start_time) * 15,
                     "machine_id": assigned_machine,
-                    "machine_name": (
-                        problem.get_machine(assigned_machine).name
-                        if assigned_machine and problem.get_machine(assigned_machine)
-                        else None
-                    ),
+                    "machine_name": machine_name,
                 }
             )
 
