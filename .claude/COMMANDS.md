@@ -158,6 +158,96 @@ Total: 4 constraint functions
 Dependencies: precedence → duration, no_overlap → assignment
 ```
 
+### Type Safety Commands
+
+### `/type-check <file>` or `/tc-file <file>`
+**Purpose**: Check specific file for type safety compliance
+
+**When triggered**: User wants to verify mypy compliance for specific file
+
+**Claude's Response**:
+1. Run mypy on specific file: `mypy {file_path}`
+2. Identify any OR-Tools typing issues
+3. Suggest fixes using centralized type aliases from TEMPLATES.md
+4. Verify integration with existing typed code
+
+**Example Output**:
+```
+Type Checking: src/solver/constraints/phase1/precedence.py
+
+✅ mypy: Success: no issues found in 1 source file
+✅ Uses centralized type aliases: TaskStartDict, TaskEndDict
+✅ OR-Tools types: All cp_model.IntVar properly annotated
+✅ Return type: -> None (correct for constraint function)
+
+Standards compliance: PASSED
+```
+
+### `/fix-type-error <error_message>`
+**Purpose**: Resolve specific mypy error with OR-Tools context
+
+**When triggered**: User provides mypy error message to fix
+
+**Claude's Response**:
+1. Analyze error in context of OR-Tools patterns
+2. Check if centralized type aliases should be used
+3. Provide specific fix with explanation
+4. Suggest verification steps
+
+**Example Output**:
+```
+Analyzing mypy error: "Item 'None' of 'Optional[cp_model.CpSolver]' has no attribute 'Value'"
+
+Issue: Accessing solver result without status check
+OR-Tools Pattern: Always verify solver status before accessing values
+
+Fix:
+```python
+# Before (causes error)
+value = solver.Value(my_var)
+
+# After (type-safe)
+if solver.StatusName() in ['OPTIMAL', 'FEASIBLE']:
+    value = solver.Value(my_var)  # Safe access
+else:
+    logger.warning(f"Solver failed: {solver.StatusName()}")
+```
+
+Next steps:
+1. Apply fix to {file_path}
+2. Run mypy to verify: mypy src/
+3. Test functionality: uv run python run_tests.py
+```
+
+### `/validate-types`
+**Purpose**: Run complete type safety validation on entire codebase
+
+**Claude's Response**:
+1. Execute `make lint` (includes mypy + ruff + black)
+2. Report on type safety compliance across all files
+3. Identify any files needing type annotations
+4. Suggest improvements for better type safety
+
+**Example Output**:
+```
+Complete Type Safety Validation:
+
+✅ mypy src/: Success: no issues found in 34 source files
+✅ ruff check .: All checks passed!
+✅ black --check .: All files formatted correctly
+
+Type Safety Status: 100% COMPLIANT
+
+Files by type coverage:
+- Fully typed: 34/34 files (100%)
+- Using centralized aliases: 28/34 files (82%)
+- OR-Tools typed: 15/15 constraint files (100%)
+
+Recommendations:
+- Consider adding type aliases to remaining 6 utility files
+- All constraint functions properly typed ✅
+```
+
 ---
 
 ## Debugging Commands
@@ -452,6 +542,9 @@ For faster development, these shortcuts are available:
 /tc  →  /test-constraint  
 /cc  →  /check-constraint
 /lc  →  /list-constraints
+/tc-file →  /type-check (file-specific type checking)
+/fix-type →  /fix-type-error
+/vt  →  /validate-types
 /ti  →  /trace-infeasible
 /es  →  /explain-solution
 /ps  →  /profile-solver

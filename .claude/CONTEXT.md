@@ -65,6 +65,13 @@
 - **Medium Problems** (50-500 tasks): Use CHOOSE_FIRST with SELECT_MIN_VALUE
 - **Large Problems** (500+ tasks): Consider domain-specific heuristics
 
+### Type Safety Impact
+- **Development Speed**: mypy catches OR-Tools API misuse early, preventing runtime errors
+- **Refactoring Safety**: Type annotations enable confident refactoring of complex constraint logic
+- **IDE Support**: Proper typing enables better autocomplete and error detection
+- **Code Documentation**: Type hints serve as self-documenting interface contracts
+- **Performance**: Zero runtime impact, all benefits during development time
+
 ## Known Performance Bottlenecks
 
 ### Variable Explosion
@@ -82,6 +89,12 @@
 ### Poor Search Order
 - **Issue**: Solver tries unlikely assignments first
 - **Solution**: Order variables by criticality, use domain knowledge
+
+### Type Safety Considerations
+- **mypy Integration**: Essential for OR-Tools development due to C++ binding complexity
+- **ortools-stubs**: Required dependency for proper CP-SAT type checking
+- **Centralized Type Aliases**: Prevent inconsistencies and improve refactoring safety
+- **Line Length Management**: Type annotations can cause line length violations, use `ruff format`
 
 ## Implementation Patterns
 

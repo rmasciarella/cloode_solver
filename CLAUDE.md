@@ -9,38 +9,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+**IMPORTANT**: This project uses UV for Python package management. All Python commands must be prefixed with `uv run` (e.g., `uv run python script.py`, `uv run python -m pytest`).
+
 ### Running Tests
 ```bash
 # Run all tests with coverage
-python run_tests.py
+uv run python run_tests.py
 
 # Run specific test file
-python -m pytest tests/unit/test_constraints.py -v
+uv run python -m pytest tests/unit/test_constraints.py -v
 
 # Run single test
-python -m pytest tests/unit/test_solver.py::test_solver_init -v
+uv run python -m pytest tests/unit/test_solver.py::test_solver_init -v
 ```
 
 ### Running the Solver
 ```bash
 # Run with test data from database
-python solver.py
+uv run python solver.py
 
 # Load test data into database
-python populate_test_data.py
+uv run python populate_test_data.py
 ```
 
 ### Development Commands
 ```bash
-# Code Quality Tools
-ruff check .                    # Run linting
+# Code Quality Tools (Complete Type Safety Pipeline)
+make lint                      # Complete quality check: ruff + black + mypy (REQUIRED before commits)
+ruff check .                   # Run linting only
 ruff check . --fix             # Auto-fix linting issues
 black .                        # Format all Python files
 black --check .                # Check formatting without changes
-mypy src/                      # Type check the source code
+mypy src/                      # Type check the source code (must pass with 0 errors)
 
-# Combined quality check (run before commits)
-make lint                      # Runs ruff + black + mypy
+# Individual tools for debugging
+ruff format .                  # Format files and handle type annotation line lengths
 ```
 
 ## Architecture
@@ -69,6 +72,11 @@ This is a constraint programming scheduling solver using Google OR-Tools CP-SAT 
 4. **Database Integration** (`db_loader.py`): Supabase client for loading/saving data
    - Uses environment variables for connection
    - Test data setup via SQL scripts
+
+5. **Type Safety** (`typing` integration): Comprehensive mypy coverage
+   - 100% type safety maintained (0 mypy errors across 34 source files)
+   - Centralized type aliases for OR-Tools structures
+   - ortools-stubs for proper CP-SAT typing
 
 ### Key Design Patterns
 
@@ -100,6 +108,7 @@ This is a constraint programming scheduling solver using Google OR-Tools CP-SAT 
 Refer to `STANDARDS.md` for comprehensive coding standards including:
 - Constraint function rules (one constraint type per function, max 30 lines)
 - Variable naming conventions
+- **Type safety requirements (all functions must be fully typed)**
 - Testing patterns
 - Error handling approaches
 - Performance optimization techniques
@@ -108,11 +117,14 @@ Refer to `STANDARDS.md` for comprehensive coding standards including:
 
 - Python 3.x
 - ortools (Google OR-Tools)
+- ortools-stubs (type annotations for mypy)
 - supabase (for database)
 - python-dotenv (environment variables)
 - pytest (testing)
 
-Install with: `pip install ortools supabase python-dotenv pytest pytest-cov ruff black mypy`
+Install with: `uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`
+
+**Note**: ortools-stubs provides proper type hints for OR-Tools CP-SAT framework, essential for achieving 100% type safety.
 
 ## Custom Commands for OR-Tools Development
 

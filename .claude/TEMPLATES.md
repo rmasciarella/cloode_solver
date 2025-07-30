@@ -1,11 +1,54 @@
 # Code Generation Templates for OR-Tools
 
+## Centralized Type Aliases for OR-Tools
+
+### Standard Type Definitions
+Import these in all constraint and solver files for consistent typing:
+
+```python
+# Required imports for type safety
+from typing import Dict, List, Tuple, Optional, Union
+from ortools.sat.python import cp_model
+
+# Core type aliases - use throughout the project
+TaskKey = Tuple[str, str]  # (job_id, task_id)
+MachineKey = str
+AssignmentKey = Tuple[str, str, str]  # (job_id, task_id, machine_id)
+
+# Variable collections with proper OR-Tools types
+TaskStartDict = Dict[TaskKey, cp_model.IntVar]
+TaskEndDict = Dict[TaskKey, cp_model.IntVar]
+TaskDurationDict = Dict[TaskKey, cp_model.IntVar]
+TaskIntervalDict = Dict[TaskKey, cp_model.IntervalVar]
+TaskAssignmentDict = Dict[AssignmentKey, cp_model.IntVar]  # BoolVar is IntVar {0,1}
+MachineIntervalDict = Dict[MachineKey, List[cp_model.IntervalVar]]
+
+# Problem data types
+PrecedenceList = List[Tuple[TaskKey, TaskKey]]
+SetupTimeDict = Dict[AssignmentKey, int]  # Setup time in time units
+```
+
+### Usage Example
+```python
+# Import centralized types at top of constraint files
+from .types import TaskStartDict, TaskEndDict, TaskKey, PrecedenceList
+
+def add_precedence_constraints(
+    model: cp_model.CpModel,
+    task_starts: TaskStartDict,
+    task_ends: TaskEndDict,
+    precedences: PrecedenceList
+) -> None:
+    """Constraint function using centralized types."""
+    # Implementation...
+```
+
 ## Constraint Function Template
 
 ```python
 def add_{constraint_type}_constraints(
     model: cp_model.CpModel,
-    {required_variables}: Dict[Tuple[int, int], IntVar],
+    {required_variables}: TaskStartDict,  # Use centralized type aliases
     {additional_params}: {param_types}
 ) -> None:
     """Add {constraint_type} constraints to the model.

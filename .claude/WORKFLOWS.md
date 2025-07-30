@@ -135,7 +135,7 @@ Final result: Meets performance target
 ```
 Before requesting review:
 - [ ] Run linting: `make lint`
-- [ ] Run tests: `python run_tests.py`
+- [ ] Run tests: `uv run python run_tests.py`
 - [ ] Check performance benchmarks
 - [ ] Validate against STANDARDS.md
 ```
@@ -341,6 +341,66 @@ After service restored:
 You: "Perform root cause analysis"
 
 Claude: [Systematic investigation of failure]
+```
+
+## 11. Type Safety Maintenance Workflow
+
+### Daily Type Checking
+```
+You: "Run full type safety check"
+
+Claude: "Execute: make lint (includes mypy + ruff + black)"
+
+# Expected output:
+# - ruff: All checks passed!
+# - black: All files formatted correctly
+# - mypy: Success: no issues found in 34 source files
+```
+
+### Adding New Constraint with Type Safety
+```
+You: "/add-constraint {name} with full type safety"
+
+Claude: [Generates constraint with proper type aliases and mypy compliance]
+
+You: "Verify type safety: mypy src/"
+
+Claude: [Confirms zero mypy errors]
+```
+
+### Type Error Resolution Workflow
+```
+You: "Fix mypy error: {error_message}"
+
+Claude: [Analyzes OR-Tools typing patterns and suggests fix]
+
+# Common resolution steps:
+1. Check if centralized type aliases are being used
+2. Verify OR-Tools objects use cp_model.IntVar notation
+3. Handle Optional types with proper None checks
+4. Use ruff format . for line length issues
+```
+
+### Phased Type Safety Implementation
+For adding type safety to existing code:
+
+```
+Step 1: "Start with easy mypy fixes - function parameters and return types"
+Step 2: "Add OR-Tools specific type annotations using centralized aliases"  
+Step 3: "Handle complex cases like Optional types and Union types"
+Step 4: "Fix any ruff formatting issues from new type annotations"
+Step 5: "Validate: ensure mypy src/ passes with zero errors"
+```
+
+### Type Safety Integration Testing
+```
+You: "Test that type safety doesn't break functionality"
+
+# Verification steps:
+1. Run complete test suite: uv run python run_tests.py
+2. Confirm 180 tests pass, 1 skipped
+3. Verify 91% coverage maintained
+4. Check that solver performance is unchanged
 ```
 
 ## Best Practices for All Workflows

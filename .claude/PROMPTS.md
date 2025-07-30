@@ -162,6 +162,41 @@ Integrate with existing hard constraints."
 3. {objective_3}
 Use: lexicographic, weighted sum, or Pareto optimization."
 
+## Type Safety
+
+### Type Error Resolution
+"Fix this mypy error in OR-Tools code:
+```
+{error_message}
+```
+File: {file_path}
+Use centralized type aliases from TEMPLATES.md and ensure proper OR-Tools type handling."
+
+### Constraint with Full Type Safety
+"Generate {constraint_name} constraint with:
+- Proper OR-Tools type annotations using centralized aliases
+- mypy compliance verification (must pass with 0 errors)
+- Integration with existing typed constraints
+- All parameters and return types properly annotated
+Follow STANDARDS.md type safety requirements."
+
+### Type Safety Validation
+"Validate type safety across the codebase:
+- Run complete mypy check on all files
+- Identify any files missing type annotations
+- Ensure all OR-Tools objects use proper cp_model types
+- Verify centralized type aliases are being used consistently
+Target: 100% mypy compliance with 0 errors."
+
+### Comprehensive Type Safety Implementation
+"Implement complete type safety for {module_name}:
+- Add type annotations to all functions and methods
+- Use centralized type aliases from TEMPLATES.md
+- Handle OR-Tools specific typing challenges
+- Ensure line length compliance with ruff formatting
+- Verify integration with existing typed code
+Must achieve 0 mypy errors while maintaining functionality."
+
 ## Template Usage Tips
 
 1. **Be Specific**: Replace all {placeholders} with actual values

@@ -24,9 +24,9 @@ task_to_machines = {}  # Mapping of eligible machines per task
 ```python
 def add_precedence_constraints(
     model: cp_model.CpModel,
-    task_starts: Dict[Tuple[int, int], IntVar],
-    task_ends: Dict[Tuple[int, int], IntVar],
-    precedences: List[Tuple[Tuple[int, int], Tuple[int, int]]]
+    task_starts: TaskStartDict,  # Use centralized type aliases
+    task_ends: TaskEndDict,
+    precedences: List[Tuple[TaskKey, TaskKey]]
 ) -> None:
     """Add precedence constraints between tasks.
     
@@ -38,6 +38,11 @@ def add_precedence_constraints(
         
     Constraints Added:
         - task2 must start after task1 ends
+        
+    Type Safety Notes:
+        - All parameters must have explicit type hints
+        - Use centralized type aliases from TEMPLATES.md
+        - Return type must be -> None for constraint functions
     """
     for (job1, task1), (job2, task2) in precedences:
         model.Add(task_starts[(job2, task2)] >= task_ends[(job1, task1)])
@@ -46,9 +51,10 @@ def add_precedence_constraints(
 ### Constraint Function Rules
 1. Each function adds ONE type of constraint
 2. Function name starts with `add_` followed by constraint type
-3. Always type hint all parameters and return None
+3. **REQUIRED**: Always type hint all parameters and return None (use centralized type aliases)
 4. Docstring must list what constraints are added
 5. Maximum 30 lines of actual code (excluding docstring)
+6. **REQUIRED**: Must pass mypy type checking with 0 errors
 
 ## 2. Development Workflow
 
@@ -127,6 +133,9 @@ def test_phase_1_integration():
 - [ ] All constraints have unit tests
 - [ ] Integration test passes
 - [ ] No hardcoded values (use constants)
+- [ ] **REQUIRED**: Passes mypy type checking (`make lint`)
+- [ ] **REQUIRED**: Uses centralized type aliases from TEMPLATES.md
+- [ ] **REQUIRED**: All OR-Tools objects properly typed
 
 ### Phase Completion Review
 - [ ] All planned constraints implemented
@@ -222,3 +231,88 @@ Each constraint function must document:
 - Keep variable count minimal
 - Use interval variables where possible
 - Avoid creating unnecessary intermediate variables
+
+## 9. Type Safety Standards
+
+### OR-Tools Type Annotations
+```python
+# Required imports for proper typing
+from ortools.sat.python import cp_model
+from typing import Dict, List, Tuple, Optional, Union
+
+# Standard type aliases (use centralized definitions from TEMPLATES.md)
+TaskKey = Tuple[str, str]  # (job_id, task_id)
+MachineKey = str
+TaskStartDict = Dict[TaskKey, cp_model.IntVar]
+TaskEndDict = Dict[TaskKey, cp_model.IntVar]
+TaskAssignmentDict = Dict[Tuple[TaskKey, MachineKey], cp_model.IntVar]
+```
+
+### Type Safety Requirements
+1. **100% mypy compliance**: All code must pass `mypy src/` with 0 errors
+2. **Centralized type aliases**: Use definitions from TEMPLATES.md for consistency
+3. **OR-Tools type handling**: Use `cp_model.IntVar`, `cp_model.BoolVar`, `cp_model.IntervalVar`
+4. **Optional type safety**: Always check solver status before accessing values
+
+### Common OR-Tools Typing Patterns
+
+#### Solver Status Handling
+```python
+def solve_with_type_safety(
+    model: cp_model.CpModel,
+    variables: TaskStartDict
+) -> Optional[Dict[TaskKey, int]]:
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    
+    if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        return {key: solver.Value(var) for key, var in variables.items()}
+    return None
+```
+
+#### Variable Creation with Proper Types
+```python
+def create_timing_variables(
+    model: cp_model.CpModel,
+    problem: SchedulingProblem
+) -> Tuple[TaskStartDict, TaskEndDict]:
+    task_starts: TaskStartDict = {}
+    task_ends: TaskEndDict = {}
+    
+    for job in problem.jobs:
+        for task in job.tasks:
+            key = (job.job_id, task.task_id)
+            task_starts[key] = model.NewIntVar(0, 100, f"start_{key[0]}_{key[1]}")
+            task_ends[key] = model.NewIntVar(0, 100, f"end_{key[0]}_{key[1]}")
+    
+    return task_starts, task_ends
+```
+
+### Type Safety Troubleshooting
+
+#### Common mypy Issues with OR-Tools
+1. **Issue**: "Item 'None' of 'Optional[...]' has no attribute"
+   **Solution**: Always check solver status before accessing values
+   ```python
+   if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+       value = solver.Value(my_var)  # Safe access
+   ```
+
+2. **Issue**: OR-Tools C++ binding type confusion
+   **Solution**: Use proper `cp_model` types, install `ortools-stubs`
+   ```python
+   # Correct
+   var: cp_model.IntVar = model.NewIntVar(0, 10, "var")
+   
+   # Incorrect - causes mypy errors
+   var = model.NewIntVar(0, 10, "var")  # No type annotation
+   ```
+
+3. **Issue**: Line length violations from type annotations
+   **Solution**: Use `ruff format .` to automatically handle line breaks
+   ```python
+   # Automatically formatted by ruff
+   def complex_function(
+       very_long_parameter_name: Dict[Tuple[str, str], cp_model.IntVar]
+   ) -> Optional[Dict[str, int]]:
+   ```
