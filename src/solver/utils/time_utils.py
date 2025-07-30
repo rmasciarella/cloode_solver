@@ -174,7 +174,7 @@ def extract_solution(
     task_starts: dict[tuple[str, str], cp_model.IntVar],
     task_ends: dict[tuple[str, str], cp_model.IntVar],
     task_assigned: dict[tuple[str, str, str], cp_model.IntVar],
-    _task_modes_selected: dict[tuple[str, str], cp_model.IntVar] | None = None,  # Future use - task mode selection
+    _task_modes_selected: dict[tuple[str, str], cp_model.IntVar] | None = None,
     setup_times: dict[tuple[str, str, str], int] | None = None,
 ) -> dict:
     """Extract solution from solved model.
@@ -231,7 +231,9 @@ def extract_solution(
             end_datetime = now + timedelta(minutes=end_time * 15)
 
             # Get machine name safely
-            machine_obj = problem.get_machine(assigned_machine) if assigned_machine else None
+            machine_obj = (
+                problem.get_machine(assigned_machine) if assigned_machine else None
+            )
             machine_name = machine_obj.name if machine_obj else None
 
             schedule.append(

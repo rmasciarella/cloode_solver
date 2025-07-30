@@ -289,7 +289,9 @@ class ScheduleExporter:
         makespan = self.solution.get("objective", 100)
         for i, machine_viz in enumerate(machines):
             total_task_time = sum(
-                task_viz.duration for task_viz in tasks if task_viz.machine == machine_viz.id
+                task_viz.duration
+                for task_viz in tasks
+                if task_viz.machine == machine_viz.id
             )
             if makespan > 0 and machine_viz.capacity > 0:
                 machine_viz.utilization = (
