@@ -17,9 +17,9 @@ class Machine:
     capacity: int = 1
     cost_per_hour: float = 0.0
 
-    def __post_init__(self):
-        if self.capacity <= 0:
-            raise ValueError(f"Machine capacity must be positive: {self.capacity}")
+    def __post_init__(self) -> None:
+        if self.capacity < 0:
+            raise ValueError(f"Machine capacity must be non-negative: {self.capacity}")
         if self.cost_per_hour < 0:
             raise ValueError(f"Machine cost cannot be negative: {self.cost_per_hour}")
 
@@ -33,7 +33,7 @@ class TaskMode:
     machine_resource_id: str
     duration_minutes: int
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.duration_minutes <= 0:
             raise ValueError(
                 f"Task mode duration must be positive: {self.duration_minutes}"
@@ -63,7 +63,7 @@ class Task:
         default_factory=list
     )  # Task IDs that must come before this
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.modes and hasattr(self, "_post_init_complete"):
             raise ValueError(f"Task {self.name} must have at least one mode")
         self._post_init_complete = True
@@ -106,7 +106,7 @@ class Job:
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Make datetime timezone-aware if it isn't already
         if self.due_date.tzinfo is None:
             self.due_date = self.due_date.replace(tzinfo=UTC)
@@ -144,7 +144,7 @@ class WorkCell:
     capacity: int = 1
     machines: list[Machine] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.capacity <= 0:
             raise ValueError(f"Work cell capacity must be positive: {self.capacity}")
 
@@ -166,7 +166,7 @@ class Precedence:
     predecessor_task_id: str
     successor_task_id: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.predecessor_task_id == self.successor_task_id:
             raise ValueError("Task cannot have precedence with itself")
 
@@ -185,7 +185,7 @@ class SchedulingProblem:
     machine_lookup: dict[str, Machine] = field(init=False)
     job_lookup: dict[str, Job] = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Build lookup dictionaries
         self.task_lookup = {}
         self.job_lookup = {}

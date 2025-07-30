@@ -5,14 +5,14 @@ import argparse
 import logging
 import sys
 
-from ..data.loaders.database import load_test_problem
-from .core.solver import FreshSolver
-from .utils.time_utils import print_solution_summary
+from src.data.loaders.database import load_test_problem
+from src.solver.core.solver import FreshSolver
+from src.solver.utils.time_utils import print_solution_summary
 
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> int:
     """Execute the solver command-line interface."""
     parser = argparse.ArgumentParser(
         description="Fresh OR-Tools CP-SAT Solver for job-shop scheduling"

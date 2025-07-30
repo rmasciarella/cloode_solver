@@ -37,7 +37,7 @@ def add_setup_time_constraints(
 
     """
     # Group tasks by machine to reduce iterations
-    machine_tasks = {}
+    machine_tasks: dict[str, list[tuple[str, str]]] = {}
     for (job_id, task_id, machine_id), _assigned in task_assigned.items():
         if machine_id not in machine_tasks:
             machine_tasks[machine_id] = []

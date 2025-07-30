@@ -67,11 +67,19 @@ def calculate_latest_start(task: Task, job: Job, horizon: int) -> int:
     time_to_due = job.due_date - now
     due_time_units = int(time_to_due.total_seconds() / 900)
 
-    # Latest start is due date minus minimum duration
-    min_duration_units = (task.min_duration + 14) // 15
-    latest_start = due_time_units - min_duration_units
+    # Find task position and calculate remaining work
+    task_index = next(i for i, t in enumerate(job.tasks) if t.task_id == task.task_id)
+
+    # Calculate total duration of remaining tasks (including this one)
+    remaining_duration = sum(
+        (t.min_duration + 14) // 15 for t in job.tasks[task_index:]
+    )
+
+    # Latest start is due date minus all remaining work
+    latest_start = due_time_units - remaining_duration
 
     # Ensure it's within horizon and non-negative
+    min_duration_units = (task.min_duration + 14) // 15
     latest_start = min(latest_start, horizon - min_duration_units)
     latest_start = max(latest_start, 0)
 
@@ -92,7 +100,7 @@ def calculate_setup_time_metrics(
 
     """
     # Group tasks by machine and sort by start time
-    machine_tasks = {}
+    machine_tasks: dict[str, list[dict]] = {}
     for task in schedule:
         machine_id = task.get("machine_id")
         if machine_id:
@@ -163,11 +171,11 @@ def extract_solution(
     solver: cp_model.CpSolver,
     _model: cp_model.CpModel,  # Not used in current implementation
     problem: SchedulingProblem,
-    task_starts,  # Dict[Tuple[str, str], IntVar]
-    task_ends,  # Dict[Tuple[str, str], IntVar]
-    task_assigned,  # Dict[Tuple[str, str, str], BoolVar]
-    _task_modes_selected=None,  # Future use - task mode selection
-    setup_times=None,  # Optional[Dict[Tuple[str, str, str], int]]
+    task_starts: dict[tuple[str, str], cp_model.IntVar],
+    task_ends: dict[tuple[str, str], cp_model.IntVar],
+    task_assigned: dict[tuple[str, str, str], cp_model.IntVar],
+    _task_modes_selected: dict[tuple[str, str], cp_model.IntVar] | None = None,  # Future use - task mode selection
+    setup_times: dict[tuple[str, str, str], int] | None = None,
 ) -> dict:
     """Extract solution from solved model.
 
@@ -235,7 +243,7 @@ def extract_solution(
                     "machine_id": assigned_machine,
                     "machine_name": (
                         problem.get_machine(assigned_machine).name
-                        if assigned_machine
+                        if assigned_machine and problem.get_machine(assigned_machine)
                         else None
                     ),
                 }
@@ -247,7 +255,7 @@ def extract_solution(
         job_end_datetime = now + timedelta(minutes=job_end_time * 15)
         if job_end_datetime > job.due_date:
             lateness_minutes = (job_end_datetime - job.due_date).total_seconds() / 60
-            total_lateness += lateness_minutes
+            total_lateness += int(lateness_minutes)
 
         makespan = max(makespan, job_end_time)
 
@@ -277,16 +285,23 @@ def extract_solution(
 
 def print_solution_summary(solution: dict) -> None:
     """Print a nice summary of the solution."""
-    logger.info("\n")
-    logger.info("SOLUTION SUMMARY")
-    logger.info("=")
+    print("\nSOLUTION SUMMARY")
+    print("=" * 16)
 
-    logger.info(f"Status: {solution['status']}")
-    logger.info(
-        f"Makespan: {solution['makespan']} time units "
-        f"({solution['makespan_hours']:.1f} hours)"
-    )
-    logger.info(f"Total Lateness: {solution['total_lateness_minutes']:.1f} minutes")
+    # Handle missing keys gracefully
+    status = solution.get("status", "UNKNOWN")
+    if "solver_stats" in solution:
+        status = solution["solver_stats"].get("status", status)
+
+    print(f"Status: {status}")
+
+    if "makespan" in solution:
+        makespan = solution["makespan"]
+        makespan_hours = solution.get("makespan_hours", makespan * 15 / 60)
+        print(f"Makespan: {makespan} time units " f"({makespan_hours:.1f} hours)")
+
+    if "total_lateness_minutes" in solution:
+        print(f"Total Lateness: {solution['total_lateness_minutes']:.1f} minutes")
 
     # Print setup time metrics if available
     if (
@@ -294,31 +309,73 @@ def print_solution_summary(solution: dict) -> None:
         and solution["setup_time_metrics"]["num_setups"] > 0
     ):
         metrics = solution["setup_time_metrics"]
-        logger.info("\nSetup Time Metrics:")
-        logger.info(
+        print("\nSetup Time Metrics:")
+        print(
             f"  Total Setup Time: {metrics['total_setup_time']} units "
             f"({metrics['total_setup_minutes']} minutes)"
         )
-        logger.info(f"  Number of Setups: {metrics['num_setups']}")
-        logger.info(
+        print(f"  Number of Setups: {metrics['num_setups']}")
+        print(
             f"  Average Setup Time: {metrics['average_setup_time']:.1f} units "
             f"({metrics['average_setup_minutes']:.1f} minutes)"
         )
 
-    logger.info("\nSolver Statistics:")
-    stats = solution["solver_stats"]
-    logger.info(f"  - Solve Time: {stats['solve_time']:.2f} seconds")
-    logger.info(f"  - Branches: {stats['branches']:,}")
-    logger.info(f"  - Conflicts: {stats['conflicts']:,}")
+    # Print solver statistics if available
+    if "solver_stats" in solution:
+        print("\nSolver Statistics:")
+        stats = solution["solver_stats"]
+        if "solve_time" in stats:
+            print(f"  - Solve Time: {stats['solve_time']:.2f} seconds")
+        if "branches" in stats:
+            print(f"  - Branches: {stats['branches']:,}")
+        if "conflicts" in stats:
+            print(f"  - Conflicts: {stats['conflicts']:,}")
 
-    logger.info(f"\nSchedule ({len(solution['schedule'])} tasks):")
-    logger.info(f"{'Task':<20} {'Start':<6} {'End':<6} {'Duration':<8} {'Machine':<15}")
-    logger.info("-")
+    # Print schedule if available
+    if "schedule" in solution:
+        schedule = solution["schedule"]
+        print(f"\nSchedule ({len(schedule)} tasks):")
+        print(f"{'Task':<20} {'Start':<6} {'End':<6} {'Duration':<8} {'Machine':<15}")
+        print("-" * 70)
 
-    for task in solution["schedule"][:10]:  # Show first 10 tasks
-        logger.info(f"{task['task_name']:<20} ")
+        # Handle different schedule formats
+        tasks_to_show = []
+        if isinstance(schedule, list):
+            tasks_to_show = schedule[:10]  # Show first 10 tasks
+        elif isinstance(schedule, dict):
+            # Flatten dict structure for display
+            for job_data in schedule.values():
+                if isinstance(job_data, dict):
+                    for task_data in job_data.values():
+                        if isinstance(task_data, dict):
+                            tasks_to_show.append(task_data)
+                            if len(tasks_to_show) >= 10:
+                                break
 
-    if len(solution["schedule"]) > 10:
-        logger.info(f"... and {len(solution['schedule']) - 10} more tasks")
+        for task in tasks_to_show:
+            # Handle different task formats
+            task_name = task.get("task_name", task.get("name", "Unknown"))
+            start = task.get("start", task.get("start_time", 0))
+            end = task.get("end", task.get("end_time", 0))
+            duration = (
+                end - start
+                if isinstance(end, int | float) and isinstance(start, int | float)
+                else 0
+            )
+            machine = task.get("machine", task.get("machine_id", "Unknown"))
 
-    logger.info("=")
+            print(f"{task_name:<20} {start:<6} {end:<6} {duration:<8} {machine:<15}")
+
+        # Show truncation message if there are more tasks
+        total_tasks = (
+            len(schedule)
+            if isinstance(schedule, list)
+            else sum(
+                len(job_data) if isinstance(job_data, dict) else 1
+                for job_data in schedule.values()
+            )
+        )
+        if total_tasks > 10:
+            print(f"... and {total_tasks - 10} more tasks")
+
+    print("=" * 16)

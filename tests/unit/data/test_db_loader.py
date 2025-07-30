@@ -44,7 +44,7 @@ class TestDatabaseLoader:
             patch.dict(os.environ, {}, clear=True),
             pytest.raises(
                 ValueError, match="SUPABASE_URL and SUPABASE_ANON_KEY must be set"
-            )
+            ),
         ):
             # WHEN/THEN: Creating loader raises ValueError
             DatabaseLoader()
@@ -228,11 +228,20 @@ class TestDatabaseLoader:
 
             # THEN: Warning printed
             warning_printed = False
+            all_prints = []
+
             for call in mock_print.call_args_list:
-                if call[0][0] and "WARNING" in call[0][0]:
-                    warning_printed = True
-                    break
-            assert warning_printed
+                if call[0]:  # Check if there are arguments
+                    message = str(call[0][0])
+                    all_prints.append(message)
+                    if "WARNING" in message:
+                        warning_printed = True
+
+            # Debug: Show all print calls if assertion fails
+            if not warning_printed:
+                print(f"DEBUG: All print calls: {all_prints}")
+
+            assert warning_printed, f"Expected WARNING but got: {all_prints}"
 
     @patch("src.data.loaders.database.create_client")
     def test_data_associations(self, mock_create_client):

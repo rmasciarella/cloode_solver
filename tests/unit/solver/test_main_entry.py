@@ -97,7 +97,7 @@ class TestMain:
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver"])
     def test_main_infeasible_solution(
-        self, mock_solver_class, mock_load, mock_print_summary, mock_print
+        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
     ):
         """Test main with infeasible solution returns error code."""
         # Mock problem
@@ -122,7 +122,7 @@ class TestMain:
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver"])
     def test_main_unknown_status(
-        self, mock_solver_class, mock_load, mock_print_summary, mock_print
+        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
     ):
         """Test main with unknown solver status returns error code."""
         # Mock problem
@@ -144,7 +144,7 @@ class TestMain:
     @patch("src.solver.__main__.print")
     @patch("src.solver.__main__.load_test_problem")
     @patch("sys.argv", ["solver", "--help"])
-    def test_main_help(self, mock_load, mock_print):
+    def test_main_help(self, mock_load, _mock_print):
         """Test main with --help flag."""
         with pytest.raises(SystemExit) as exc_info:
             main()
@@ -156,7 +156,7 @@ class TestMain:
 
     @patch("src.solver.__main__.print")
     @patch("sys.argv", ["solver", "--invalid-option"])
-    def test_main_invalid_args(self, mock_print):
+    def test_main_invalid_args(self, _mock_print):
         """Test main with invalid arguments."""
         with pytest.raises(SystemExit) as exc_info:
             main()
@@ -209,7 +209,7 @@ def test_main_module_execution(mock_main, _mock_exit):
     # we need to manually trigger it
     with (
         patch.object(src.solver.__main__, "__name__", "__main__"),
-        open(src.solver.__main__.__file__) as f
+        open(src.solver.__main__.__file__) as f,
     ):
         exec(
             compile(

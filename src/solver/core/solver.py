@@ -53,16 +53,18 @@ class FreshSolver:
         self.setup_times = setup_times or {}
 
         # Decision variables - will be populated during solve
-        self.task_starts = {}  # Dict[Tuple[str, str], IntVar]
-        self.task_ends = {}  # Dict[Tuple[str, str], IntVar]
-        self.task_durations = {}  # Dict[Tuple[str, str], IntVar]
-        self.task_intervals = {}  # Dict[Tuple[str, str], IntervalVar]
-        self.task_assigned = {}  # Dict[Tuple[str, str, str], BoolVar]
-        self.machine_intervals = defaultdict(list)  # Dict[str, List[IntervalVar]]
+        self.task_starts: dict[tuple[str, str], cp_model.IntVar] = {}
+        self.task_ends: dict[tuple[str, str], cp_model.IntVar] = {}
+        self.task_durations: dict[tuple[str, str], cp_model.IntVar] = {}
+        self.task_intervals: dict[tuple[str, str], cp_model.IntervalVar] = {}
+        self.task_assigned: dict[tuple[str, str, str], cp_model.IntVar] = {}
+        self.machine_intervals: dict[str, list[cp_model.IntervalVar]] = defaultdict(
+            list
+        )
 
         # Solver parameters
         self.horizon = calculate_horizon(problem)
-        self.solver = None
+        self.solver: cp_model.CpSolver | None = None
 
     def create_variables(self) -> None:
         """Create all decision variables for the model."""
@@ -326,7 +328,7 @@ class FreshSolver:
         return solution
 
 
-def main():
+def main() -> dict:
     """Execute the solver testing workflow."""
     # Load test problem
     logger.info("Loading problem from database...")
@@ -334,7 +336,7 @@ def main():
 
     # Example setup times (in 15-minute intervals)
     # Format: (predecessor_task_id, successor_task_id, machine_id) -> setup_time
-    setup_times = {
+    setup_times: dict[tuple[str, str, str], int] = {
         # Add your setup times here if needed
         # Example: ("task_1", "task_2", "machine_1"): 2,  # 30 minutes setup
     }

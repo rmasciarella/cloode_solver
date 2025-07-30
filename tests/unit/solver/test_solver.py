@@ -98,7 +98,7 @@ class TestFreshSolver:
             patch("src.solver.utils.time_utils.calculate_horizon", return_value=50),
             patch(
                 "src.solver.utils.time_utils.calculate_latest_start", return_value=20
-            )
+            ),
         ):
             solver = FreshSolver(problem)
 
@@ -239,7 +239,7 @@ class TestFreshSolver:
 
         with (
             patch("src.solver.utils.time_utils.calculate_horizon", return_value=100),
-            patch("src.solver.utils.time_utils.extract_solution") as mock_extract
+            patch("src.solver.utils.time_utils.extract_solution") as mock_extract,
         ):
             mock_extract.return_value = {
                 "status": "OPTIMAL",
@@ -279,7 +279,7 @@ class TestFreshSolver:
 
         with (
             patch("src.solver.utils.time_utils.calculate_horizon", return_value=100),
-            patch("src.solver.utils.time_utils.extract_solution") as mock_extract
+            patch("src.solver.utils.time_utils.extract_solution") as mock_extract,
         ):
             mock_extract.return_value = {
                 "status": "INFEASIBLE",
@@ -311,7 +311,7 @@ class TestFreshSolver:
 
         with (
             patch("src.solver.utils.time_utils.calculate_horizon", return_value=100),
-            patch("ortools.sat.python.cp_model.CpSolver") as mock_solver_class
+            patch("ortools.sat.python.cp_model.CpSolver") as mock_solver_class,
         ):
             mock_solver_instance = MagicMock()
             mock_solver_class.return_value = mock_solver_instance
@@ -321,7 +321,7 @@ class TestFreshSolver:
             # WHEN: Solving with custom time limit
             with (
                 patch("builtins.print"),
-                patch("src.solver.utils.time_utils.extract_solution")
+                patch("src.solver.utils.time_utils.extract_solution"),
             ):
                 solver.solve(time_limit=120)
 

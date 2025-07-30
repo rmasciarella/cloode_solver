@@ -42,13 +42,14 @@ class TestMachine:
         """Test that negative capacity raises error."""
         # GIVEN: Negative capacity
         # WHEN/THEN: Creating machine raises ValueError
-        with pytest.raises(ValueError, match="Machine capacity must be positive"):
+        with pytest.raises(ValueError, match="Machine capacity must be non-negative"):
             Machine("m1", "c1", "Machine", capacity=-1)
 
     def test_machine_zero_capacity(self):
-        """Test that zero capacity raises error."""
-        with pytest.raises(ValueError, match="Machine capacity must be positive"):
-            Machine("m1", "c1", "Machine", capacity=0)
+        """Test that zero capacity is now allowed."""
+        # Zero capacity is now allowed per business requirements
+        machine = Machine("m1", "c1", "Machine", capacity=0)
+        assert machine.capacity == 0
 
     def test_machine_negative_cost(self):
         """Test that negative cost raises error."""

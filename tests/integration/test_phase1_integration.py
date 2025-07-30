@@ -22,7 +22,7 @@ from src.solver.models.problem import (
 class TestPhase1FullIntegration:
     """Test complete Phase 1 integration."""
 
-    @patch("db_loader.create_client")
+    @patch("src.data.loaders.database.create_client")
     def test_full_pipeline_with_mocked_db(self, mock_create_client):
         """Test complete pipeline from DB load to solution."""
         # GIVEN: Mock database with complete test data
@@ -294,9 +294,7 @@ class TestPhase1FullIntegration:
             for prec in problem.precedences:
                 pred_end = task_times[prec.predecessor_task_id][1]
                 succ_start = task_times[prec.successor_task_id][0]
-                assert (
-                    succ_start >= pred_end
-                ), (
+                assert succ_start >= pred_end, (
                     f"{prec.successor_task_id} starts before "
                     f"{prec.predecessor_task_id} ends"
                 )

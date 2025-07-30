@@ -15,7 +15,14 @@ from src.solver.constraints.phase1 import (
     add_redundant_precedence_constraints,
     add_task_duration_constraints,
 )
-from src.solver.models.problem import Job, Precedence, SchedulingProblem, Task, TaskMode
+from src.solver.models.problem import (
+    Job,
+    Machine,
+    Precedence,
+    SchedulingProblem,
+    Task,
+    TaskMode,
+)
 
 
 class TestTaskDurationConstraints:
@@ -360,7 +367,9 @@ class TestMachineNoOverlapConstraints:
 
         machine_intervals = defaultdict(list)
 
-        # Create tasks
+        # Create machine and tasks
+        machine1 = Machine("m1", "cell1", "Machine 1", capacity=1)
+
         task1 = Task("t1", "j1", "Task 1", modes=[TaskMode("mode1", "t1", "m1", 75)])
         task2 = Task("t2", "j1", "Task 2", modes=[TaskMode("mode2", "t2", "m1", 75)])
         job = Job(
@@ -369,7 +378,7 @@ class TestMachineNoOverlapConstraints:
             due_date=datetime.now(UTC),
             tasks=[task1, task2],
         )
-        problem = SchedulingProblem([job], [], [], [])
+        problem = SchedulingProblem([job], [machine1], [], [])
 
         # Force both tasks to use m1
         model.Add(task_assigned[("j1", "t1", "m1")] == 1)
@@ -421,7 +430,10 @@ class TestMachineNoOverlapConstraints:
 
         machine_intervals = defaultdict(list)
 
-        # Create tasks on different machines
+        # Create machines and tasks on different machines
+        machine1 = Machine("m1", "cell1", "Machine 1", capacity=1)
+        machine2 = Machine("m2", "cell1", "Machine 2", capacity=1)
+
         task1 = Task("t1", "j1", "Task 1", modes=[TaskMode("mode1", "t1", "m1", 75)])
         task2 = Task("t2", "j1", "Task 2", modes=[TaskMode("mode2", "t2", "m2", 75)])
         job = Job(
@@ -430,7 +442,7 @@ class TestMachineNoOverlapConstraints:
             due_date=datetime.now(UTC),
             tasks=[task1, task2],
         )
-        problem = SchedulingProblem([job], [], [], [])
+        problem = SchedulingProblem([job], [machine1, machine2], [], [])
 
         # Assign to different machines
         model.Add(task_assigned[("j1", "t1", "m1")] == 1)

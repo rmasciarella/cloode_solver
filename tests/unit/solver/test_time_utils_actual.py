@@ -179,9 +179,7 @@ class TestExtractSolution:
         # Create variables
         task_starts = {}
         task_ends = {}
-        task_intervals = {}
-        task_presences = {}
-        task_modes = {}
+        task_assigned = {}
 
         for job in problem.jobs:
             for task in job.tasks:
@@ -191,19 +189,24 @@ class TestExtractSolution:
                 task_starts[(job.job_id, task.task_id)] = start
                 task_ends[(job.job_id, task.task_id)] = end
 
-                # Mode selection
-                modes = []
-                for i, mode in enumerate(task.modes):
-                    mode_var = model.NewBoolVar(f"mode_{task.task_id}_{i}")
-                    modes.append(mode_var)
+                # Create assignment variables for each machine
+                assignments = []
+                for machine in problem.machines:
+                    assign_var = model.NewBoolVar(
+                        f"assign_{task.task_id}_{machine.resource_id}"
+                    )
+                    task_assigned[(job.job_id, task.task_id, machine.resource_id)] = (
+                        assign_var
+                    )
+                    assignments.append(assign_var)
 
-                    # Duration constraint when mode selected
-                    duration_units = (mode.duration_minutes + 14) // 15
-                    model.Add(end == start + duration_units).OnlyEnforceIf(mode_var)
+                # Exactly one machine assignment
+                model.AddExactlyOne(assignments)
 
-                # Exactly one mode
-                model.AddExactlyOne(modes)
-                task_modes[(job.job_id, task.task_id)] = modes
+                # Set duration from first mode (simplified for test)
+                if task.modes:
+                    duration_units = (task.modes[0].duration_minutes + 14) // 15
+                    model.Add(end == start + duration_units)
 
         # Solve
         solver.Solve(model)
@@ -211,12 +214,11 @@ class TestExtractSolution:
         # Extract solution
         solution = extract_solution(
             solver,
+            model,
             problem,
             task_starts,
             task_ends,
-            task_intervals,
-            task_presences,
-            task_modes,
+            task_assigned,
         )
 
         assert solution is not None

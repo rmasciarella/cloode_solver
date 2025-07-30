@@ -96,9 +96,9 @@ class DatabaseLoader:
         # Validate
         issues = problem.validate()
         if issues:
-            logger.info("WARNING: Problem validation issues found:")
+            print("WARNING: Problem validation issues found:")
             for issue in issues:
-                logger.info(f"  - {issue}")
+                print(f"  - {issue}")
 
         logger.info("Loaded problem with:")
         logger.info(f"  - {len(jobs)} jobs")

@@ -8,9 +8,12 @@ import os
 import sys
 
 # Add the commands directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".claude", "commands"))
+commands_path = os.path.join(
+    os.path.dirname(__file__), "..", "..", ".claude", "commands"
+)
+sys.path.insert(0, commands_path)
 
-from ortools_commands import process_command
+from ortools_commands import get_command_prompt  # noqa: E402
 
 
 def test_commands():
@@ -38,7 +41,7 @@ def test_commands():
         print("-" * 80)
 
         try:
-            result = process_command(command)
+            result = get_command_prompt(command)
             # Just show first few lines of output
             lines = result.split("\n")[:10]
             for line in lines:

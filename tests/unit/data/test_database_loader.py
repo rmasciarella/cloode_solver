@@ -48,8 +48,12 @@ class TestDatabaseLoader:
         assert loader.table_prefix == ""
 
     @patch.dict(os.environ, {}, clear=True)
-    def test_init_missing_env_vars(self):
+    @patch("src.data.loaders.database.load_dotenv")
+    def test_init_missing_env_vars(self, mock_load_dotenv):
         """Test initialization fails with missing environment variables."""
+        # Ensure load_dotenv doesn't load anything
+        mock_load_dotenv.return_value = None
+
         with pytest.raises(
             ValueError, match="SUPABASE_URL and SUPABASE_ANON_KEY must be set"
         ):
@@ -358,7 +362,7 @@ class TestDatabaseLoader:
         assert len(problem.work_cells[0].machines) == 1
         assert problem.total_task_count == 1
 
-    @patch("builtins.print")
+    @patch("src.data.loaders.database.print")
     @patch.dict(
         os.environ,
         {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_ANON_KEY": "test_key"},
@@ -404,12 +408,13 @@ class TestDatabaseLoader:
             elif table_name == "test_task_precedences":
                 mock_response.data = []
 
+            # Set up chain: table -> select -> execute
+            mock_chain.select.return_value.execute.return_value = mock_response
+            # For resources table, also handle: table -> select -> eq -> execute
             if hasattr(mock_chain.select.return_value, "eq"):
                 mock_chain.select.return_value.eq.return_value.execute.return_value = (
                     mock_response
                 )
-            else:
-                mock_chain.select.return_value.execute.return_value = mock_response
 
             return mock_chain
 

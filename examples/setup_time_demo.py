@@ -186,8 +186,8 @@ def main():
     problem, setup_times = create_setup_time_demo()
 
     print("Problem created with:")
-    product_a_count = len([j for j in problem.jobs if 'job_a' in j.job_id])
-    product_b_count = len([j for j in problem.jobs if 'job_b' in j.job_id])
+    product_a_count = len([j for j in problem.jobs if "job_a" in j.job_id])
+    product_b_count = len([j for j in problem.jobs if "job_b" in j.job_id])
     print(
         f"- {len(problem.jobs)} jobs ({product_a_count} Product A, "
         f"{product_b_count} Product B)"
