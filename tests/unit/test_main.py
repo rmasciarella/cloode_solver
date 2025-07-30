@@ -3,8 +3,6 @@
 import sys
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.solver.__main__ import main
 
 
@@ -99,8 +97,11 @@ class TestMain:
         mock_load.side_effect = ConnectionError("Database unavailable")
 
         # Run main
-        with patch.object(sys, "argv", ["solver"]), pytest.raises(ConnectionError):
-            main()
+        with patch.object(sys, "argv", ["solver"]), patch("builtins.print"):
+            result = main()
+
+        # Should return error code instead of raising
+        assert result == 1
 
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
@@ -115,8 +116,11 @@ class TestMain:
         mock_solver_class.return_value = mock_solver
 
         # Run main
-        with patch.object(sys, "argv", ["solver"]), pytest.raises(ValueError):
-            main()
+        with patch.object(sys, "argv", ["solver"]), patch("builtins.print"):
+            result = main()
+
+        # Should return error code instead of raising
+        assert result == 1
 
     def test_main_module_execution(self):
         """Test that __main__ module executes main when run."""

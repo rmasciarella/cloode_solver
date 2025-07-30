@@ -380,65 +380,75 @@ def extract_solution(
     }
 
 
-def print_solution_summary(solution: dict) -> None:
-    """Print a nice summary of the solution."""
-    print("\nSOLUTION SUMMARY")
-    print("=" * 16)
+def log_solution_summary(solution: dict, logger: logging.Logger | None = None) -> None:
+    """Log a comprehensive summary of the solution using structured logging.
+
+    Args:
+        solution: Solution dictionary from extract_solution()
+        logger: Optional logger instance. Uses module logger if None.
+
+    """
+    if logger is None:
+        logger = globals()["logger"]
+
+    logger.info("=" * 50)
+    logger.info("SOLUTION SUMMARY")
+    logger.info("=" * 50)
 
     # Handle missing keys gracefully
     status = solution.get("status", "UNKNOWN")
     if "solver_stats" in solution:
         status = solution["solver_stats"].get("status", status)
 
-    print(f"Status: {status}")
+    logger.info("Solution status: %s", status)
 
     if "makespan" in solution:
         makespan = solution["makespan"]
         makespan_hours = solution.get("makespan_hours", makespan * 15 / 60)
-        print(f"Makespan: {makespan} time units ({makespan_hours:.1f} hours)")
+        logger.info("Makespan: %d time units (%.1f hours)", makespan, makespan_hours)
 
     if "total_lateness_minutes" in solution:
-        print(f"Total Lateness: {solution['total_lateness_minutes']:.1f} minutes")
+        logger.info("Total lateness: %.1f minutes", solution["total_lateness_minutes"])
 
-    # Print setup time metrics if available
+    # Log setup time metrics if available
     if (
         "setup_time_metrics" in solution
         and solution["setup_time_metrics"]["num_setups"] > 0
     ):
         metrics = solution["setup_time_metrics"]
-        print("\nSetup Time Metrics:")
-        print(
-            f"  Total Setup Time: {metrics['total_setup_time']} units "
-            f"({metrics['total_setup_minutes']} minutes)"
+        logger.info("Setup time metrics:")
+        logger.info(
+            "  Total setup time: %d units (%d minutes)",
+            metrics["total_setup_time"],
+            metrics["total_setup_minutes"],
         )
-        print(f"  Number of Setups: {metrics['num_setups']}")
-        print(
-            f"  Average Setup Time: {metrics['average_setup_time']:.1f} units "
-            f"({metrics['average_setup_minutes']:.1f} minutes)"
+        logger.info("  Number of setups: %d", metrics["num_setups"])
+        logger.info(
+            "  Average setup time: %.1f units (%.1f minutes)",
+            metrics["average_setup_time"],
+            metrics["average_setup_minutes"],
         )
 
-    # Print solver statistics if available
+    # Log solver statistics if available
     if "solver_stats" in solution:
-        print("\nSolver Statistics:")
+        logger.info("Solver statistics:")
         stats = solution["solver_stats"]
         if "solve_time" in stats:
-            print(f"  - Solve Time: {stats['solve_time']:.2f} seconds")
+            logger.info("  Solve time: %.2f seconds", stats["solve_time"])
         if "branches" in stats:
-            print(f"  - Branches: {stats['branches']:,}")
+            logger.info("  Branches explored: %s", f"{stats['branches']:,}")
         if "conflicts" in stats:
-            print(f"  - Conflicts: {stats['conflicts']:,}")
+            logger.info("  Conflicts encountered: %s", f"{stats['conflicts']:,}")
 
-    # Print schedule if available
+    # Log schedule summary if available
     if "schedule" in solution:
         schedule = solution["schedule"]
-        print(f"\nSchedule ({len(schedule)} tasks):")
-        print(f"{'Task':<20} {'Start':<6} {'End':<6} {'Duration':<8} {'Machine':<15}")
-        print("-" * 70)
+        logger.info("Schedule summary: %d tasks total", len(schedule))
 
-        # Handle different schedule formats
+        # Log first few tasks as examples
         tasks_to_show = []
         if isinstance(schedule, list):
-            tasks_to_show = schedule[:10]  # Show first 10 tasks
+            tasks_to_show = schedule[:5]  # Show first 5 tasks in logs
         elif isinstance(schedule, dict):
             # Flatten dict structure for display
             for job_data in schedule.values():
@@ -446,22 +456,32 @@ def print_solution_summary(solution: dict) -> None:
                     for task_data in job_data.values():
                         if isinstance(task_data, dict):
                             tasks_to_show.append(task_data)
-                            if len(tasks_to_show) >= 10:
+                            if len(tasks_to_show) >= 5:
                                 break
 
-        for task in tasks_to_show:
-            # Handle different task formats
-            task_name = task.get("task_name", task.get("name", "Unknown"))
-            start = task.get("start", task.get("start_time", 0))
-            end = task.get("end", task.get("end_time", 0))
-            duration = (
-                end - start
-                if isinstance(end, int | float) and isinstance(start, int | float)
-                else 0
-            )
-            machine = task.get("machine", task.get("machine_id", "Unknown"))
+        if tasks_to_show:
+            logger.info("Sample scheduled tasks:")
+            for i, task in enumerate(tasks_to_show):
+                # Handle different task formats
+                task_name = task.get("task_name", task.get("name", "Unknown"))
+                start = task.get("start", task.get("start_time", 0))
+                end = task.get("end", task.get("end_time", 0))
+                duration = (
+                    end - start
+                    if isinstance(end, int | float) and isinstance(start, int | float)
+                    else 0
+                )
+                machine = task.get("machine", task.get("machine_id", "Unknown"))
 
-            print(f"{task_name:<20} {start:<6} {end:<6} {duration:<8} {machine:<15}")
+                logger.info(
+                    "  Task %d: %s (start=%s, end=%s, duration=%s, machine=%s)",
+                    i + 1,
+                    task_name,
+                    start,
+                    end,
+                    duration,
+                    machine,
+                )
 
         # Show truncation message if there are more tasks
         total_tasks = (
@@ -472,7 +492,39 @@ def print_solution_summary(solution: dict) -> None:
                 for job_data in schedule.values()
             )
         )
-        if total_tasks > 10:
-            print(f"... and {total_tasks - 10} more tasks")
+        if total_tasks > 5:
+            logger.info("... and %d more tasks", total_tasks - 5)
 
-    print("=" * 16)
+    logger.info("=" * 50)
+
+
+def print_solution_summary(solution: dict) -> None:
+    """Print a nice summary of the solution.
+
+    DEPRECATED: Use log_solution_summary() instead for structured logging.
+    This function is kept for backward compatibility but logs a deprecation warning.
+    """
+    logger.warning(
+        "print_solution_summary() is deprecated. Use log_solution_summary() instead."
+    )
+
+    # For backward compatibility, still provide console output but also log
+    log_solution_summary(solution, logger)
+
+    # Simple console output for immediate user feedback
+    status = solution.get("status", "UNKNOWN")
+    if "solver_stats" in solution:
+        status = solution["solver_stats"].get("status", status)
+
+    print(f"\nSolution Status: {status}")
+
+    if "makespan" in solution:
+        makespan_hours = solution.get("makespan_hours", solution["makespan"] * 15 / 60)
+        print(
+            f"Makespan: {solution['makespan']} time units ({makespan_hours:.1f} hours)"
+        )
+
+    if "schedule" in solution:
+        print(f"Tasks scheduled: {len(solution['schedule'])}")
+
+    print("(See logs for detailed solution analysis)")

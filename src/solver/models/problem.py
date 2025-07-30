@@ -5,6 +5,7 @@ Provides type safety, validation, and computed properties.
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from enum import Enum
 
 
 @dataclass
@@ -63,9 +64,40 @@ class Task:
         default_factory=list
     )  # Task IDs that must come before this
 
+    # Phase 2.1b: Multi-operator support
+    min_operators: int = 1  # Minimum operators required
+    max_operators: int = 1  # Maximum operators that can work on this task
+    operator_efficiency_curve: str = (
+        "linear"  # How efficiency scales with operator count
+    )
+
     def __post_init__(self) -> None:
         if not self.modes and hasattr(self, "_post_init_complete"):
             raise ValueError(f"Task {self.name} must have at least one mode")
+
+        # Validate multi-operator constraints
+        if self.min_operators <= 0:
+            raise ValueError(
+                f"Task {self.name} min_operators must be positive: {self.min_operators}"
+            )
+        if self.max_operators <= 0:
+            raise ValueError(
+                f"Task {self.name} max_operators must be positive: {self.max_operators}"
+            )
+        if self.min_operators > self.max_operators:
+            raise ValueError(
+                f"Task {self.name} min_operators ({self.min_operators}) "
+                f"cannot exceed max_operators ({self.max_operators})"
+            )
+
+        # Validate efficiency curve type
+        valid_curves = ["linear", "diminishing", "constant"]
+        if self.operator_efficiency_curve not in valid_curves:
+            raise ValueError(
+                f"Task {self.name} efficiency curve must be one of {valid_curves}: "
+                f"{self.operator_efficiency_curve}"
+            )
+
         self._post_init_complete = True
 
     @property
@@ -198,9 +230,42 @@ class TemplateTask:
     precedence_successors: list[str] = field(default_factory=list)
     precedence_predecessors: list[str] = field(default_factory=list)
 
+    # Phase 2.1b: Multi-operator support
+    min_operators: int = 1  # Minimum operators required
+    max_operators: int = 1  # Maximum operators that can work on this task
+    operator_efficiency_curve: str = (
+        "linear"  # How efficiency scales with operator count
+    )
+
     def __post_init__(self) -> None:
         if not self.modes and hasattr(self, "_template_post_init_complete"):
             raise ValueError(f"Template task {self.name} must have at least one mode")
+
+        # Validate multi-operator constraints
+        if self.min_operators <= 0:
+            raise ValueError(
+                f"Template task {self.name} min_operators must be positive: "
+                f"{self.min_operators}"
+            )
+        if self.max_operators <= 0:
+            raise ValueError(
+                f"Template task {self.name} max_operators must be positive: "
+                f"{self.max_operators}"
+            )
+        if self.min_operators > self.max_operators:
+            raise ValueError(
+                f"Template task {self.name} min_operators ({self.min_operators}) "
+                f"cannot exceed max_operators ({self.max_operators})"
+            )
+
+        # Validate efficiency curve type
+        valid_curves = ["linear", "diminishing", "constant"]
+        if self.operator_efficiency_curve not in valid_curves:
+            raise ValueError(
+                f"Template task {self.name} efficiency curve must be one of "
+                f"{valid_curves}: {self.operator_efficiency_curve}"
+            )
+
         self._template_post_init_complete = True
 
     @property
@@ -337,6 +402,174 @@ class JobInstance:
             pass  # In production, might want to raise ValueError
 
 
+class ProficiencyLevel(Enum):
+    """Skill proficiency levels for operator skill matching."""
+
+    NOVICE = 1  # Can perform with supervision, 50% efficiency
+    COMPETENT = 2  # Can perform independently, 75% efficiency
+    PROFICIENT = 3  # Can perform efficiently, 100% efficiency
+    EXPERT = 4  # Can perform optimally and train others, 125% efficiency
+
+
+@dataclass
+class Skill:
+    """Represents a skill required for task execution."""
+
+    skill_id: str
+    name: str
+    description: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.skill_id.strip():
+            raise ValueError("Skill ID cannot be empty")
+        if not self.name.strip():
+            raise ValueError("Skill name cannot be empty")
+
+
+@dataclass
+class OperatorSkill:
+    """Represents an operator's proficiency in a specific skill."""
+
+    operator_id: str
+    skill_id: str
+    proficiency_level: ProficiencyLevel
+    years_experience: float = 0.0
+    last_used_date: datetime | None = None
+
+    def __post_init__(self) -> None:
+        if self.years_experience < 0:
+            raise ValueError(
+                f"Years experience cannot be negative: {self.years_experience}"
+            )
+
+    @property
+    def efficiency_multiplier(self) -> float:
+        """Get efficiency multiplier based on proficiency level."""
+        multipliers = {
+            ProficiencyLevel.NOVICE: 0.5,
+            ProficiencyLevel.COMPETENT: 0.75,
+            ProficiencyLevel.PROFICIENT: 1.0,
+            ProficiencyLevel.EXPERT: 1.25,
+        }
+        return multipliers[self.proficiency_level]
+
+
+@dataclass
+class Operator:
+    """Represents a human operator resource."""
+
+    operator_id: str
+    name: str
+    employee_number: str
+    skills: list[OperatorSkill] = field(default_factory=list)
+    hourly_rate: float = 0.0
+    max_hours_per_day: int = 8
+    is_active: bool = True
+    department_id: str | None = None
+
+    # Skill lookup for efficient access
+    skill_lookup: dict[str, OperatorSkill] = field(init=False)
+
+    def __post_init__(self) -> None:
+        if not self.operator_id.strip():
+            raise ValueError("Operator ID cannot be empty")
+        if not self.name.strip():
+            raise ValueError("Operator name cannot be empty")
+        if self.hourly_rate < 0:
+            raise ValueError(f"Hourly rate cannot be negative: {self.hourly_rate}")
+        if self.max_hours_per_day <= 0:
+            raise ValueError(
+                f"Max hours per day must be positive: {self.max_hours_per_day}"
+            )
+
+        # Build skill lookup
+        self.skill_lookup = {skill.skill_id: skill for skill in self.skills}
+
+    @property
+    def skill_ids(self) -> list[str]:
+        """Get list of skill IDs this operator possesses."""
+        return [skill.skill_id for skill in self.skills]
+
+    def has_skill(
+        self, skill_id: str, min_proficiency: ProficiencyLevel = ProficiencyLevel.NOVICE
+    ) -> bool:
+        """Check if operator has skill at minimum proficiency level."""
+        if skill_id not in self.skill_lookup:
+            return False
+        return (
+            self.skill_lookup[skill_id].proficiency_level.value >= min_proficiency.value
+        )
+
+    def get_skill_proficiency(self, skill_id: str) -> ProficiencyLevel | None:
+        """Get operator's proficiency level for a skill."""
+        skill = self.skill_lookup.get(skill_id)
+        return skill.proficiency_level if skill else None
+
+    def get_skill_efficiency(self, skill_id: str) -> float:
+        """Get efficiency multiplier for a specific skill."""
+        skill = self.skill_lookup.get(skill_id)
+        return skill.efficiency_multiplier if skill else 0.0
+
+
+@dataclass
+class TaskSkillRequirement:
+    """Represents a skill requirement for a task."""
+
+    task_id: str
+    skill_id: str
+    required_proficiency: ProficiencyLevel
+    is_mandatory: bool = True
+    weight: float = 1.0  # For multi-skill optimization
+    operators_needed: int = 1  # Number of operators needed with this skill
+
+    def __post_init__(self) -> None:
+        if self.weight <= 0:
+            raise ValueError(
+                f"Skill requirement weight must be positive: {self.weight}"
+            )
+        if self.operators_needed <= 0:
+            raise ValueError(
+                f"Operators needed must be positive: {self.operators_needed}"
+            )
+
+
+@dataclass
+class OperatorShift:
+    """Represents an operator's work shift schedule."""
+
+    operator_id: str
+    shift_date: datetime
+    start_time: int  # Time units from midnight (15-minute intervals)
+    end_time: int  # Time units from midnight (15-minute intervals)
+    is_available: bool = True
+    overtime_allowed: bool = False
+    max_overtime_hours: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.start_time < 0 or self.start_time >= 96:  # 96 = 24 hours * 4 units/hour
+            raise ValueError(f"Start time must be 0-95: {self.start_time}")
+        if self.end_time < 0 or self.end_time >= 96:
+            raise ValueError(f"End time must be 0-95: {self.end_time}")
+        if self.start_time >= self.end_time:
+            raise ValueError("Start time must be before end time")
+        if self.max_overtime_hours < 0:
+            raise ValueError(
+                f"Max overtime hours cannot be negative: {self.max_overtime_hours}"
+            )
+
+    @property
+    def shift_duration_hours(self) -> float:
+        """Get shift duration in hours."""
+        return (self.end_time - self.start_time) * 0.25  # 15 minutes = 0.25 hours
+
+    @property
+    def max_total_hours(self) -> float:
+        """Get maximum total hours including overtime."""
+        return self.shift_duration_hours + (
+            self.max_overtime_hours if self.overtime_allowed else 0
+        )
+
+
 @dataclass
 class SchedulingProblem:
     """Complete problem definition for the solver."""
@@ -345,6 +578,12 @@ class SchedulingProblem:
     machines: list[Machine]
     work_cells: list[WorkCell]
     precedences: list[Precedence]
+
+    # Phase 2: Resource and skill constraints
+    operators: list[Operator] = field(default_factory=list)
+    skills: list[Skill] = field(default_factory=list)
+    task_skill_requirements: list[TaskSkillRequirement] = field(default_factory=list)
+    operator_shifts: list[OperatorShift] = field(default_factory=list)
 
     # Template-based architecture support
     job_template: JobTemplate | None = None
@@ -357,6 +596,9 @@ class SchedulingProblem:
     job_lookup: dict[str, Job] = field(init=False)
     template_task_lookup: dict[str, TemplateTask] = field(init=False)
     job_instance_lookup: dict[str, JobInstance] = field(init=False)
+    operator_lookup: dict[str, Operator] = field(init=False)
+    skill_lookup: dict[str, Skill] = field(init=False)
+    task_skill_lookup: dict[str, list[TaskSkillRequirement]] = field(init=False)
 
     def __post_init__(self) -> None:
         # Build lookup dictionaries
@@ -364,6 +606,9 @@ class SchedulingProblem:
         self.job_lookup = {}
         self.template_task_lookup = {}
         self.job_instance_lookup = {}
+        self.operator_lookup = {}
+        self.skill_lookup = {}
+        self.task_skill_lookup = {}
 
         # Handle legacy job structure
         for job in self.jobs:
@@ -372,6 +617,16 @@ class SchedulingProblem:
                 self.task_lookup[task.task_id] = task
 
         self.machine_lookup = {m.resource_id: m for m in self.machines}
+
+        # Build Phase 2 lookups
+        self.operator_lookup = {op.operator_id: op for op in self.operators}
+        self.skill_lookup = {skill.skill_id: skill for skill in self.skills}
+
+        # Build task skill requirements lookup
+        for req in self.task_skill_requirements:
+            if req.task_id not in self.task_skill_lookup:
+                self.task_skill_lookup[req.task_id] = []
+            self.task_skill_lookup[req.task_id].append(req)
 
         # Handle template-based structure
         if self.job_template:
@@ -441,6 +696,74 @@ class SchedulingProblem:
         """Get job instance by ID (for template-based problems)."""
         return self.job_instance_lookup.get(instance_id)
 
+    def get_operator(self, operator_id: str) -> Operator | None:
+        """Get operator by ID."""
+        return self.operator_lookup.get(operator_id)
+
+    def get_skill(self, skill_id: str) -> Skill | None:
+        """Get skill by ID."""
+        return self.skill_lookup.get(skill_id)
+
+    def get_task_skill_requirements(self, task_id: str) -> list[TaskSkillRequirement]:
+        """Get skill requirements for a task."""
+        return self.task_skill_lookup.get(task_id, [])
+
+    def get_qualified_operators(self, task_id: str) -> list[Operator]:
+        """Get operators qualified to perform a task based on skill requirements."""
+        skill_requirements = self.get_task_skill_requirements(task_id)
+        if not skill_requirements:
+            # If no skill requirements, all operators can do the task
+            return [op for op in self.operators if op.is_active]
+
+        qualified_operators = []
+        for operator in self.operators:
+            if not operator.is_active:
+                continue
+
+            # Check if operator meets all mandatory skill requirements
+            can_perform = True
+            for req in skill_requirements:
+                if req.is_mandatory and not operator.has_skill(
+                    req.skill_id, req.required_proficiency
+                ):
+                    can_perform = False
+                    break
+
+            if can_perform:
+                qualified_operators.append(operator)
+
+        return qualified_operators
+
+    def calculate_operator_task_efficiency(
+        self, operator_id: str, task_id: str
+    ) -> float:
+        """Calculate operator's efficiency for a specific task based on skill match."""
+        operator = self.get_operator(operator_id)
+        if not operator:
+            return 0.0
+
+        skill_requirements = self.get_task_skill_requirements(task_id)
+        if not skill_requirements:
+            return 1.0  # No skill requirements, base efficiency
+
+        # Calculate weighted average efficiency across all required skills
+        total_weight = 0.0
+        weighted_efficiency = 0.0
+
+        for req in skill_requirements:
+            efficiency = operator.get_skill_efficiency(req.skill_id)
+
+            # Check if operator meets minimum proficiency requirement
+            if req.is_mandatory and not operator.has_skill(
+                req.skill_id, req.required_proficiency
+            ):
+                return 0.0  # Cannot perform mandatory skill at required level
+
+            weighted_efficiency += efficiency * req.weight
+            total_weight += req.weight
+
+        return weighted_efficiency / total_weight if total_weight > 0 else 0.0
+
     def get_instance_task_id(self, instance_id: str, template_task_id: str) -> str:
         """Generate task ID for a specific instance and template task."""
         return f"{instance_id}_{template_task_id}"
@@ -451,6 +774,110 @@ class SchedulingProblem:
         if len(parts) == 2:
             return parts[0], parts[1]
         return None
+
+    def calculate_operator_template_task_efficiency(
+        self, operator_id: str, template_task_id: str
+    ) -> float:
+        """Calculate operator's efficiency for a template task based on skill match."""
+        operator = self.get_operator(operator_id)
+        if not operator:
+            return 0.0
+
+        template_task = self.get_template_task(template_task_id)
+        if not template_task:
+            return 0.0
+
+        skill_requirements = self.get_required_skills_for_template_task(
+            template_task_id
+        )
+        if not skill_requirements:
+            return 1.0  # No skill requirements, base efficiency
+
+        # Calculate weighted average efficiency across all required skills
+        total_weight = 0.0
+        weighted_efficiency = 0.0
+
+        for skill in skill_requirements:
+            efficiency = operator.get_skill_efficiency(skill.skill_id)
+            weight = 1.0  # Default weight, could be skill-specific
+
+            # Check if operator has required proficiency
+            task_req = self.get_task_skill_requirement(template_task_id, skill.skill_id)
+            if (
+                task_req
+                and task_req.is_mandatory
+                and not operator.has_skill(
+                    skill.skill_id, task_req.required_proficiency
+                )
+            ):
+                return 0.0  # Cannot perform required skill at required level
+
+            weighted_efficiency += efficiency * weight
+            total_weight += weight
+
+        return weighted_efficiency / total_weight if total_weight > 0 else 1.0
+
+    def get_required_skills_for_template_task(
+        self, template_task_id: str
+    ) -> list[Skill]:
+        """Get all skills required for a template task."""
+        required_skills = []
+
+        for req in self.task_skill_requirements:
+            if req.task_id == template_task_id and req.is_mandatory:
+                skill = self.get_skill(req.skill_id)
+                if skill:
+                    required_skills.append(skill)
+
+        return required_skills
+
+    def get_task_skill_requirement(
+        self, task_id: str, skill_id: str
+    ) -> TaskSkillRequirement | None:
+        """Get specific task skill requirement."""
+        for req in self.task_skill_requirements:
+            if req.task_id == task_id and req.skill_id == skill_id:
+                return req
+        return None
+
+    def get_operators_by_skill_groups(self) -> dict[str, list[Operator]]:
+        """Group operators by their skill signature for workload balancing."""
+        skill_groups: dict[str, list[Operator]] = {}
+
+        for operator in self.operators:
+            # Create skill signature (sorted skill IDs)
+            skill_ids = sorted([skill.skill_id for skill in operator.skills])
+            skill_signature = ",".join(skill_ids)
+
+            if skill_signature not in skill_groups:
+                skill_groups[skill_signature] = []
+            skill_groups[skill_signature].append(operator)
+
+        return skill_groups
+
+    def get_skill_equivalent_operators(self) -> dict[str, list[Operator]]:
+        """Group operators with equivalent skills for workload balancing."""
+        skill_groups: dict[str, list[Operator]] = {}
+
+        for operator in self.operators:
+            # Create skill signature with proficiency levels
+            skills_sig = []
+            for skill in operator.skills:
+                skills_sig.append(f"{skill.skill_id}:{skill.proficiency_level.value}")
+            skill_signature = ",".join(sorted(skills_sig))
+
+            if skill_signature not in skill_groups:
+                skill_groups[skill_signature] = []
+            skill_groups[skill_signature].append(operator)
+
+        return skill_groups
+
+    def operator_has_skill(self, operator_id: str, skill_id: str) -> bool:
+        """Check if operator has a specific skill."""
+        operator = self.get_operator(operator_id)
+        if not operator:
+            return False
+        return operator.has_skill(skill_id)
 
     def validate(self) -> list[str]:
         """Validate the problem definition. Returns list of issues."""

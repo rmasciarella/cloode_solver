@@ -1,0 +1,107 @@
+{
+  "template_id": "integrated_demo_v1",
+  "benchmark_suites": [
+    {
+      "template_id": "integrated_demo_v1",
+      "benchmark_date": "2025-07-30T20:51:36.467278+00:00",
+      "baseline_comparison": {
+        "instances_1": 25.2,
+        "instances_3": 42.0,
+        "instances_5": 58.8,
+        "instances_10": 100.8,
+        "instances_20": 184.79999999999998
+      },
+      "results": [
+        {
+          "template_id": "integrated_demo_v1",
+          "instance_count": 3,
+          "solve_time": 0.3776031667640847,
+          "memory_usage_mb": 77,
+          "objective_value": 300.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 60,
+            "linearization_level": 1,
+            "search_branching": "AUTOMATIC"
+          },
+          "timestamp": "2025-07-30T20:51:36.467234+00:00",
+          "variable_count": 150,
+          "constraint_count": 90,
+          "first_solution_time": 0.03776031667640847,
+          "iterations_count": 1300
+        },
+        {
+          "template_id": "integrated_demo_v1",
+          "instance_count": 5,
+          "solve_time": 0.5287303111672187,
+          "memory_usage_mb": 95,
+          "objective_value": 500.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 60,
+            "linearization_level": 1,
+            "search_branching": "AUTOMATIC"
+          },
+          "timestamp": "2025-07-30T20:51:36.467270+00:00",
+          "variable_count": 250,
+          "constraint_count": 150,
+          "first_solution_time": 0.05287303111672187,
+          "iterations_count": 1500
+        }
+      ]
+    },
+    {
+      "template_id": "integrated_demo_v1",
+      "benchmark_date": "2025-07-30T20:53:02.714855+00:00",
+      "baseline_comparison": {
+        "instances_1": 25.2,
+        "instances_3": 42.0,
+        "instances_5": 58.8,
+        "instances_10": 100.8,
+        "instances_20": 184.79999999999998
+      },
+      "results": [
+        {
+          "template_id": "integrated_demo_v1",
+          "instance_count": 3,
+          "solve_time": 0.3799952063546001,
+          "memory_usage_mb": 74,
+          "objective_value": 300.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 60,
+            "linearization_level": 1,
+            "search_branching": "AUTOMATIC"
+          },
+          "timestamp": "2025-07-30T20:53:02.714803+00:00",
+          "variable_count": 150,
+          "constraint_count": 90,
+          "first_solution_time": 0.03799952063546001,
+          "iterations_count": 1300
+        },
+        {
+          "template_id": "integrated_demo_v1",
+          "instance_count": 5,
+          "solve_time": 0.5713269175538561,
+          "memory_usage_mb": 106,
+          "objective_value": 500.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 60,
+            "linearization_level": 1,
+            "search_branching": "AUTOMATIC"
+          },
+          "timestamp": "2025-07-30T20:53:02.714848+00:00",
+          "variable_count": 250,
+          "constraint_count": 150,
+          "first_solution_time": 0.057132691755385615,
+          "iterations_count": 1500
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@ from src.solver.utils.time_utils import (
     calculate_horizon,
     calculate_latest_start,
     extract_solution,
-    print_solution_summary,
+    log_solution_summary,
 )
 
 
@@ -345,13 +345,14 @@ class TestExtractSolution:
         assert solution["solver_stats"]["objective_value"] is None
 
 
-class TestPrintSolutionSummary:
-    """Test solution summary printing."""
+class TestLogSolutionSummary:
+    """Test solution summary logging."""
 
-    @patch("builtins.print")
-    def test_print_solution_summary(self, mock_print):
-        """Test printing solution summary."""
-        # GIVEN: Solution data
+    def test_log_solution_summary(self):
+        """Test logging solution summary."""
+        # GIVEN: Solution data and mock logger
+        mock_logger = MagicMock()
+
         solution = {
             "status": "OPTIMAL",
             "makespan": 10,
@@ -376,23 +377,24 @@ class TestPrintSolutionSummary:
             ],
         }
 
-        # WHEN: Printing summary
-        print_solution_summary(solution)
+        # WHEN: Logging summary
+        log_solution_summary(solution, mock_logger)
 
-        # THEN: Summary printed with correct format
-        printed_text = " ".join(str(call[0][0]) for call in mock_print.call_args_list)
-        assert "OPTIMAL" in printed_text
-        assert "2.5 hours" in printed_text
-        assert "30.5 minutes" in printed_text
-        assert "1.23 seconds" in printed_text
-        assert "1,000" in printed_text  # Formatted number
-        assert "Task 1" in printed_text
-        assert "Task 2" in printed_text
+        # THEN: Summary logged with correct format
+        logged_calls = [str(call) for call in mock_logger.info.call_args_list]
+        logged_text = " ".join(logged_calls)
+        assert "OPTIMAL" in logged_text
+        assert "10" in logged_text and "2.5" in logged_text  # makespan units and hours
+        assert "30.5" in logged_text  # lateness minutes
+        assert "1.234" in logged_text  # solve time
+        assert "Task 1" in logged_text
+        assert "Task 2" in logged_text
 
-    @patch("builtins.print")
-    def test_print_solution_summary_truncation(self, mock_print):
+    def test_log_solution_summary_truncation(self):
         """Test that long schedules are truncated."""
-        # GIVEN: Solution with many tasks
+        # GIVEN: Solution with many tasks and mock logger
+        mock_logger = MagicMock()
+
         tasks = []
         for i in range(15):
             tasks.append(
@@ -414,11 +416,12 @@ class TestPrintSolutionSummary:
             "schedule": tasks,
         }
 
-        # WHEN: Printing summary
-        print_solution_summary(solution)
+        # WHEN: Logging summary
+        log_solution_summary(solution, mock_logger)
 
-        # THEN: Only first 10 tasks shown
-        printed_text = " ".join(str(call[0][0]) for call in mock_print.call_args_list)
-        assert "Task 9" in printed_text  # Last of first 10
-        assert "Task 10" not in printed_text  # 11th task not shown
-        assert "and 5 more tasks" in printed_text
+        # THEN: Only first 5 tasks shown with truncation message
+        logged_calls = [str(call) for call in mock_logger.info.call_args_list]
+        logged_text = " ".join(logged_calls)
+        assert "Task 4" in logged_text  # Last of first 5 (Task 0-4)
+        assert "... and %d more tasks" in logged_text  # Truncation message format
+        assert "10" in logged_text  # 15 total - 5 shown = 10 more

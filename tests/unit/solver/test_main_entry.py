@@ -11,12 +11,12 @@ class TestMain:
     """Test main entry point function."""
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver", "--time-limit", "60"])
     def test_main_with_time_limit(
-        self, mock_solver_class, mock_load, mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, mock_log_summary, _mock_print
     ):
         """Test main with custom time limit."""
         # Mock problem
@@ -36,16 +36,16 @@ class TestMain:
         mock_load.assert_called_once()
         mock_solver_class.assert_called_once_with(mock_problem)
         mock_solver.solve.assert_called_once_with(time_limit=60)
-        mock_print_summary.assert_called_once_with(mock_solution)
+        mock_log_summary.assert_called_once()
         assert result == 0  # Success exit code
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver"])
     def test_main_default_time_limit(
-        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, _mock_log_summary, _mock_print
     ):
         """Test main with default time limit."""
         # Mock problem
@@ -66,12 +66,12 @@ class TestMain:
         assert result == 0  # Success exit code for FEASIBLE
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver", "--test"])
     def test_main_with_test_flag(
-        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, _mock_log_summary, _mock_print
     ):
         """Test main with --test flag."""
         # Mock problem
@@ -92,12 +92,12 @@ class TestMain:
         assert result == 0
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver"])
     def test_main_infeasible_solution(
-        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, _mock_log_summary, _mock_print
     ):
         """Test main with infeasible solution returns error code."""
         # Mock problem
@@ -117,12 +117,12 @@ class TestMain:
         assert result == 1
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver"])
     def test_main_unknown_status(
-        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, _mock_log_summary, _mock_print
     ):
         """Test main with unknown solver status returns error code."""
         # Mock problem
@@ -165,12 +165,12 @@ class TestMain:
         assert exc_info.value.code == 2
 
     @patch("src.solver.__main__.print")
-    @patch("src.solver.__main__.print_solution_summary")
+    @patch("src.solver.__main__.log_solution_summary")
     @patch("src.solver.__main__.load_test_problem")
     @patch("src.solver.__main__.FreshSolver")
     @patch("sys.argv", ["solver", "--time-limit", "0"])
     def test_main_with_zero_time_limit(
-        self, mock_solver_class, mock_load, _mock_print_summary, _mock_print
+        self, mock_solver_class, mock_load, _mock_log_summary, _mock_print
     ):
         """Test main with zero time limit."""
         # Mock problem

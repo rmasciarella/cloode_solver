@@ -102,7 +102,9 @@ class TestHighCapacityVisualization:
         problem = SchedulingProblem(
             jobs=jobs,
             machines=machines,
-            work_cells=[WorkCell("cell_1", "Production Cell", machines=machines)],
+            work_cells=[
+                WorkCell("cell_1", "Production Cell", capacity=4, machines=machines)
+            ],
             precedences=[],
         )
 

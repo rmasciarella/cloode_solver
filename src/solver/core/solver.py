@@ -25,6 +25,13 @@ from src.solver.constraints.phase1 import (
     add_template_redundant_constraints,
     add_unattended_execution_constraints,
     add_weekend_optimization_constraints,
+    add_workcell_capacity_constraints,
+)
+
+# Phase 2 imports
+from src.solver.constraints.phase2 import (
+    add_advanced_skill_matching_constraints,
+    add_shift_calendar_constraints,
 )
 
 # Type imports - using Any for now as OR-Tools types aren't directly importable
@@ -69,6 +76,9 @@ class FreshSolver:
         self.machine_intervals: dict[str, list[cp_model.IntervalVar]] = defaultdict(
             list
         )
+
+        # Phase 2: Operator assignment variables
+        self.task_operator_assigned: dict[tuple[str, str, str], cp_model.IntVar] = {}
 
         # Solver parameters
         self.horizon = calculate_horizon(problem)
@@ -162,6 +172,24 @@ class FreshSolver:
                         f"assigned_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}_{mode.machine_resource_id[:8]}"
                     )
 
+                # Phase 2: Operator assignment variables for qualified operators only
+                if self.problem.operators:
+                    # Get qualified operators for this template task
+                    qualified_operators = self.problem.get_qualified_operators(
+                        instance_task_id
+                    )
+                    for operator in qualified_operators:
+                        operator_key = (
+                            instance.instance_id,
+                            instance_task_id,
+                            operator.operator_id,
+                        )
+                        self.task_operator_assigned[operator_key] = (
+                            self.model.NewBoolVar(
+                                f"op_assigned_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}_{operator.operator_id[:8]}"
+                            )
+                        )
+
     def _create_legacy_variables(self) -> None:
         """Create variables for legacy job-based problems."""
         for job in self.problem.jobs:
@@ -210,6 +238,20 @@ class FreshSolver:
                     self.task_assigned[machine_key] = self.model.NewBoolVar(
                         f"assigned_{job.job_id[:8]}_{task.task_id[:8]}_{mode.machine_resource_id[:8]}"
                     )
+
+                # Phase 2: Operator assignment variables for qualified operators only
+                if self.problem.operators:
+                    # Get qualified operators for this task
+                    qualified_operators = self.problem.get_qualified_operators(
+                        task.task_id
+                    )
+                    for operator in qualified_operators:
+                        operator_key = (job.job_id, task.task_id, operator.operator_id)
+                        self.task_operator_assigned[operator_key] = (
+                            self.model.NewBoolVar(
+                                f"op_assigned_{job.job_id[:8]}_{task.task_id[:8]}_{operator.operator_id[:8]}"
+                            )
+                        )
 
     def add_constraints(self) -> None:
         """Add all Phase 1 constraints to the model."""
@@ -265,6 +307,15 @@ class FreshSolver:
             self.problem,
         )
 
+        # WorkCell capacity constraints (physical workspace limitations)
+        add_workcell_capacity_constraints(
+            self.model,
+            self.task_intervals,
+            self.task_assigned,
+            self.problem.work_cells,
+            self.problem,
+        )
+
         # Setup time constraints (if any setup times are defined)
         if self.setup_times:
             add_setup_time_constraints(
@@ -294,6 +345,28 @@ class FreshSolver:
         add_weekend_optimization_constraints(
             self.model, self.task_starts, self.task_durations, self.problem
         )
+
+        # Phase 2: Advanced skill-based operator assignment constraints
+        if self.problem.operators and self.task_operator_assigned:
+            # Add advanced skill matching with multi-operator support
+            # and proficiency optimization
+            add_advanced_skill_matching_constraints(
+                self.model,
+                self.task_starts,
+                self.task_ends,
+                self.task_operator_assigned,
+                self.problem,
+            )
+
+            # Add shift calendar constraints if operator shifts are defined
+            if self.problem.operator_shifts:
+                add_shift_calendar_constraints(
+                    self.model,
+                    self.task_starts,
+                    self.task_ends,
+                    self.task_operator_assigned,
+                    self.problem,
+                )
 
     def _add_legacy_constraints(self) -> None:
         """Add constraints for legacy job-based problems."""
@@ -340,6 +413,15 @@ class FreshSolver:
             self.problem,
         )
 
+        # WorkCell capacity constraints (physical workspace limitations)
+        add_workcell_capacity_constraints(
+            self.model,
+            self.task_intervals,
+            self.task_assigned,
+            self.problem.work_cells,
+            self.problem,
+        )
+
         # Setup time constraints (if any setup times are defined)
         if self.setup_times:
             add_setup_time_constraints(
@@ -366,6 +448,28 @@ class FreshSolver:
         add_weekend_optimization_constraints(
             self.model, self.task_starts, self.task_durations, self.problem
         )
+
+        # Phase 2: Advanced skill-based operator assignment constraints
+        if self.problem.operators and self.task_operator_assigned:
+            # Add advanced skill matching with multi-operator support
+            # and proficiency optimization
+            add_advanced_skill_matching_constraints(
+                self.model,
+                self.task_starts,
+                self.task_ends,
+                self.task_operator_assigned,
+                self.problem,
+            )
+
+            # Add shift calendar constraints if operator shifts are defined
+            if self.problem.operator_shifts:
+                add_shift_calendar_constraints(
+                    self.model,
+                    self.task_starts,
+                    self.task_ends,
+                    self.task_operator_assigned,
+                    self.problem,
+                )
 
     def set_objective(self) -> None:
         """Set the objective function - minimize makespan for Phase 1."""

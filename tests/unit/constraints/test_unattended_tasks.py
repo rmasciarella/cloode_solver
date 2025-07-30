@@ -23,7 +23,11 @@ from src.solver.models.problem import (
 
 
 def test_business_hours_setup_constraints_legacy():
-    """Test that setup tasks for unattended processes are constrained to business hours."""
+    """Test that setup tasks for unattended processes are constrained to business hours.
+
+    Tests the constraint that setup tasks for unattended processes must occur
+    during business hours.
+    """
     # GIVEN: A model with an unattended setup task
     model = cp_model.CpModel()
 
@@ -67,9 +71,10 @@ def test_business_hours_setup_constraints_legacy():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
     start_time = solver.Value(task_starts[task_key])
     end_time = solver.Value(task_ends[task_key])
@@ -82,9 +87,9 @@ def test_business_hours_setup_constraints_legacy():
 
     # Should be within business hours (28-68) and not on weekend (day 5,6)
     assert day < 5, f"Setup scheduled on weekend day {day}"
-    assert 28 <= start_offset <= 68, (
-        f"Setup start {start_offset} outside business hours"
-    )
+    assert (
+        28 <= start_offset <= 68
+    ), f"Setup start {start_offset} outside business hours"
     assert 28 <= end_offset <= 68, f"Setup end {end_offset} outside business hours"
 
 
@@ -141,18 +146,19 @@ def test_business_hours_setup_constraints_template():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
     start_time = solver.Value(task_starts[task_key])
     day = start_time // 96
     start_offset = start_time % 96
 
     assert day < 5, f"Template setup scheduled on weekend day {day}"
-    assert 28 <= start_offset <= 68, (
-        f"Template setup start {start_offset} outside business hours"
-    )
+    assert (
+        28 <= start_offset <= 68
+    ), f"Template setup start {start_offset} outside business hours"
 
 
 def test_unattended_execution_no_time_restrictions():
@@ -198,9 +204,10 @@ def test_unattended_execution_no_time_restrictions():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
     # The execution task should be able to start at any time
     # (no specific time restrictions should be enforced)
@@ -273,16 +280,17 @@ def test_setup_execution_dependency():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
     setup_end = solver.Value(task_ends[setup_key])
     execution_start = solver.Value(task_starts[execution_key])
 
-    assert execution_start >= setup_end, (
-        f"Execution starts ({execution_start}) before setup ends ({setup_end})"
-    )
+    assert (
+        execution_start >= setup_end
+    ), f"Execution starts ({execution_start}) before setup ends ({setup_end})"
 
 
 def test_weekend_optimization_long_tasks():
@@ -332,14 +340,16 @@ def test_weekend_optimization_long_tasks():
     )
 
     # THEN: The constraint should be added successfully
-    # (The actual weekend preference would be enforced through objective function weighting)
+    # (The actual weekend preference would be enforced
+    # through objective function weighting)
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
     # Should be feasible with weekend optimization constraints
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
 
 def test_non_unattended_tasks_unaffected():
@@ -388,9 +398,10 @@ def test_non_unattended_tasks_unaffected():
     status = solver.Solve(model)
 
     # Should solve without additional restrictions
-    assert status in [cp_model.OPTIMAL, cp_model.FEASIBLE], (
-        f"Solver status: {solver.StatusName(status)}"
-    )
+    assert status in [
+        cp_model.OPTIMAL,
+        cp_model.FEASIBLE,
+    ], f"Solver status: {solver.StatusName(status)}"
 
 
 def test_empty_problem_handling():

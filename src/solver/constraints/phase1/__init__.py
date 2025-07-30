@@ -20,6 +20,7 @@ from .unattended_tasks import (
     add_unattended_execution_constraints,
     add_weekend_optimization_constraints,
 )
+from .workcell_capacity import add_workcell_capacity_constraints
 
 __all__ = [
     "add_task_duration_constraints",
@@ -39,4 +40,6 @@ __all__ = [
     "add_business_hours_setup_constraints",
     "add_unattended_execution_constraints",
     "add_weekend_optimization_constraints",
+    # WorkCell capacity constraints
+    "add_workcell_capacity_constraints",
 ]

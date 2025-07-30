@@ -62,7 +62,9 @@ def create_test_problem():
     return SchedulingProblem(
         jobs=jobs,
         machines=machines,
-        work_cells=[WorkCell(cell_id="cell1", name="Cell 1", machines=machines)],
+        work_cells=[
+            WorkCell(cell_id="cell1", name="Cell 1", capacity=2, machines=machines)
+        ],
         precedences=[],
     )
 

@@ -517,21 +517,47 @@ def load_available_templates() -> list[JobTemplate]:
 
 
 if __name__ == "__main__":
-    # Test template loading
+    # Test template loading with structured logging
+    import sys
+    from pathlib import Path
+
+    # Add project root to path for logging config import
+    project_root = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(project_root))
+
+    from src.solver.utils.logging_config import get_data_logger, setup_logging
+
+    # Setup logging for testing
+    setup_logging(level="INFO", enable_file_logging=False)
+    test_logger = get_data_logger("template_loader_test")
+
     loader = TemplateDatabaseLoader()
 
     # Load available templates
     templates = loader.load_available_templates()
     if templates:
-        print(f"Found {len(templates)} templates:")
+        test_logger.info("Template loading test results:")
+        test_logger.info("Found %d templates:", len(templates))
         for template in templates:
-            print(f"  - {template.name}: {template.task_count} tasks")
+            test_logger.info("  - %s: %d tasks", template.name, template.task_count)
 
         # Load problem from first template
+        test_logger.info("Testing problem loading from first template...")
         problem = loader.load_template_problem(templates[0].template_id)
-        print(
-            f"\nLoaded problem with {len(problem.jobs)} jobs, "
-            f"{problem.total_task_count} tasks"
+        test_logger.info(
+            "Loaded problem with %d jobs, %d tasks",
+            len(problem.jobs),
+            problem.total_task_count,
         )
+        test_logger.info("Template loading test completed successfully")
+
+        # Also provide console feedback for immediate results
+        print(f"✅ Successfully loaded {len(templates)} templates")
+        print(f"✅ Generated problem with {len(problem.jobs)} jobs")
+        print("See logs for detailed template information")
     else:
-        print("No templates found. Run migration script to create templates.")
+        test_logger.warning("No templates found in database")
+        test_logger.info("Run migration script to create test templates")
+
+        # Console feedback for immediate action needed
+        print("❌ No templates found. Run migration script to create templates.")

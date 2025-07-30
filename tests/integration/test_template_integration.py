@@ -485,7 +485,6 @@ if __name__ == "__main__":
                 },
             ),
         ):
-
             test.test_automatic_mode_detection(DatabaseLoader)
             test.test_template_vs_legacy_compatibility(DatabaseLoader)
             test.test_template_solving_performance(DatabaseLoader)
