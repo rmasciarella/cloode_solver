@@ -319,9 +319,9 @@ class TestPhase1FullIntegration:
                 schedule.sort(key=lambda x: x[0])
                 # Check no overlaps
                 for i in range(len(schedule) - 1):
-                    assert (
-                        schedule[i][1] <= schedule[i + 1][0]
-                    ), f"Overlap on {machine}: {schedule[i][2]} and {schedule[i+1][2]}"
+                    assert schedule[i][1] <= schedule[i + 1][0], (
+                        f"Overlap on {machine}: {schedule[i][2]} and {schedule[i + 1][2]}"
+                    )
 
     def test_phase1_validation_errors(self):
         """Test that validation errors are handled gracefully."""
@@ -458,7 +458,7 @@ class TestPhase1FullIntegration:
 
                 # Chain precedences within job
                 if t > 0:
-                    precedences.append(Precedence(f"task-{j}-{t-1}", task_id))
+                    precedences.append(Precedence(f"task-{j}-{t - 1}", task_id))
 
             job = Job(
                 f"job-{j}",

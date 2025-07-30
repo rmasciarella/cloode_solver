@@ -37,9 +37,9 @@ def create_test_problem(num_jobs=2, due_hours_from_now=24) -> SchedulingProblem:
     for i in range(num_jobs):
         tasks = [
             Task(
-                task_id=f"T{i*2+1}",
-                job_id=f"J{i+1}",
-                name=f"Task {i*2+1}",
+                task_id=f"T{i * 2 + 1}",
+                job_id=f"J{i + 1}",
+                name=f"Task {i * 2 + 1}",
                 modes=[
                     TaskMode(
                         task_mode_id="tm_auto",
@@ -56,9 +56,9 @@ def create_test_problem(num_jobs=2, due_hours_from_now=24) -> SchedulingProblem:
                 ],
             ),
             Task(
-                task_id=f"T{i*2+2}",
-                job_id=f"J{i+1}",
-                name=f"Task {i*2+2}",
+                task_id=f"T{i * 2 + 2}",
+                job_id=f"J{i + 1}",
+                name=f"Task {i * 2 + 2}",
                 modes=[
                     TaskMode(
                         task_mode_id="tm_auto",
@@ -77,8 +77,8 @@ def create_test_problem(num_jobs=2, due_hours_from_now=24) -> SchedulingProblem:
         ]
 
         job = Job(
-            job_id=f"J{i+1}",
-            description=f"Job {i+1}",
+            job_id=f"J{i + 1}",
+            description=f"Job {i + 1}",
             tasks=tasks,
             due_date=datetime.now(UTC) + timedelta(hours=due_hours_from_now),
         )

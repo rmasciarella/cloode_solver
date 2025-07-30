@@ -186,9 +186,9 @@ def create_test_problem() -> SchedulingProblem:
     tasks = []
     for i in range(3):
         task = Task(
-            task_id=f"T{i+1}",
+            task_id=f"T{i + 1}",
             job_id="J1",
-            name=f"Task {i+1}",
+            name=f"Task {i + 1}",
             modes=[
                 TaskMode(
                     task_mode_id="tm_auto",

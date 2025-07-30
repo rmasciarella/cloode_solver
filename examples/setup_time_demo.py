@@ -51,17 +51,17 @@ def create_setup_time_demo():
 
     # Product Type A jobs
     for i in range(2):
-        job_id = f"job_a_{i+1}"
+        job_id = f"job_a_{i + 1}"
         jobs.append(
             Job(
                 job_id=job_id,
-                description=f"Product A - Unit {i+1}",
+                description=f"Product A - Unit {i + 1}",
                 due_date=datetime.now(UTC) + timedelta(hours=8),
                 tasks=[
                     Task(
                         task_id=f"{job_id}_task_1",
                         job_id=job_id,
-                        name=f"Machining A{i+1}",
+                        name=f"Machining A{i + 1}",
                         modes=[
                             TaskMode(
                                 task_mode_id=f"{job_id}_task_1_mode_1",
@@ -74,7 +74,7 @@ def create_setup_time_demo():
                     Task(
                         task_id=f"{job_id}_task_2",
                         job_id=job_id,
-                        name=f"Printing A{i+1}",
+                        name=f"Printing A{i + 1}",
                         modes=[
                             TaskMode(
                                 task_mode_id=f"{job_id}_task_2_mode_1",
@@ -90,17 +90,17 @@ def create_setup_time_demo():
 
     # Product Type B jobs (different product requiring setup)
     for i in range(2):
-        job_id = f"job_b_{i+1}"
+        job_id = f"job_b_{i + 1}"
         jobs.append(
             Job(
                 job_id=job_id,
-                description=f"Product B - Unit {i+1}",
+                description=f"Product B - Unit {i + 1}",
                 due_date=datetime.now(UTC) + timedelta(hours=8),
                 tasks=[
                     Task(
                         task_id=f"{job_id}_task_1",
                         job_id=job_id,
-                        name=f"Machining B{i+1}",
+                        name=f"Machining B{i + 1}",
                         modes=[
                             TaskMode(
                                 task_mode_id=f"{job_id}_task_1_mode_1",
@@ -113,7 +113,7 @@ def create_setup_time_demo():
                     Task(
                         task_id=f"{job_id}_task_2",
                         job_id=job_id,
-                        name=f"Printing B{i+1}",
+                        name=f"Printing B{i + 1}",
                         modes=[
                             TaskMode(
                                 task_mode_id=f"{job_id}_task_2_mode_1",
@@ -153,24 +153,24 @@ def create_setup_time_demo():
     for i in range(2):
         for j in range(2):
             # A to B setup on machine_1 (15 minutes = 1 time unit)
-            setup_times[(f"job_a_{i+1}_task_1", f"job_b_{j+1}_task_1", "machine_1")] = (
-                1  # 15 minutes setup
-            )
+            setup_times[
+                (f"job_a_{i + 1}_task_1", f"job_b_{j + 1}_task_1", "machine_1")
+            ] = 1  # 15 minutes setup
 
             # B to A setup on machine_1 (30 minutes = 2 time units)
-            setup_times[(f"job_b_{i+1}_task_1", f"job_a_{j+1}_task_1", "machine_1")] = (
-                2  # 30 minutes setup
-            )
+            setup_times[
+                (f"job_b_{i + 1}_task_1", f"job_a_{j + 1}_task_1", "machine_1")
+            ] = 2  # 30 minutes setup
 
             # A to B setup on machine_2 (15 minutes = 1 time unit)
-            setup_times[(f"job_a_{i+1}_task_2", f"job_b_{j+1}_task_2", "machine_2")] = (
-                1  # 15 minutes setup
-            )
+            setup_times[
+                (f"job_a_{i + 1}_task_2", f"job_b_{j + 1}_task_2", "machine_2")
+            ] = 1  # 15 minutes setup
 
             # B to A setup on machine_2 (15 minutes = 1 time unit)
-            setup_times[(f"job_b_{i+1}_task_2", f"job_a_{j+1}_task_2", "machine_2")] = (
-                1  # 15 minutes setup
-            )
+            setup_times[
+                (f"job_b_{i + 1}_task_2", f"job_a_{j + 1}_task_2", "machine_2")
+            ] = 1  # 15 minutes setup
 
     return problem, setup_times
 

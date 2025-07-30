@@ -32,11 +32,33 @@ def add_task_duration_constraints(
         - interval variable spans from start to end with duration
 
     """
-    for job in problem.jobs:
-        for task in job.tasks:
-            task_key = (job.job_id, task.task_id)
+    if problem.is_template_based:
+        # Template-based: iterate over instances and template tasks
+        for instance in problem.job_instances:
+            for template_task in problem.job_template.template_tasks:
+                instance_task_id = problem.get_instance_task_id(
+                    instance.instance_id, template_task.template_task_id
+                )
+                task_key = (instance.instance_id, instance_task_id)
 
-            # Link start, duration, and end
-            model.Add(
-                task_ends[task_key] == task_starts[task_key] + task_durations[task_key]
-            )
+                # Link start, duration, and end for template task instance
+                if (
+                    task_key in task_starts
+                    and task_key in task_ends
+                    and task_key in task_durations
+                ):
+                    model.Add(
+                        task_ends[task_key]
+                        == task_starts[task_key] + task_durations[task_key]
+                    )
+    else:
+        # Legacy: iterate over jobs and tasks
+        for job in problem.jobs:
+            for task in job.tasks:
+                task_key = (job.job_id, task.task_id)
+
+                # Link start, duration, and end
+                model.Add(
+                    task_ends[task_key]
+                    == task_starts[task_key] + task_durations[task_key]
+                )

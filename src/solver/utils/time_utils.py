@@ -19,13 +19,36 @@ def calculate_horizon(problem: SchedulingProblem) -> int:
 
     Returns time units (15-minute intervals) from now to latest due date plus buffer.
     """
-    # Find the latest due date
-    latest_due = max(job.due_date for job in problem.jobs)
+    if problem.is_template_based:
+        # Template-based horizon calculation
+        if not problem.job_instances:
+            # No instances, use default horizon
+            return 100
 
-    # Calculate total work content (sum of all minimum durations)
-    total_work_minutes = sum(
-        task.min_duration for job in problem.jobs for task in job.tasks
-    )
+        # Find the latest due date from job instances
+        latest_due = max(instance.due_date for instance in problem.job_instances)
+
+        # Calculate total work content from template
+        if problem.job_template:
+            template_work_minutes = sum(
+                template_task.min_duration
+                for template_task in problem.job_template.template_tasks
+            )
+            total_work_minutes = template_work_minutes * len(problem.job_instances)
+        else:
+            total_work_minutes = 0
+    else:
+        # Legacy horizon calculation
+        if not problem.jobs:
+            return 100
+
+        # Find the latest due date
+        latest_due = max(job.due_date for job in problem.jobs)
+
+        # Calculate total work content (sum of all minimum durations)
+        total_work_minutes = sum(
+            task.min_duration for job in problem.jobs for task in job.tasks
+        )
 
     # Convert to time units (15-minute intervals)
     total_work_units = (total_work_minutes + 14) // 15
@@ -206,60 +229,132 @@ def extract_solution(
     total_lateness = 0
     now = datetime.now(UTC)
 
-    for job in problem.jobs:
-        job_end_time = 0
+    if problem.is_template_based:
+        # Template-based solution extraction
+        for instance in problem.job_instances:
+            instance_end_time = 0
 
-        for task in job.tasks:
-            task_key = (job.job_id, task.task_id)
+            for template_task in problem.job_template.template_tasks:
+                instance_task_id = problem.get_instance_task_id(
+                    instance.instance_id, template_task.template_task_id
+                )
+                task_key = (instance.instance_id, instance_task_id)
 
-            # Get timing
-            start_time = solver.Value(task_starts[task_key])
-            end_time = solver.Value(task_ends[task_key])
+                # Get timing
+                start_time = solver.Value(task_starts[task_key])
+                end_time = solver.Value(task_ends[task_key])
 
-            # Find assigned machine
-            assigned_machine = None
-            for machine in problem.machines:
-                machine_key = (job.job_id, task.task_id, machine.resource_id)
-                if machine_key in task_assigned and solver.Value(
-                    task_assigned[machine_key]
-                ):
-                    assigned_machine = machine.resource_id
-                    break
+                # Find assigned machine
+                assigned_machine = None
+                for machine in problem.machines:
+                    machine_key = (
+                        instance.instance_id,
+                        instance_task_id,
+                        machine.resource_id,
+                    )
+                    if machine_key in task_assigned and solver.Value(
+                        task_assigned[machine_key]
+                    ):
+                        assigned_machine = machine.resource_id
+                        break
 
-            # Convert times to datetime
-            start_datetime = now + timedelta(minutes=start_time * 15)
-            end_datetime = now + timedelta(minutes=end_time * 15)
+                # Convert times to datetime
+                start_datetime = now + timedelta(minutes=start_time * 15)
+                end_datetime = now + timedelta(minutes=end_time * 15)
 
-            # Get machine name safely
-            machine_obj = (
-                problem.get_machine(assigned_machine) if assigned_machine else None
-            )
-            machine_name = machine_obj.name if machine_obj else None
+                # Get machine name safely
+                machine_obj = (
+                    problem.get_machine(assigned_machine) if assigned_machine else None
+                )
+                machine_name = machine_obj.name if machine_obj else None
 
-            schedule.append(
-                {
-                    "job_id": job.job_id,
-                    "task_id": task.task_id,
-                    "task_name": task.name,
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "start_datetime": start_datetime.isoformat(),
-                    "end_datetime": end_datetime.isoformat(),
-                    "duration_minutes": (end_time - start_time) * 15,
-                    "machine_id": assigned_machine,
-                    "machine_name": machine_name,
-                }
-            )
+                schedule.append(
+                    {
+                        "job_id": instance.instance_id,  # Use instance ID as job ID
+                        "task_id": instance_task_id,
+                        "task_name": template_task.name,
+                        "template_task_id": template_task.template_task_id,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "start_datetime": start_datetime.isoformat(),
+                        "end_datetime": end_datetime.isoformat(),
+                        "duration_minutes": (end_time - start_time) * 15,
+                        "machine_id": assigned_machine,
+                        "machine_name": machine_name,
+                        "is_template_based": True,
+                    }
+                )
 
-            job_end_time = max(job_end_time, end_time)
+                instance_end_time = max(instance_end_time, end_time)
 
-        # Calculate job lateness
-        job_end_datetime = now + timedelta(minutes=job_end_time * 15)
-        if job_end_datetime > job.due_date:
-            lateness_minutes = (job_end_datetime - job.due_date).total_seconds() / 60
-            total_lateness += int(lateness_minutes)
+            # Calculate instance lateness
+            instance_end_datetime = now + timedelta(minutes=instance_end_time * 15)
+            if instance_end_datetime > instance.due_date:
+                lateness_minutes = (
+                    instance_end_datetime - instance.due_date
+                ).total_seconds() / 60
+                total_lateness += int(lateness_minutes)
 
-        makespan = max(makespan, job_end_time)
+            makespan = max(makespan, instance_end_time)
+    else:
+        # Legacy solution extraction
+        for job in problem.jobs:
+            job_end_time = 0
+
+            for task in job.tasks:
+                task_key = (job.job_id, task.task_id)
+
+                # Get timing
+                start_time = solver.Value(task_starts[task_key])
+                end_time = solver.Value(task_ends[task_key])
+
+                # Find assigned machine
+                assigned_machine = None
+                for machine in problem.machines:
+                    machine_key = (job.job_id, task.task_id, machine.resource_id)
+                    if machine_key in task_assigned and solver.Value(
+                        task_assigned[machine_key]
+                    ):
+                        assigned_machine = machine.resource_id
+                        break
+
+                # Convert times to datetime
+                start_datetime = now + timedelta(minutes=start_time * 15)
+                end_datetime = now + timedelta(minutes=end_time * 15)
+
+                # Get machine name safely
+                machine_obj = (
+                    problem.get_machine(assigned_machine) if assigned_machine else None
+                )
+                machine_name = machine_obj.name if machine_obj else None
+
+                schedule.append(
+                    {
+                        "job_id": job.job_id,
+                        "task_id": task.task_id,
+                        "task_name": task.name,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "start_datetime": start_datetime.isoformat(),
+                        "end_datetime": end_datetime.isoformat(),
+                        "duration_minutes": (end_time - start_time) * 15,
+                        "machine_id": assigned_machine,
+                        "machine_name": machine_name,
+                        "is_template_based": False,
+                    }
+                )
+
+                job_end_time = max(job_end_time, end_time)
+
+            # Calculate job lateness
+            job_end_datetime = now + timedelta(minutes=job_end_time * 15)
+            if job_end_datetime > job.due_date:
+                lateness_minutes = (
+                    job_end_datetime - job.due_date
+                ).total_seconds() / 60
+                total_lateness += int(lateness_minutes)
+
+            makespan = max(makespan, job_end_time)
 
     # Calculate setup time metrics
     setup_time_metrics = calculate_setup_time_metrics(schedule, setup_times or {})
@@ -300,7 +395,7 @@ def print_solution_summary(solution: dict) -> None:
     if "makespan" in solution:
         makespan = solution["makespan"]
         makespan_hours = solution.get("makespan_hours", makespan * 15 / 60)
-        print(f"Makespan: {makespan} time units " f"({makespan_hours:.1f} hours)")
+        print(f"Makespan: {makespan} time units ({makespan_hours:.1f} hours)")
 
     if "total_lateness_minutes" in solution:
         print(f"Total Lateness: {solution['total_lateness_minutes']:.1f} minutes")

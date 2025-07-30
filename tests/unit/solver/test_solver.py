@@ -153,7 +153,6 @@ class TestFreshSolver:
                 "src.solver.core.solver.add_redundant_precedence_constraints"
             ) as mock_redundant,
         ):
-
             # WHEN: Adding constraints
             solver.add_constraints()
 
@@ -406,7 +405,7 @@ class TestPhase1Integration:
 
                 # Add precedence within job
                 if t > 0:
-                    precedences.append(Precedence(f"t{j}_{t-1}", task_id))
+                    precedences.append(Precedence(f"t{j}_{t - 1}", task_id))
 
             job = Job(
                 f"j{j}", f"Job {j}", datetime.now(UTC) + timedelta(hours=8), tasks=tasks

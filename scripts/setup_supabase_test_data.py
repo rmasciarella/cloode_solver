@@ -42,12 +42,12 @@ def create_test_tables(supabase: Client) -> bool:
             if statement:
                 try:
                     # Execute using the query builder approach
-                    print(f"Executing statement {i+1}/{len(statements)}...")
+                    print(f"Executing statement {i + 1}/{len(statements)}...")
                     # Since Supabase client doesn't have direct SQL execution,
                     # we'll need to use the populate script approach
                     print(f"Statement preview: {statement[:50]}...")
                 except Exception as stmt_error:
-                    print(f"Error executing statement {i+1}: {stmt_error}")
+                    print(f"Error executing statement {i + 1}: {stmt_error}")
                     return False
 
         print("Note: Direct SQL execution not supported by Supabase client.")

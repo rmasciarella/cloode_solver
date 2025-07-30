@@ -222,7 +222,7 @@ try:
         precedences.append(
             {
                 "predecessor_task_id": task_ids[f"job1_task{i}"],
-                "successor_task_id": task_ids[f"job1_task{i+1}"],
+                "successor_task_id": task_ids[f"job1_task{i + 1}"],
             }
         )
 

@@ -43,24 +43,54 @@ def add_machine_capacity_constraints(
         intervals = []
         demands = []
 
-        for job in problem.jobs:
-            for task in job.tasks:
-                # Check if task can run on this machine
-                if machine.resource_id in task.eligible_machines:
-                    task_key = (job.job_id, task.task_id)
-                    assign_key = (job.job_id, task.task_id, machine.resource_id)
+        if problem.is_template_based:
+            # Template-based: iterate over instances and template tasks
+            for instance in problem.job_instances:
+                for template_task in problem.job_template.template_tasks:
+                    # Check if template task can run on this machine
+                    if machine.resource_id in template_task.eligible_machines:
+                        instance_task_id = problem.get_instance_task_id(
+                            instance.instance_id, template_task.template_task_id
+                        )
+                        task_key = (instance.instance_id, instance_task_id)
+                        assign_key = (
+                            instance.instance_id,
+                            instance_task_id,
+                            machine.resource_id,
+                        )
 
-                    # Create optional interval based on assignment
-                    optional_interval = model.NewOptionalIntervalVar(
-                        task_intervals[task_key].StartExpr(),
-                        task_intervals[task_key].SizeExpr(),
-                        task_intervals[task_key].EndExpr(),
-                        task_assigned[assign_key],
-                        f"optional_{job.job_id[:8]}_{task.task_id[:8]}_{machine.resource_id[:8]}",
-                    )
+                        if task_key in task_intervals and assign_key in task_assigned:
+                            # Create optional interval based on assignment
+                            optional_interval = model.NewOptionalIntervalVar(
+                                task_intervals[task_key].StartExpr(),
+                                task_intervals[task_key].SizeExpr(),
+                                task_intervals[task_key].EndExpr(),
+                                task_assigned[assign_key],
+                                f"optional_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}_{machine.resource_id[:8]}",
+                            )
 
-                    intervals.append(optional_interval)
-                    demands.append(1)  # Each task consumes 1 unit of capacity
+                            intervals.append(optional_interval)
+                            demands.append(1)  # Each task consumes 1 unit of capacity
+        else:
+            # Legacy: iterate over jobs and tasks
+            for job in problem.jobs:
+                for task in job.tasks:
+                    # Check if task can run on this machine
+                    if machine.resource_id in task.eligible_machines:
+                        task_key = (job.job_id, task.task_id)
+                        assign_key = (job.job_id, task.task_id, machine.resource_id)
+
+                        # Create optional interval based on assignment
+                        optional_interval = model.NewOptionalIntervalVar(
+                            task_intervals[task_key].StartExpr(),
+                            task_intervals[task_key].SizeExpr(),
+                            task_intervals[task_key].EndExpr(),
+                            task_assigned[assign_key],
+                            f"optional_{job.job_id[:8]}_{task.task_id[:8]}_{machine.resource_id[:8]}",
+                        )
+
+                        intervals.append(optional_interval)
+                        demands.append(1)  # Each task consumes 1 unit of capacity
 
         # Add cumulative constraint if machine has tasks
         if intervals:

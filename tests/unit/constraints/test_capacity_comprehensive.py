@@ -271,7 +271,8 @@ class TestCapacityPerformance:
         for i in range(100):
             # Each task can run on any machine
             modes = [
-                TaskMode(f"mode_{i}_m{j+1}", f"t{i}", f"m{j+1}", 30) for j in range(5)
+                TaskMode(f"mode_{i}_m{j + 1}", f"t{i}", f"m{j + 1}", 30)
+                for j in range(5)
             ]
             task = Task(f"t{i}", f"j{i}", f"Task {i}", modes=modes)
             job = Job(f"j{i}", f"Job {i}", datetime.now(UTC), [task])
@@ -293,12 +294,12 @@ class TestCapacityPerformance:
 
             # Assignment variables for each machine
             for j in range(5):
-                assign_var = model.NewBoolVar(f"assign_{i}_m{j+1}")
-                task_assigned[(f"j{i}", f"t{i}", f"m{j+1}")] = assign_var
+                assign_var = model.NewBoolVar(f"assign_{i}_m{j + 1}")
+                task_assigned[(f"j{i}", f"t{i}", f"m{j + 1}")] = assign_var
 
             # Must be assigned to exactly one machine
             assignment_vars = [
-                task_assigned[(f"j{i}", f"t{i}", f"m{j+1}")] for j in range(5)
+                task_assigned[(f"j{i}", f"t{i}", f"m{j + 1}")] for j in range(5)
             ]
             model.AddExactlyOne(assignment_vars)
 
@@ -322,11 +323,11 @@ class TestCapacityPerformance:
 
         # Verify solution uses high-capacity machines efficiently
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-            machine_usage = {f"m{i+1}": 0 for i in range(5)}
+            machine_usage = {f"m{i + 1}": 0 for i in range(5)}
             for i in range(100):
                 for j in range(5):
-                    if solver.Value(task_assigned[(f"j{i}", f"t{i}", f"m{j+1}")]):
-                        machine_usage[f"m{j+1}"] += 1
+                    if solver.Value(task_assigned[(f"j{i}", f"t{i}", f"m{j + 1}")]):
+                        machine_usage[f"m{j + 1}"] += 1
                         break
 
             # High capacity machines should be utilized (at least some tasks)

@@ -16,7 +16,12 @@ from src.solver.constraints.phase1 import (
     add_precedence_constraints,
     add_redundant_precedence_constraints,
     add_setup_time_constraints,
+    add_symmetry_breaking_constraints,
     add_task_duration_constraints,
+    add_template_assignment_constraints,
+    add_template_no_overlap_constraints,
+    add_template_precedence_constraints,
+    add_template_redundant_constraints,
 )
 
 # Type imports - using Any for now as OR-Tools types aren't directly importable
@@ -70,6 +75,91 @@ class FreshSolver:
         """Create all decision variables for the model."""
         logger.info("Creating decision variables...")
 
+        if self.problem.is_template_based:
+            self._create_template_variables()
+        else:
+            self._create_legacy_variables()
+
+        logger.info(f"Created {len(self.task_starts)} task timing variables")
+        logger.info(f"Created {len(self.task_assigned)} assignment variables")
+
+    def _create_template_variables(self) -> None:
+        """Create variables for template-based problems."""
+        if not self.problem.job_template or not self.problem.job_instances:
+            logger.warning("Template-based problem missing template or instances")
+            return
+
+        template = self.problem.job_template
+        instances = self.problem.job_instances
+
+        logger.info(
+            f"Creating template variables for {len(instances)} instances of {template.task_count} tasks"
+        )
+
+        # For each job instance, create variables for each template task
+        for instance in instances:
+            for template_task in template.template_tasks:
+                # Generate task key for this instance-template combination
+                instance_task_id = self.problem.get_instance_task_id(
+                    instance.instance_id, template_task.template_task_id
+                )
+                task_key = (instance.instance_id, instance_task_id)
+
+                # Calculate bounds
+                earliest_start = 0
+                # For template tasks, we use a simplified latest start calculation
+                # Could be enhanced with template precedence analysis
+                latest_start = max(0, self.horizon - template_task.min_duration // 15)
+
+                # Timing variables
+                self.task_starts[task_key] = self.model.NewIntVar(
+                    earliest_start,
+                    latest_start,
+                    f"start_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}",
+                )
+
+                # Duration variable (constrained by machine mode selection)
+                min_duration = min(
+                    mode.duration_time_units for mode in template_task.modes
+                )
+                max_duration = max(
+                    mode.duration_time_units for mode in template_task.modes
+                )
+
+                self.task_durations[task_key] = self.model.NewIntVar(
+                    min_duration,
+                    max_duration,
+                    f"duration_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}",
+                )
+
+                # End variable
+                self.task_ends[task_key] = self.model.NewIntVar(
+                    earliest_start + min_duration,
+                    min(self.horizon, latest_start + max_duration),
+                    f"end_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}",
+                )
+
+                # Interval variable
+                self.task_intervals[task_key] = self.model.NewIntervalVar(
+                    self.task_starts[task_key],
+                    self.task_durations[task_key],
+                    self.task_ends[task_key],
+                    f"interval_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}",
+                )
+
+                # Machine assignment variables for each mode
+                for mode in template_task.modes:
+                    machine_key = (
+                        instance.instance_id,
+                        instance_task_id,
+                        mode.machine_resource_id,
+                    )
+                    self.task_assigned[machine_key] = self.model.NewBoolVar(
+                        f"assigned_{instance.instance_id[:8]}_{template_task.template_task_id[:8]}_{mode.machine_resource_id[:8]}"
+                    )
+
+    def _create_legacy_variables(self) -> None:
+        """Create variables for legacy job-based problems."""
         for job in self.problem.jobs:
             for task in job.tasks:
                 task_key = (job.job_id, task.task_id)
@@ -117,12 +207,82 @@ class FreshSolver:
                         f"assigned_{job.job_id[:8]}_{task.task_id[:8]}_{mode.machine_resource_id[:8]}"
                     )
 
-        logger.info(f"Created {len(self.task_starts)} task timing variables")
-        logger.info(f"Created {len(self.task_assigned)} assignment variables")
-
     def add_constraints(self) -> None:
         """Add all Phase 1 constraints to the model."""
         logger.info("Adding constraints...")
+
+        if self.problem.is_template_based:
+            self._add_template_constraints()
+        else:
+            self._add_legacy_constraints()
+
+        logger.info("All constraints added")
+
+    def _add_template_constraints(self) -> None:
+        """Add optimized constraints for template-based problems."""
+        logger.info("Adding template-optimized constraints...")
+
+        # Task duration constraints (legacy function works for template too)
+        add_task_duration_constraints(
+            self.model,
+            self.task_starts,
+            self.task_ends,
+            self.task_intervals,
+            self.task_durations,
+            self.problem,
+        )
+
+        # Template-optimized precedence constraints
+        add_template_precedence_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem
+        )
+
+        # Template-optimized machine assignment constraints
+        add_template_assignment_constraints(
+            self.model, self.task_assigned, self.task_durations, self.problem
+        )
+
+        # Template-optimized no overlap constraints (ONLY for capacity=1 machines)
+        add_template_no_overlap_constraints(
+            self.model,
+            self.task_intervals,
+            self.task_assigned,
+            self.machine_intervals,
+            self.problem,
+        )
+
+        # Machine capacity constraints (ONLY for machines with capacity > 1)
+        # Uses AddCumulative which is necessary for parallel task scheduling
+        add_machine_capacity_constraints(
+            self.model,
+            self.task_intervals,
+            self.task_assigned,
+            self.problem.machines,
+            self.problem,
+        )
+
+        # Setup time constraints (if any setup times are defined)
+        if self.setup_times:
+            add_setup_time_constraints(
+                self.model,
+                self.task_starts,
+                self.task_ends,
+                self.task_assigned,
+                self.setup_times,
+                self.problem,
+            )
+
+        # Symmetry breaking constraints for identical jobs
+        add_symmetry_breaking_constraints(self.model, self.task_starts, self.problem)
+
+        # Template-specific redundant constraints for better performance
+        add_template_redundant_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem, self.horizon
+        )
+
+    def _add_legacy_constraints(self) -> None:
+        """Add constraints for legacy job-based problems."""
+        logger.info("Adding legacy constraints...")
 
         # Task duration constraints
         add_task_duration_constraints(
@@ -181,18 +341,29 @@ class FreshSolver:
             self.model, self.task_starts, self.task_ends, self.problem
         )
 
-        logger.info("All constraints added")
-
     def set_objective(self) -> None:
         """Set the objective function - minimize makespan for Phase 1."""
         logger.info("Setting objective...")
 
         # Find the maximum end time across all tasks
         all_ends = []
-        for job in self.problem.jobs:
-            for task in job.tasks:
-                task_key = (job.job_id, task.task_id)
-                all_ends.append(self.task_ends[task_key])
+
+        if self.problem.is_template_based:
+            # Template-based: collect all instance task end times
+            for instance in self.problem.job_instances:
+                for template_task in self.problem.job_template.template_tasks:
+                    instance_task_id = self.problem.get_instance_task_id(
+                        instance.instance_id, template_task.template_task_id
+                    )
+                    task_key = (instance.instance_id, instance_task_id)
+                    if task_key in self.task_ends:
+                        all_ends.append(self.task_ends[task_key])
+        else:
+            # Legacy: collect all job task end times
+            for job in self.problem.jobs:
+                for task in job.tasks:
+                    task_key = (job.job_id, task.task_id)
+                    all_ends.append(self.task_ends[task_key])
 
         # Create makespan variable
         makespan = self.model.NewIntVar(0, self.horizon, "makespan")
@@ -204,11 +375,21 @@ class FreshSolver:
 
         if has_high_capacity:
             # Calculate theoretical minimum for informational purposes
-            total_work = sum(
-                min(mode.duration_time_units for mode in task.modes)
-                for job in self.problem.jobs
-                for task in job.tasks
-            )
+            if self.problem.is_template_based:
+                # Template-based calculation
+                template_min_work = sum(
+                    min(mode.duration_time_units for mode in template_task.modes)
+                    for template_task in self.problem.job_template.template_tasks
+                )
+                total_work = template_min_work * len(self.problem.job_instances)
+            else:
+                # Legacy calculation
+                total_work = sum(
+                    min(mode.duration_time_units for mode in task.modes)
+                    for job in self.problem.jobs
+                    for task in job.tasks
+                )
+
             total_capacity = sum(m.capacity for m in self.problem.machines)
             theoretical_min = (total_work + total_capacity - 1) // total_capacity
 
@@ -216,7 +397,11 @@ class FreshSolver:
                 f"Objective: minimize makespan "
                 f"(theoretical min: {theoretical_min} time units)"
             )
-            logger.info("Using search hints to encourage concurrent execution")
+
+            if self.problem.is_template_based:
+                logger.info("Using template-based search hints")
+            else:
+                logger.info("Using search hints to encourage concurrent execution")
 
             # Add a hint to the solver about the expected makespan
             # This guides the search without making the problem infeasible
@@ -229,6 +414,55 @@ class FreshSolver:
 
     def add_search_strategy(self) -> None:
         """Add search strategy to guide the solver."""
+        if self.problem.is_template_based:
+            self._add_template_search_strategy()
+        else:
+            self._add_legacy_search_strategy()
+
+    def _add_template_search_strategy(self) -> None:
+        """Add optimized search strategy for template-based problems."""
+        has_high_capacity = any(m.capacity > 1 for m in self.problem.machines)
+        has_precedences = len(self.problem.job_template.template_precedences) > 0
+
+        # For template-based problems, prioritize scheduling by template task order
+        # This takes advantage of identical structure across instances
+
+        # Group variables by template task, then by instance
+        template_task_groups = []
+
+        for template_task in self.problem.job_template.template_tasks:
+            task_group = []
+            for instance in self.problem.job_instances:
+                instance_task_id = self.problem.get_instance_task_id(
+                    instance.instance_id, template_task.template_task_id
+                )
+                task_key = (instance.instance_id, instance_task_id)
+                if task_key in self.task_starts:
+                    task_group.append(self.task_starts[task_key])
+
+            if task_group:
+                template_task_groups.append(task_group)
+
+        # Strategy: Schedule template tasks in order, with symmetry breaking
+        for _i, task_group in enumerate(template_task_groups):
+            if has_high_capacity and not has_precedences:
+                # For parallel machines without precedences, schedule all instances concurrently
+                self.model.AddDecisionStrategy(
+                    task_group, cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE
+                )
+            else:
+                # For sequential scheduling, use earliest start heuristic
+                self.model.AddDecisionStrategy(
+                    task_group, cp_model.CHOOSE_LOWEST_MIN, cp_model.SELECT_MIN_VALUE
+                )
+
+        logger.info(
+            f"Search strategy: template-based scheduling for {len(self.problem.job_instances)} "
+            f"instances with {len(template_task_groups)} template tasks"
+        )
+
+    def _add_legacy_search_strategy(self) -> None:
+        """Add search strategy for legacy job-based problems."""
         has_high_capacity = any(m.capacity > 1 for m in self.problem.machines)
 
         if has_high_capacity and len(self.problem.precedences) == 0:

@@ -77,7 +77,7 @@ def run_migration():
             try:
                 # Use RPC to execute raw SQL
                 supabase.rpc("execute_sql", {"query": statement + ";"}).execute()
-                print(f"  Statement {i+1}/{len(statements)} executed")
+                print(f"  Statement {i + 1}/{len(statements)} executed")
             except Exception as e:
                 # If RPC doesn't exist, we'll note it but continue
                 if "execute_sql" in str(e):
@@ -90,7 +90,7 @@ def run_migration():
                     )
                     return False
                 else:
-                    print(f"  Error on statement {i+1}: {e}")
+                    print(f"  Error on statement {i + 1}: {e}")
 
     print("Migration completed!")
     return True
