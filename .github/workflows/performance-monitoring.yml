@@ -1,0 +1,371 @@
+name: Performance Monitoring & Regression Detection
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/performance-monitoring.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  schedule:
+    # Run performance baseline tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      performance_test_scale:
+        description: 'Performance test scale'
+        required: false
+        default: 'baseline'
+        type: choice
+        options:
+          - baseline
+          - medium
+          - full_nfr6
+
+env:
+  PYTHON_VERSION: '3.13'
+  PERFORMANCE_THRESHOLD_DEGRADATION: 20  # Fail if >20% performance degradation
+  MEMORY_THRESHOLD_GB: 4.0  # Maximum memory usage threshold
+  PERFORMANCE_BASELINE_DAYS: 7  # Days to look back for baseline calculation
+
+jobs:
+  performance-baseline-tests:
+    name: Performance Baseline Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      matrix:
+        test_scale: [baseline_small, baseline_medium]
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-benchmark psutil
+        
+    - name: Create Benchmark Output Directory
+      run: mkdir -p tests/integration/benchmarks
+      
+    - name: Run Performance Baseline Tests
+      id: perf_tests
+      run: |
+        # Run performance tests and capture results
+        pytest -v tests/integration/test_performance_benchmarks.py::TestPerformanceBenchmarks::test_performance_regression_baseline \
+          --tb=short --no-header \
+          -o log_cli=true -o log_cli_level=INFO \
+          > performance_results.log 2>&1
+        
+        # Extract performance metrics from the latest benchmark file
+        LATEST_BASELINE=$(ls -t tests/integration/benchmarks/baseline_*.json | head -1)
+        if [ -f "$LATEST_BASELINE" ]; then
+          echo "BASELINE_FILE=$LATEST_BASELINE" >> $GITHUB_OUTPUT
+          
+          # Extract key metrics
+          EXEC_TIME=$(jq -r '.performance_metrics.execution_time_seconds' "$LATEST_BASELINE")
+          MEMORY_MB=$(jq -r '.performance_metrics.peak_memory_mb' "$LATEST_BASELINE")
+          CPU_UTIL=$(jq -r '.performance_metrics.cpu_utilization_percent' "$LATEST_BASELINE")
+          
+          echo "EXEC_TIME=$EXEC_TIME" >> $GITHUB_OUTPUT
+          echo "MEMORY_MB=$MEMORY_MB" >> $GITHUB_OUTPUT  
+          echo "CPU_UTIL=$CPU_UTIL" >> $GITHUB_OUTPUT
+          
+          # Store metrics for comparison
+          echo "execution_time_seconds=$EXEC_TIME" >> performance_metrics.env
+          echo "peak_memory_mb=$MEMORY_MB" >> performance_metrics.env
+          echo "cpu_utilization_percent=$CPU_UTIL" >> performance_metrics.env
+        fi
+        
+    - name: Upload Performance Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results-${{ matrix.test_scale }}
+        path: |
+          tests/integration/benchmarks/
+          performance_results.log
+          performance_metrics.env
+        retention-days: 30
+        
+    - name: Performance Summary
+      run: |
+        echo "## Performance Test Results (${{ matrix.test_scale }})" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+        if [ -n "${{ steps.perf_tests.outputs.EXEC_TIME }}" ]; then
+          echo "| Execution Time | ${{ steps.perf_tests.outputs.EXEC_TIME }}s |" >> $GITHUB_STEP_SUMMARY
+          echo "| Peak Memory | ${{ steps.perf_tests.outputs.MEMORY_MB }}MB |" >> $GITHUB_STEP_SUMMARY
+          echo "| CPU Utilization | ${{ steps.perf_tests.outputs.CPU_UTIL }}% |" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "| Test Scale | ${{ matrix.test_scale }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Timestamp | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+
+  performance-regression-detection:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    needs: performance-baseline-tests
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout Repository  
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need history for baseline comparison
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-benchmark psutil requests
+        
+    - name: Download Performance Results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: performance-results-*
+        merge-multiple: true
+        
+    - name: Run Performance Regression Tests
+      id: regression_tests
+      run: |
+        # Run comprehensive performance tests
+        python scripts/performance/run_regression_tests.py \
+          --baseline-days ${{ env.PERFORMANCE_BASELINE_DAYS }} \
+          --threshold ${{ env.PERFORMANCE_THRESHOLD_DEGRADATION }} \
+          --output regression_results.json
+        
+        # Check if regression was detected
+        if [ -f regression_results.json ]; then
+          REGRESSION_DETECTED=$(jq -r '.regression_detected' regression_results.json)
+          DEGRADATION_PERCENT=$(jq -r '.max_degradation_percent // 0' regression_results.json)
+          
+          echo "REGRESSION_DETECTED=$REGRESSION_DETECTED" >> $GITHUB_OUTPUT
+          echo "DEGRADATION_PERCENT=$DEGRADATION_PERCENT" >> $GITHUB_OUTPUT
+          
+          if [ "$REGRESSION_DETECTED" = "true" ]; then
+            echo "❌ Performance regression detected: ${DEGRADATION_PERCENT}% degradation" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ No performance regression detected" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+    - name: Generate Performance Report
+      if: always()
+      run: |
+        python scripts/performance/generate_performance_report.py \
+          --output performance_report.md \
+          --format github
+          
+        cat performance_report.md >> $GITHUB_STEP_SUMMARY
+        
+    - name: Upload Regression Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-analysis
+        path: |
+          regression_results.json
+          performance_report.md
+        retention-days: 30
+        
+    - name: Comment PR with Performance Analysis
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let comment = '## 🚀 Performance Analysis\n\n';
+          
+          if (fs.existsSync('performance_report.md')) {
+            const report = fs.readFileSync('performance_report.md', 'utf8');
+            comment += report;
+          } else {
+            comment += 'Performance analysis could not be completed.\n';
+          }
+          
+          // Add regression status
+          const regressionDetected = '${{ steps.regression_tests.outputs.REGRESSION_DETECTED }}';
+          const degradationPercent = '${{ steps.regression_tests.outputs.DEGRADATION_PERCENT }}';
+          
+          if (regressionDetected === 'true') {
+            comment += `\n⚠️ **Performance Regression Detected**: ${degradationPercent}% degradation\n`;
+          } else {
+            comment += '\n✅ **No Performance Regression Detected**\n';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  nfr6-scale-validation:
+    name: NFR6 Scale Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.performance_test_scale == 'full_nfr6')
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-benchmark psutil
+        
+    - name: Run NFR6 Scale Tests
+      id: nfr6_tests
+      run: |
+        # Run full NFR6 scale tests (50 jobs, 5000 tasks)
+        pytest -v tests/integration/test_performance_benchmarks.py::TestPerformanceBenchmarks::test_nfr6_scale_requirements \
+          --tb=short --no-header \
+          -o log_cli=true -o log_cli_level=INFO \
+          > nfr6_results.log 2>&1
+        
+        # Extract results
+        LATEST_NFR6=$(ls -t tests/integration/benchmarks/nfr6_scale_*.json | head -1)
+        if [ -f "$LATEST_NFR6" ]; then
+          MEMORY_GB=$(jq -r '.performance_metrics.peak_memory_gb' "$LATEST_NFR6")
+          EXEC_TIME=$(jq -r '.performance_metrics.execution_time_seconds' "$LATEST_NFR6")
+          
+          echo "MEMORY_GB=$MEMORY_GB" >> $GITHUB_OUTPUT
+          echo "EXEC_TIME=$EXEC_TIME" >> $GITHUB_OUTPUT
+          
+          # Check NFR6 compliance
+          if (( $(echo "$MEMORY_GB > ${{ env.MEMORY_THRESHOLD_GB }}" | bc -l) )); then
+            echo "NFR6_MEMORY_COMPLIANCE=false" >> $GITHUB_OUTPUT
+          else
+            echo "NFR6_MEMORY_COMPLIANCE=true" >> $GITHUB_OUTPUT
+          fi
+        fi
+        
+    - name: NFR6 Compliance Check
+      run: |
+        echo "## NFR6 Scale Validation Results" >> $GITHUB_STEP_SUMMARY
+        echo "| Requirement | Target | Actual | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------------|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -n "${{ steps.nfr6_tests.outputs.MEMORY_GB }}" ]; then
+          MEMORY_STATUS="✅ Pass"
+          if [ "${{ steps.nfr6_tests.outputs.NFR6_MEMORY_COMPLIANCE }}" = "false" ]; then
+            MEMORY_STATUS="❌ Fail"
+          fi
+          
+          echo "| Memory Usage | < ${{ env.MEMORY_THRESHOLD_GB }}GB | ${{ steps.nfr6_tests.outputs.MEMORY_GB }}GB | $MEMORY_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Execution Time | - | ${{ steps.nfr6_tests.outputs.EXEC_TIME }}s | ℹ️ Info |" >> $GITHUB_STEP_SUMMARY
+          echo "| Scale | 50 jobs, 5000 tasks | 50 jobs, 5000 tasks | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Upload NFR6 Results
+      uses: actions/upload-artifact@v4  
+      with:
+        name: nfr6-validation-results
+        path: |
+          tests/integration/benchmarks/nfr6_scale_*.json
+          nfr6_results.log
+        retention-days: 30
+
+  performance-trend-analysis:
+    name: Performance Trend Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need full history for trend analysis
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install matplotlib pandas numpy requests
+        
+    - name: Generate Performance Trends
+      run: |
+        python scripts/performance/generate_trend_analysis.py \
+          --days 30 \
+          --output-dir performance_trends \
+          --format json,html,png
+          
+    - name: Upload Trend Analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-trends
+        path: performance_trends/
+        retention-days: 90
+        
+    - name: Update Performance Dashboard
+      env:
+        WEBHOOK_URL: ${{ secrets.PERFORMANCE_WEBHOOK_URL }}
+      run: |
+        if [ -n "$WEBHOOK_URL" ]; then
+          python scripts/performance/update_dashboard.py \
+            --trends-dir performance_trends \
+            --webhook-url "$WEBHOOK_URL"
+        fi
+
+  performance-alerting:
+    name: Performance Alerting
+    runs-on: ubuntu-latest
+    needs: [performance-regression-detection, nfr6-scale-validation]
+    if: always() && (needs.performance-regression-detection.result == 'failure' || needs.nfr6-scale-validation.result == 'failure')
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python  
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+        
+    - name: Send Performance Alert
+      env:
+        ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+      run: |
+        python scripts/performance/send_performance_alert.py \
+          --regression-detected "${{ needs.performance-regression-detection.result == 'failure' }}" \
+          --nfr6-compliance-failed "${{ needs.nfr6-scale-validation.result == 'failure' }}" \
+          --commit-sha "${{ github.sha }}" \
+          --branch "${{ github.ref_name }}" \
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

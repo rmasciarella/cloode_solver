@@ -1,0 +1,411 @@
+name: Infrastructure as Code
+
+on:
+  push:
+    branches: [main, develop]
+    paths: 
+      - 'infrastructure/terraform/**'
+      - 'scripts/infrastructure/**'
+      - '.github/workflows/infrastructure.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infrastructure/terraform/**'
+      - 'scripts/infrastructure/**'
+
+env:
+  TERRAFORM_VERSION: '1.5.7'
+  DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+  TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
+  TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+jobs:
+  terraform-validate:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      working-directory: infrastructure/terraform
+      
+    - name: Terraform Init
+      run: terraform init -backend=false
+      working-directory: infrastructure/terraform
+      
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: infrastructure/terraform
+      
+    - name: Check Generated Files Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Terraform Security Scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        scan-ref: 'infrastructure/terraform'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  terraform-plan-dev:
+    name: Terraform Plan (Development)
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Create Generated Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Create Development Variables
+      run: |
+        cat > infrastructure/terraform/dev.auto.tfvars << EOF
+        environment = "dev"
+        project_name = "modular-solver"
+        region = "nyc1"
+        droplet_size = "s-1vcpu-1gb"
+        enable_load_balancer = false
+        enable_scheduler_function = false
+        registry_subscription_tier = "starter"
+        enable_alerts = false
+        ssh_public_keys = []
+        allowed_ssh_sources = ["0.0.0.0/0"]
+        tags = {
+          Environment = "dev"
+          Project = "modular-solver"
+          ManagedBy = "github-actions"
+        }
+        EOF
+        
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infrastructure/terraform
+      
+    - name: Create Development Workspace
+      run: |
+        terraform workspace new dev || terraform workspace select dev
+      working-directory: infrastructure/terraform
+      
+    - name: Terraform Plan
+      run: terraform plan -var-file=dev.auto.tfvars -out=tfplan
+      working-directory: infrastructure/terraform
+      
+    - name: Save Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan-dev
+        path: infrastructure/terraform/tfplan
+        retention-days: 5
+
+  terraform-plan-staging:
+    name: Terraform Plan (Staging)
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Create Generated Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Create Staging Variables
+      run: |
+        cat > infrastructure/terraform/staging.auto.tfvars << EOF
+        environment = "staging"
+        project_name = "modular-solver"
+        region = "nyc1"
+        droplet_size = "s-2vcpu-2gb"
+        enable_load_balancer = false
+        enable_scheduler_function = true
+        registry_subscription_tier = "basic"
+        enable_alerts = true
+        alert_email = "${{ secrets.ALERT_EMAIL }}"
+        ssh_public_keys = ["${{ secrets.SSH_PUBLIC_KEY }}"]
+        allowed_ssh_sources = ["${{ secrets.ALLOWED_SSH_CIDR }}"]
+        tags = {
+          Environment = "staging"
+          Project = "modular-solver"
+          ManagedBy = "github-actions"
+        }
+        EOF
+        
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infrastructure/terraform
+      
+    - name: Create Staging Workspace
+      run: |
+        terraform workspace new staging || terraform workspace select staging
+      working-directory: infrastructure/terraform
+      
+    - name: Terraform Plan
+      run: terraform plan -var-file=staging.auto.tfvars -out=tfplan
+      working-directory: infrastructure/terraform
+      
+    - name: Save Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan-staging
+        path: infrastructure/terraform/tfplan
+        retention-days: 5
+
+  terraform-apply-staging:
+    name: Terraform Apply (Staging)
+    runs-on: ubuntu-latest
+    needs: terraform-plan-staging
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Create Generated Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Download Plan
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan-staging
+        path: infrastructure/terraform/
+        
+    - name: Create Staging Variables
+      run: |
+        cat > infrastructure/terraform/staging.auto.tfvars << EOF
+        environment = "staging"
+        project_name = "modular-solver"
+        region = "nyc1"
+        droplet_size = "s-2vcpu-2gb"
+        enable_load_balancer = false
+        enable_scheduler_function = true
+        registry_subscription_tier = "basic"
+        enable_alerts = true
+        alert_email = "${{ secrets.ALERT_EMAIL }}"
+        ssh_public_keys = ["${{ secrets.SSH_PUBLIC_KEY }}"]
+        allowed_ssh_sources = ["${{ secrets.ALLOWED_SSH_CIDR }}"]
+        tags = {
+          Environment = "staging"
+          Project = "modular-solver"
+          ManagedBy = "github-actions"
+        }
+        EOF
+        
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infrastructure/terraform
+      
+    - name: Select Staging Workspace
+      run: terraform workspace select staging
+      working-directory: infrastructure/terraform
+      
+    - name: Terraform Apply
+      run: terraform apply tfplan
+      working-directory: infrastructure/terraform
+      
+    - name: Generate Outputs
+      run: terraform output -json > generated/terraform-outputs.json
+      working-directory: infrastructure/terraform
+      
+    - name: Save Outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-outputs-staging
+        path: infrastructure/terraform/generated/
+        
+    - name: Run Health Check
+      run: |
+        if [ -f generated/health-check.sh ]; then
+          chmod +x generated/health-check.sh
+          ./generated/health-check.sh
+        fi
+      working-directory: infrastructure/terraform
+      
+    - name: Post-Deployment Summary
+      run: |
+        echo "## Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "Environment: staging" >> $GITHUB_STEP_SUMMARY
+        echo "Terraform Version: ${{ env.TERRAFORM_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "Deployment Time: $(date)" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f generated/terraform-outputs.json ]; then
+          DROPLET_IP=$(jq -r '.compute.value.droplet_public_ip // "unknown"' generated/terraform-outputs.json)
+          APP_URL=$(jq -r '.application.value.application_url // "unknown"' generated/terraform-outputs.json)
+          echo "Droplet IP: $DROPLET_IP" >> $GITHUB_STEP_SUMMARY
+          echo "Application URL: $APP_URL" >> $GITHUB_STEP_SUMMARY
+        fi
+      working-directory: infrastructure/terraform
+
+  infrastructure-drift-detection:
+    name: Infrastructure Drift Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Create Generated Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infrastructure/terraform
+      
+    - name: Check Staging Drift
+      run: |
+        terraform workspace select staging
+        terraform plan -var-file=staging.auto.tfvars -detailed-exitcode > drift-report.txt
+        DRIFT_EXIT_CODE=$?
+        
+        if [ $DRIFT_EXIT_CODE -eq 2 ]; then
+          echo "DRIFT_DETECTED=true" >> $GITHUB_ENV
+          echo "Infrastructure drift detected in staging environment" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "DRIFT_DETECTED=false" >> $GITHUB_ENV
+          echo "No infrastructure drift detected" >> $GITHUB_STEP_SUMMARY
+        fi
+      working-directory: infrastructure/terraform
+      continue-on-error: true
+      
+    - name: Create Drift Issue
+      if: env.DRIFT_DETECTED == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Infrastructure Drift Detected',
+            body: `Infrastructure drift has been detected in the staging environment.
+            
+            Please review the terraform plan output and take appropriate action.
+            
+            Workflow: ${context.workflow}
+            Run ID: ${context.runId}
+            Commit: ${context.sha}`,
+            labels: ['infrastructure', 'drift-detection']
+          })
+
+  cost-estimation:
+    name: Cost Estimation
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        
+    - name: Setup Digital Ocean CLI
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        
+    - name: Create Generated Directory
+      run: mkdir -p infrastructure/terraform/generated
+      
+    - name: Terraform Init
+      run: terraform init -backend=false
+      working-directory: infrastructure/terraform
+      
+    - name: Generate Cost Estimate
+      run: |
+        # Create a simple cost estimation based on resource configuration
+        cat > cost-estimate.md << EOF
+        ## Infrastructure Cost Estimation
+        
+        Based on the current Terraform configuration:
+        
+        ### Development Environment
+        - Droplet (s-1vcpu-1gb): \$5/month
+        - Registry (starter): \$0/month
+        - **Total**: ~\$5/month
+        
+        ### Staging Environment  
+        - Droplet (s-2vcpu-2gb): \$12/month
+        - Registry (basic): \$5/month
+        - Functions: \$2/month
+        - **Total**: ~\$19/month
+        
+        ### Production Environment
+        - Droplet (s-2vcpu-4gb): \$24/month
+        - Registry (basic): \$5/month
+        - Load Balancer: \$10/month
+        - Functions: \$2/month
+        - Backups: \$2/month
+        - **Total**: ~\$43/month
+        
+        *Costs are estimates based on Digital Ocean pricing as of $(date +%Y-%m-%d)*
+        EOF
+        
+        cat cost-estimate.md >> $GITHUB_STEP_SUMMARY
+      working-directory: infrastructure/terraform

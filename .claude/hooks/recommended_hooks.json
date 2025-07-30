@@ -1,0 +1,55 @@
+{
+  "hooks": [
+    {
+      "name": "format-on-save",
+      "event": "post-edit",
+      "command": "poetry run black --quiet $(git diff --name-only --cached | grep -E '\\.py$' || echo '')",
+      "description": "Format only changed Python files",
+      "enabled": true
+    },
+    {
+      "name": "lint-on-save",
+      "event": "post-edit",
+      "command": "poetry run ruff check --fix $(git diff --name-only --cached | grep -E '\\.py$' || echo '') 2>/dev/null || true",
+      "description": "Auto-fix linting issues in changed files",
+      "enabled": true
+    },
+    {
+      "name": "test-on-constraint-change",
+      "event": "file-change",
+      "pattern": "src/solver/constraints/*.py",
+      "command": "poetry run pytest tests/constraints/ -k $(basename {} .py) --tb=short",
+      "description": "Run tests for modified constraint",
+      "enabled": true
+    },
+    {
+      "name": "validate-env",
+      "event": "file-change",
+      "pattern": ".env*",
+      "command": "echo '⚠️  Environment file changed - verify no secrets were committed!'",
+      "description": "Warn about environment file changes",
+      "enabled": true
+    },
+    {
+      "name": "quick-quality-check",
+      "event": "pre-commit",
+      "command": "poetry run black --check src/ && poetry run ruff check src/ && poetry run pytest tests/unit/test_core.py -x",
+      "description": "Fast quality gates before commit",
+      "enabled": true
+    },
+    {
+      "name": "performance-reminder",
+      "event": "file-change",
+      "pattern": "src/solver/core.py",
+      "command": "echo '📊 Core solver modified - consider running: poetry run pytest tests/integration/test_performance_benchmarks.py'",
+      "description": "Remind about performance impact",
+      "enabled": false
+    }
+  ],
+  "settings": {
+    "fail_on_error": false,
+    "parallel_execution": true,
+    "timeout_seconds": 30,
+    "log_level": "INFO"
+  }
+}

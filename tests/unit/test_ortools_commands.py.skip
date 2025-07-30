@@ -1,0 +1,272 @@
+"""
+Tests for OR-Tools command system.
+"""
+
+import pytest
+from typing import Dict, Optional
+import sys
+import os
+
+# Add the parent directory to the path to import the command module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '.claude', 'commands'))
+from ortools_commands import ORToolsCommandHandler, process_command, CommandContext
+
+
+class TestORToolsCommands:
+    """Test suite for OR-Tools command system."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        self.handler = ORToolsCommandHandler()
+    
+    def test_command_aliases(self):
+        """Test that command aliases work correctly."""
+        # Test short alias
+        result1 = process_command("/ac test_constraint")
+        result2 = process_command("/add-constraint test_constraint")
+        
+        # Both should ask for the same information
+        assert "To generate the constraint function" in result1
+        assert "To generate the constraint function" in result2
+        
+    def test_add_constraint_command(self):
+        """Test /add-constraint command."""
+        result = process_command("/add-constraint maintenance_window")
+        
+        assert "constraint function" in result.lower()
+        assert "maintenance_window" in result
+        assert "def add_maintenance_window_constraints" in result
+        assert "Mathematical formulation" in result
+        assert "Business logic" in result
+        
+    def test_add_constraint_no_args(self):
+        """Test /add-constraint with no arguments."""
+        result = process_command("/add-constraint")
+        
+        assert "Please specify constraint name" in result
+        assert "❌" in result
+        
+    def test_test_constraint_command(self):
+        """Test /test-constraint command."""
+        result = process_command("/test-constraint precedence")
+        
+        assert "def test_precedence_constraints" in result
+        assert "GIVEN" in result
+        assert "WHEN" in result
+        assert "THEN" in result
+        assert "edge case" in result
+        
+    def test_check_constraint_command(self):
+        """Test /check-constraint command."""
+        result = process_command("/check-constraint add_precedence_constraints")
+        
+        assert "Checking: add_precedence_constraints" in result
+        assert "Naming convention" in result
+        assert "Line count" in result
+        assert "Type hints" in result
+        assert "Standards Compliance" in result
+        
+    def test_list_constraints_command(self):
+        """Test /list-constraints command."""
+        result = process_command("/list-constraints")
+        
+        assert "Constraints in solver.py" in result
+        assert "Phase 1 Constraints" in result
+        assert "add_duration_constraints" in result
+        assert "add_precedence_constraints" in result
+        assert "Dependencies" in result
+        
+    def test_trace_infeasible_command(self):
+        """Test /trace-infeasible command."""
+        result = process_command("/trace-infeasible")
+        
+        assert "Infeasibility Tracing Guide" in result
+        assert "Remove Objective Function" in result
+        assert "Disable Constraints Systematically" in result
+        assert "Binary Search" in result
+        assert "Data Validation" in result
+        
+    def test_explain_solution_command(self):
+        """Test /explain-solution command."""
+        result = process_command("/explain-solution")
+        
+        # Should ask for solver output
+        assert "Please provide solver output" in result
+        
+        # Test with context
+        context = {"solver_output": "dummy output"}
+        result = process_command("/explain-solution", context)
+        
+        assert "Schedule Explanation" in result
+        assert "Machine Utilization" in result
+        assert "Key Performance Insights" in result
+        
+    def test_profile_solver_command(self):
+        """Test /profile-solver command."""
+        result = process_command("/profile-solver")
+        
+        assert "Solver Performance Profile" in result
+        assert "Model Statistics" in result
+        assert "Time Breakdown" in result
+        assert "Performance Bottlenecks" in result
+        assert "Optimization Recommendations" in result
+        
+    def test_debug_variables_command(self):
+        """Test /debug-variables command."""
+        result = process_command("/debug-variables")
+        
+        assert "Variable Debug Information" in result
+        assert "Task Start Variables" in result
+        assert "Assignment Variables" in result
+        assert "Suspicious Patterns" in result
+        
+    def test_suggest_redundant_command(self):
+        """Test /suggest-redundant command."""
+        result = process_command("/suggest-redundant")
+        
+        assert "Redundant Constraint Suggestions" in result
+        assert "Transitive Precedence" in result
+        assert "Makespan Lower Bound" in result
+        assert "Expected Impact" in result
+        
+    def test_tighten_bounds_command(self):
+        """Test /tighten-bounds command."""
+        result = process_command("/tighten-bounds")
+        
+        assert "Variable Bound Tightening Analysis" in result
+        assert "Current vs Suggested Bounds" in result
+        assert "Bound Calculation Methods" in result
+        assert "Expected Improvements" in result
+        
+    def test_optimize_search_command(self):
+        """Test /optimize-search command."""
+        result = process_command("/optimize-search")
+        
+        assert "Search Strategy Optimization" in result
+        assert "Critical Path First" in result
+        assert "Bottleneck Resources First" in result
+        assert "Performance Comparison" in result
+        
+    def test_analyze_complexity_command(self):
+        """Test /analyze-complexity command."""
+        result = process_command("/analyze-complexity")
+        
+        assert "Model Complexity Analysis" in result
+        assert "Variable Complexity" in result
+        assert "Constraint Complexity" in result
+        assert "Big O" in result
+        assert "Scalability Analysis" in result
+        
+    def test_workflow_commands(self):
+        """Test compound workflow commands."""
+        result = process_command("/dev-flow test_constraint")
+        
+        assert "Executing workflow: /dev-flow" in result
+        assert "/add-constraint" in result
+        assert "/test-constraint" in result
+        assert "/check-constraint" in result
+        
+    def test_unknown_command(self):
+        """Test handling of unknown commands."""
+        result = process_command("/unknown-command")
+        
+        assert "Unknown command" in result
+        assert "/unknown-command" in result
+        
+    def test_command_with_context(self):
+        """Test commands with context information."""
+        context = {
+            "current_file": "solver.py",
+            "current_line": 150,
+            "model_info": {"num_tasks": 100, "num_machines": 5}
+        }
+        
+        ctx = CommandContext(
+            command="/profile-solver",
+            args=[],
+            current_file=context["current_file"],
+            current_line=context["current_line"],
+            model_info=context["model_info"]
+        )
+        
+        assert ctx.current_file == "solver.py"
+        assert ctx.current_line == 150
+        assert ctx.model_info["num_tasks"] == 100
+
+
+class TestCommandContext:
+    """Test CommandContext dataclass."""
+    
+    def test_context_creation(self):
+        """Test creating command context."""
+        ctx = CommandContext(
+            command="/add-constraint",
+            args=["maintenance", "window"],
+            current_file="constraints.py",
+            current_line=45
+        )
+        
+        assert ctx.command == "/add-constraint"
+        assert ctx.args == ["maintenance", "window"]
+        assert ctx.current_file == "constraints.py"
+        assert ctx.current_line == 45
+        assert ctx.solver_output is None
+        assert ctx.model_info is None
+        
+    def test_context_optional_fields(self):
+        """Test optional fields in context."""
+        ctx = CommandContext(
+            command="/explain-solution",
+            args=[],
+            solver_output="Status: OPTIMAL\nMakespan: 85"
+        )
+        
+        assert ctx.solver_output == "Status: OPTIMAL\nMakespan: 85"
+        assert ctx.current_file is None
+
+
+class TestCommandIntegration:
+    """Integration tests for command system."""
+    
+    def test_full_constraint_development_flow(self):
+        """Test complete constraint development workflow."""
+        # Step 1: Add constraint
+        result1 = process_command("/add-constraint shift_availability")
+        assert "def add_shift_availability_constraints" in result1
+        
+        # Step 2: Create test
+        result2 = process_command("/test-constraint shift_availability")
+        assert "def test_shift_availability_constraints" in result2
+        
+        # Step 3: Check compliance
+        result3 = process_command("/check-constraint add_shift_availability_constraints")
+        assert "Checking: add_shift_availability_constraints" in result3
+        
+    def test_debugging_workflow(self):
+        """Test debugging workflow."""
+        # Step 1: Profile solver
+        result1 = process_command("/profile-solver")
+        assert "Performance Bottlenecks" in result1
+        
+        # Step 2: Tighten bounds based on profile
+        result2 = process_command("/tighten-bounds")
+        assert "Variable Bound Tightening" in result2
+        
+        # Step 3: Add redundant constraints
+        result3 = process_command("/suggest-redundant")
+        assert "Redundant Constraint Suggestions" in result3
+        
+    def test_infeasibility_debugging_flow(self):
+        """Test infeasibility debugging workflow."""
+        # Step 1: Trace infeasible
+        result1 = process_command("/trace-infeasible")
+        assert "Remove Objective Function" in result1
+        
+        # Step 2: Explain what went wrong
+        context = {"solver_output": "INFEASIBLE"}
+        result2 = process_command("/explain-solution", context)
+        assert "Schedule Explanation" in result2
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
