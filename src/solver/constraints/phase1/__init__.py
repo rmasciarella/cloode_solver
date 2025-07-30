@@ -15,6 +15,11 @@ from .template_constraints import (
     add_template_redundant_constraints,
 )
 from .timing import add_task_duration_constraints
+from .unattended_tasks import (
+    add_business_hours_setup_constraints,
+    add_unattended_execution_constraints,
+    add_weekend_optimization_constraints,
+)
 
 __all__ = [
     "add_task_duration_constraints",
@@ -30,4 +35,8 @@ __all__ = [
     "add_template_no_overlap_constraints",
     "add_symmetry_breaking_constraints",
     "add_template_redundant_constraints",
+    # Unattended task constraints
+    "add_business_hours_setup_constraints",
+    "add_unattended_execution_constraints",
+    "add_weekend_optimization_constraints",
 ]

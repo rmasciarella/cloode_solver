@@ -10,6 +10,7 @@ from ortools.sat.python import cp_model
 
 from src.data.loaders.database import load_test_problem
 from src.solver.constraints.phase1 import (
+    add_business_hours_setup_constraints,
     add_machine_assignment_constraints,
     add_machine_capacity_constraints,
     add_machine_no_overlap_constraints,
@@ -22,6 +23,8 @@ from src.solver.constraints.phase1 import (
     add_template_no_overlap_constraints,
     add_template_precedence_constraints,
     add_template_redundant_constraints,
+    add_unattended_execution_constraints,
+    add_weekend_optimization_constraints,
 )
 
 # Type imports - using Any for now as OR-Tools types aren't directly importable
@@ -281,6 +284,17 @@ class FreshSolver:
             self.model, self.task_starts, self.task_ends, self.problem, self.horizon
         )
 
+        # Unattended task constraints for business hours setup and 24/7 execution
+        add_business_hours_setup_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem
+        )
+        add_unattended_execution_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem
+        )
+        add_weekend_optimization_constraints(
+            self.model, self.task_starts, self.task_durations, self.problem
+        )
+
     def _add_legacy_constraints(self) -> None:
         """Add constraints for legacy job-based problems."""
         logger.info("Adding legacy constraints...")
@@ -340,6 +354,17 @@ class FreshSolver:
         # Redundant constraints for better performance
         add_redundant_precedence_constraints(
             self.model, self.task_starts, self.task_ends, self.problem
+        )
+
+        # Unattended task constraints for business hours setup and 24/7 execution
+        add_business_hours_setup_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem
+        )
+        add_unattended_execution_constraints(
+            self.model, self.task_starts, self.task_ends, self.problem
+        )
+        add_weekend_optimization_constraints(
+            self.model, self.task_starts, self.task_durations, self.problem
         )
 
     def set_objective(self) -> None:
