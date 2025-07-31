@@ -73,6 +73,18 @@ Thumbs.db
 logs/
 *.log
 
+# Node.js files (from .claude/ directory)
+node_modules/
+.claude/node_modules/
+package-lock.json
+
+# Development and debugging files
+debug_*.py
+test_*.py
+quick_*.py
+check_*.py
+validate_*.py
+
 # Database files
 *.db
 *.sqlite
