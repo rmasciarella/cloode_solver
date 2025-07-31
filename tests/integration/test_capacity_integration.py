@@ -87,8 +87,8 @@ class TestCapacitySolverIntegration:
             jobs=jobs,
             machines=machines,
             work_cells=[
-                WorkCell("print_cell", "Printing", machines=[printer_farm]),
-                WorkCell("finish_cell", "Finishing", machines=[cnc]),
+                WorkCell("print_cell", "Printing", capacity=5, machines=[printer_farm]),
+                WorkCell("finish_cell", "Finishing", capacity=1, machines=[cnc]),
             ],
             precedences=precedences,
         )

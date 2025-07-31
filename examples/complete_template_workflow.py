@@ -36,7 +36,7 @@ def demonstrate_automatic_loading():
 
     # The DatabaseLoader automatically detects template infrastructure
     # and uses the most efficient loading method available
-    loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+    loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
 
     print("Loading problem with automatic optimization...")
     start_time = time.time()
@@ -85,7 +85,7 @@ def demonstrate_template_vs_legacy_comparison():
     try:
         template_start = time.time()
         template_loader = DatabaseLoader(
-            use_test_tables=True, prefer_template_mode=True
+            use_test_tables=True, prefer_optimized_mode=True
         )
         template_problem = template_loader.load_problem(max_instances=3)
         template_load_time = time.time() - template_start
@@ -189,7 +189,7 @@ def demonstrate_template_constraints():
     print("3. TEMPLATE-OPTIMIZED CONSTRAINT GENERATION")
     print("=" * 60)
 
-    loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+    loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
     problem = loader.load_problem(max_instances=4)
 
     if not problem.is_template_based:

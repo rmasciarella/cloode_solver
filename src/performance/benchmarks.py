@@ -249,80 +249,143 @@ class BenchmarkRunner:
         config: TemplateBenchmark,
         instance_count: int,
         repetition: int,  # noqa: ARG002
-        problem_generator: Any | None = None,  # noqa: ARG002
+        problem_generator: Any | None = None,
     ) -> BenchmarkResult:
-        """Run a single benchmark test."""
-        # For now, simulate benchmark execution
-        # In production, this would:
-        # 1. Generate or load test problem with instance_count instances
-        # 2. Create CP-SAT model with template optimization
-        # 3. Configure solver with specified parameters
-        # 4. Measure solve time, memory usage, and solution quality
+        """Run a single benchmark test with actual solver execution."""
+        import os
+        import time
+
+        import psutil
+
+        from src.data.loaders.optimized_database import OptimizedDatabaseLoader
+        from src.solver.core.solver import FreshSolver
+
+        logger.debug(
+            f"Running benchmark: {config.template_id}, {instance_count} instances"
+        )
 
         parameters = config.parameters or {
             "num_search_workers": 4,
             "max_time_in_seconds": config.time_limit_seconds,
         }
 
-        # Simulate solve time based on instance count and parameters
-        base_time = 1.0 + (instance_count * 0.5)  # Base complexity
+        try:
+            # 1. Generate or load test problem with instance_count instances
+            if problem_generator:
+                problem = problem_generator(config.template_id, instance_count)
+            else:
+                # Use template database loader to create problem
+                loader = OptimizedDatabaseLoader()
+                problem = loader.load_optimized_problem(
+                    pattern_id=config.template_id, max_instances=instance_count
+                )
 
-        # Parameter effects
-        workers = parameters.get("num_search_workers", 4)
-        if workers == 8:
-            base_time *= 0.7  # 8 workers faster
-        elif workers == 1:
-            base_time *= 1.5  # Single worker slower
+            if not problem:
+                raise ValueError(
+                    f"Failed to generate problem for template {config.template_id}"
+                )
 
-        # Template optimization effect (5-8x improvement)
-        template_speedup = 6.0  # Simulate template optimization
-        solve_time = base_time / template_speedup
+            # 2. Create solver and configure parameters
+            solver = FreshSolver(problem)
 
-        # Add some realistic variation
-        import random
+            # Configure solver parameters
+            if solver.solver:
+                for param_name, param_value in parameters.items():
+                    if hasattr(solver.solver.parameters, param_name):
+                        setattr(solver.solver.parameters, param_name, param_value)
 
-        solve_time *= 0.9 + random.random() * 0.2  # ±10% variation
+            # 3. Measure solve time and memory usage
+            start_time = time.time()
+            process = psutil.Process(os.getpid())
+            start_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-        # Simulate memory usage
-        memory_usage = 50 + (instance_count * 10) + random.randint(-10, 10)
+            # Track first solution time
+            first_solution_time = 0.0
 
-        # Simulate successful solve
-        result = BenchmarkResult(
-            template_id=config.template_id,
-            instance_count=instance_count,
-            solve_time=solve_time,
-            memory_usage_mb=memory_usage,
-            objective_value=instance_count * 100.0,  # Simulated objective
-            solver_status="OPTIMAL",
-            parameters_used=parameters,
-            variable_count=instance_count * 50,  # Simulated variables
-            constraint_count=instance_count * 30,  # Simulated constraints
-            first_solution_time=solve_time * 0.1,  # Simulated first solution
-            iterations_count=1000 + instance_count * 100,
-        )
+            # Solve the problem
+            solution = solver.solve(config.time_limit_seconds)
 
-        logger.debug(
-            f"Benchmark result: {instance_count} instances -> {solve_time:.2f}s"
-        )
+            end_time = time.time()
+            end_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-        return result
+            solve_time = end_time - start_time
+            memory_usage = max(0, end_memory - start_memory)
+
+            # 4. Extract results
+            if solution and solution.get("status") in ["OPTIMAL", "FEASIBLE"]:
+                objective_value = solution.get("makespan", 0)
+                solver_status = solution.get("status", "OPTIMAL")
+                # Estimate - would need callback for exact timing
+                first_solution_time = solve_time * 0.1
+            else:
+                objective_value = None
+                solver_status = (
+                    solution.get("status", "NO_SOLUTION") if solution else "NO_SOLUTION"
+                )
+
+            # Get model statistics (estimated from problem size)
+            # starts, ends, assignments
+            variable_count = (
+                len(problem.jobs) * sum(len(job.tasks) for job in problem.jobs) * 3
+            )
+            constraint_count = variable_count * 2  # Rough estimate
+            iterations_count = 1000  # Would need solver callback for exact count
+
+            result = BenchmarkResult(
+                template_id=config.template_id,
+                instance_count=instance_count,
+                solve_time=solve_time,
+                memory_usage_mb=memory_usage,
+                objective_value=objective_value,
+                solver_status=solver_status,
+                parameters_used=parameters,
+                variable_count=variable_count,
+                constraint_count=constraint_count,
+                first_solution_time=first_solution_time,
+                iterations_count=iterations_count,
+            )
+
+            logger.debug(
+                f"Benchmark result: {instance_count} instances -> {solve_time:.2f}s, "
+                f"status: {solver_status}, memory: {memory_usage:.1f}MB"
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Benchmark failed for {config.template_id}: {e}")
+            # Return failed result
+            return BenchmarkResult(
+                template_id=config.template_id,
+                instance_count=instance_count,
+                solve_time=float("inf"),
+                memory_usage_mb=0.0,
+                objective_value=None,
+                solver_status="FAILED",
+                parameters_used=parameters,
+            )
 
     def _get_baseline_comparison(
-        self, template_id: str  # noqa: ARG002
+        self,
+        template_id: str,
     ) -> dict[str, float] | None:
-        """Get baseline performance for comparison."""
-        # Simulate baseline performance (without template optimization)
-        baselines = {}
+        """Get baseline performance for comparison from historical data."""
+        # Check if we have historical baseline data stored
+        baseline_file = self.results_dir / f"{template_id}_baseline.json"
 
-        # Template-specific complexity factor based on ID
-        complexity_factor = len(template_id) / 10.0 + 1.0
+        if baseline_file.exists():
+            try:
+                with open(baseline_file) as f:
+                    baseline_data = json.load(f)
+                baselines = baseline_data.get("baselines", {})
+                return baselines if isinstance(baselines, dict) else {}
+            except Exception as e:
+                logger.warning(f"Failed to load baseline data for {template_id}: {e}")
 
-        for instance_count in [1, 3, 5, 10, 20]:
-            # Simulate legacy performance (before template optimization)
-            legacy_time = (1.0 + instance_count * 0.5) * 6.0 * complexity_factor
-            baselines[f"instances_{instance_count}"] = legacy_time
-
-        return baselines
+        # If no baseline exists, return None instead of simulated data
+        # Baselines should be established through actual measurement runs
+        logger.info(f"No baseline data available for {template_id}")
+        return None
 
     def _save_benchmark_suite(self, suite: BenchmarkSuite) -> None:
         """Save benchmark suite to storage."""

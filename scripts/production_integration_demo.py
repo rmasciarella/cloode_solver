@@ -63,9 +63,9 @@ def demo_parameter_management():
         sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
         from solver.templates import (
+            OptimizedOptimizer,
+            OptimizedValidator,
             ParameterManager,
-            TemplateOptimizer,
-            TemplateValidator,
         )
 
         print("✅ Template management modules loaded successfully")
@@ -95,8 +95,8 @@ def demo_parameter_management():
         print(f"🏆 Blessed parameters available: {blessed_count}")
 
         # Initialize optimizer and validator
-        TemplateOptimizer()  # noqa: F841
-        TemplateValidator()  # noqa: F841
+        OptimizedOptimizer()  # noqa: F841
+        OptimizedValidator()  # noqa: F841
 
         print("✅ Template optimizer and validator ready")
 

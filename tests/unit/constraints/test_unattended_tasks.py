@@ -12,17 +12,17 @@ from src.solver.constraints.phase1.unattended_tasks import (
 from src.solver.models.problem import (
     Job,
     JobInstance,
-    JobTemplate,
+    JobOptimizedPattern,
     Machine,
     SchedulingProblem,
     Task,
     TaskMode,
-    TemplateTask,
+    OptimizedTask,
     WorkCell,
 )
 
 
-def test_business_hours_setup_constraints_legacy():
+def test_business_hours_setup_constraints_unique():
     """Test that setup tasks for unattended processes are constrained to business hours.
 
     Tests the constraint that setup tasks for unattended processes must occur
@@ -93,29 +93,29 @@ def test_business_hours_setup_constraints_legacy():
     assert 28 <= end_offset <= 68, f"Setup end {end_offset} outside business hours"
 
 
-def test_business_hours_setup_constraints_template():
-    """Test business hours constraints for template-based unattended tasks."""
-    # GIVEN: A template with unattended setup task
+def test_business_hours_setup_constraints_optimized():
+    """Test business hours constraints for optimized-based unattended tasks."""
+    # GIVEN: A optimized with unattended setup task
     model = cp_model.CpModel()
 
-    template_task = TemplateTask(
-        template_task_id="setup_template",
-        name="Template Setup",
+    optimized_task = OptimizedTask(
+        optimized_task_id="setup_optimized",
+        name="Optimized Setup",
         is_unattended=True,
         is_setup=True,
-        modes=[TaskMode("mode_1", "setup_template", "machine_1", 45)],  # 45 minutes
+        modes=[TaskMode("mode_1", "setup_optimized", "machine_1", 45)],  # 45 minutes
     )
 
-    template = JobTemplate(
-        template_id="template_1",
-        name="Unattended Template",
-        description="Template with setup",
-        template_tasks=[template_task],
+    optimized = JobOptimizedPattern(
+        optimized_pattern_id="optimized_1",
+        name="Unattended Optimized",
+        description="Optimized with setup",
+        optimized_tasks=[optimized_task],
     )
 
     instance = JobInstance(
         instance_id="instance_1",
-        template_id="template_1",
+        optimized_id="optimized_1",
         description="Instance 1",
         due_date=datetime.now(UTC),
     )
@@ -123,18 +123,18 @@ def test_business_hours_setup_constraints_template():
     machine = Machine("machine_1", "cell_1", "Setup Machine")
     work_cell = WorkCell("cell_1", "Cell 1", machines=[machine])
 
-    problem = SchedulingProblem.create_from_template(
-        job_template=template,
+    problem = SchedulingProblem.create_from_optimized(
+        job_optimized=optimized,
         job_instances=[instance],
         machines=[machine],
         work_cells=[work_cell],
     )
 
     # Create timing variables
-    instance_task_id = problem.get_instance_task_id("instance_1", "setup_template")
+    instance_task_id = problem.get_instance_task_id("instance_1", "setup_optimized")
     task_key = ("instance_1", instance_task_id)
-    task_starts = {task_key: model.NewIntVar(0, 1000, "start_setup_template")}
-    task_ends = {task_key: model.NewIntVar(0, 1000, "end_setup_template")}
+    task_starts = {task_key: model.NewIntVar(0, 1000, "start_setup_optimized")}
+    task_ends = {task_key: model.NewIntVar(0, 1000, "end_setup_optimized")}
 
     # Task duration constraint (45 min = 3 time units)
     model.Add(task_ends[task_key] == task_starts[task_key] + 3)
@@ -142,7 +142,7 @@ def test_business_hours_setup_constraints_template():
     # WHEN: Adding business hours constraints
     add_business_hours_setup_constraints(model, task_starts, task_ends, problem)
 
-    # THEN: Template setup task is scheduled within business hours
+    # THEN: Optimized setup task is scheduled within business hours
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
@@ -155,10 +155,10 @@ def test_business_hours_setup_constraints_template():
     day = start_time // 96
     start_offset = start_time % 96
 
-    assert day < 5, f"Template setup scheduled on weekend day {day}"
+    assert day < 5, f"Optimized setup scheduled on weekend day {day}"
     assert (
         28 <= start_offset <= 68
-    ), f"Template setup start {start_offset} outside business hours"
+    ), f"Optimized setup start {start_offset} outside business hours"
 
 
 def test_unattended_execution_no_time_restrictions():

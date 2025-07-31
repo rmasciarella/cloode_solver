@@ -48,6 +48,7 @@ fresh_solver/
 **Important**: This project uses UV for Python package management. All commands must be prefixed with `uv run`.
 
 1. Install UV and dependencies:
+
 ```bash
 # Install UV (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -57,17 +58,20 @@ uv install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your Supabase credentials
 ```
 
 3. Load template test data:
+
 ```bash
 uv run python scripts/populate_template_test_data.py
 ```
 
 4. Run template solver:
+
 ```bash
 uv run python test_template_solver.py
 ```
@@ -83,6 +87,7 @@ Performance benchmarks for template-based scheduling:
 ## Development Commands
 
 **Complete Type Safety Pipeline**:
+
 ```bash
 make lint                      # Complete quality check: ruff + black + mypy (REQUIRED)
 uv run ruff check . --fix      # Auto-fix linting issues
@@ -91,6 +96,7 @@ uv run mypy src/               # Type check (must pass with 0 errors)
 ```
 
 **Testing**:
+
 ```bash
 uv run python run_tests.py              # Run all tests with coverage
 uv run python -m pytest tests/unit/ -v  # Run unit tests
@@ -98,6 +104,7 @@ uv run python -m pytest tests/integration/test_template_integration.py -v
 ```
 
 **Template Development**:
+
 ```bash
 uv run python examples/template_scheduling_example.py     # Template example
 uv run python scripts/validate_template_performance.py    # Performance validation
@@ -106,18 +113,21 @@ uv run python scripts/validate_template_performance.py    # Performance validati
 ## Architecture Highlights
 
 ### Template-First Design
+
 - **JobTemplate**: Reusable job structure with template tasks and precedences
 - **JobInstance**: Lightweight instance referencing template with due dates
 - **Template Constraints**: Optimized constraint functions for identical jobs
 - **Legacy Compatibility**: Backward compatibility with traditional job-shop scheduling
 
 ### Type Safety (100% mypy compliance)
+
 - **34 source files** with complete type annotations
 - **Centralized type aliases** for OR-Tools structures
 - **ortools-stubs** integration for proper CP-SAT typing
 - **88-character line length** compliance with automatic formatting
 
 ### Modular Claude Configuration
+
 - **CLAUDE.md** (126 lines): Clean navigation hub
 - **Subordinate files**: Detailed information in organized structure
 - **Custom commands**: Template-specific OR-Tools development commands

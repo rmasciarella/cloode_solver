@@ -11,8 +11,8 @@ from ortools.sat.python import cp_model
 from src.solver.models.problem import SchedulingProblem
 
 if TYPE_CHECKING:
+    from src.solver.models.optimized_task import OptimizedTask
     from src.solver.models.task import Task
-    from src.solver.models.template_task import TemplateTask
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +59,16 @@ def add_skill_requirement_constraints(
 
     # Get all tasks that need operator assignment
     task_ids = set()
-    if problem.is_template_based and problem.job_template:
-        # Template-based tasks
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
+        # Optimized mode tasks
         for instance in problem.job_instances:
-            for template_task in problem.job_template.template_tasks:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
                 task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_ids.add(task_id)
     else:
-        # Legacy tasks
+        # Unique mode tasks
         for job in problem.jobs:
             for task in job.tasks:
                 task_ids.add(task.task_id)
@@ -87,7 +87,7 @@ def add_skill_requirement_constraints(
         for operator in qualified_operators:
             # Find the job_id for this task
             job_id = None
-            if problem.is_template_based:
+            if problem.is_optimized_mode:
                 # Parse instance task ID
                 parsed = problem.parse_instance_task_id(task_id)
                 if parsed:
@@ -110,13 +110,13 @@ def add_skill_requirement_constraints(
 
             # Check if this is a multi-operator task
             is_multi_operator = False
-            if problem.is_template_based:
+            if problem.is_optimized_mode:
                 parsed = problem.parse_instance_task_id(task_id)
                 if parsed:
-                    template_task_result = problem.get_template_task(parsed[1])
+                    optimized_task_result = problem.get_optimized_task(parsed[1])
                     is_multi_operator = (
-                        template_task_result is not None
-                        and template_task_result.max_operators > 1
+                        optimized_task_result is not None
+                        and optimized_task_result.max_operators > 1
                     )
             else:
                 task_result = problem.get_task(task_id)
@@ -246,19 +246,19 @@ def add_multi_operator_task_constraints(
 
     # Get all tasks that need multi-operator support
     task_ids = set()
-    task_definitions: dict[str, Task | TemplateTask] = {}  # task_id -> task object
+    task_definitions: dict[str, Task | OptimizedTask] = {}  # task_id -> task object
 
-    if problem.is_template_based and problem.job_template:
-        # Template-based tasks
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
+        # Optimized mode tasks
         for instance in problem.job_instances:
-            for template_task in problem.job_template.template_tasks:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
                 task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_ids.add(task_id)
-                task_definitions[task_id] = template_task
+                task_definitions[task_id] = optimized_task
     else:
-        # Legacy tasks
+        # Unique mode tasks
         for job in problem.jobs:
             for task in job.tasks:
                 task_ids.add(task.task_id)
@@ -315,11 +315,11 @@ def add_skill_proficiency_optimization(
 
     # Get all tasks
     task_ids = set()
-    if problem.is_template_based and problem.job_template:
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
         for instance in problem.job_instances:
-            for template_task in problem.job_template.template_tasks:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
                 task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_ids.add(task_id)
     else:

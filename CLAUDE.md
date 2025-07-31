@@ -1,16 +1,10 @@
 # CLAUDE.md
-@.claude/STANDARDS.md
-@.claude/COMMANDS.md  
-@.claude/CONTEXT.md
-@.claude/TEMPLATES.md
-@.claude/WORKFLOWS.md
-@.claude/PROMPTS.md
-@.claude/DEVELOPMENT.md
-@.claude/TROUBLESHOOTING.md
 
-This file provides concise guidance to Claude Code when working with this OR-Tools constraint programming solver optimized for template-based scheduling.
+**🔄 Active Context**: @/docs/worklog/active/CURRENT.md
 
-## Essential Commands
+OR-Tools constraint programming solver optimized for template-based scheduling.
+
+## Core Workflow
 
 **CRITICAL**: Use UV prefix for all Python commands: `uv run python script.py`
 
@@ -18,109 +12,107 @@ This file provides concise guidance to Claude Code when working with this OR-Too
 # Core Development Workflow
 make lint                    # Complete quality check: ruff + black + mypy (REQUIRED)
 uv run python run_tests.py   # Run all tests with coverage
-uv run python solver.py      # Run solver with test data
 
-# Template Development (5-8x Performance Gains)
-uv run python scripts/validate_template_performance.py  # Benchmark templates
-/template-benchmark <template_id>                       # Claude command for analysis
+# Template-Based Development
+uv run python scripts/validate_template_performance.py  # Validate template patterns
+uv run python scripts/run_production_solver.py         # Production template solver
+/optimized-benchmark <pattern_id>                       # Claude command for analysis
 ```
 
-## Project Architecture ⚡
+### Core Components
 
-**Template-First Constraint Programming Solver** using Google OR-Tools CP-SAT for parallel identical job scheduling with 5-8x performance improvements over legacy approaches.
+**Data Layer**:
+- `src/data/loaders/optimized_database.py` - OptimizedDatabaseLoader for O(pattern_size × instances) performance
+- `src/data/loaders/database.py` - Legacy DatabaseLoader for backward compatibility
+- `schema/optimized_solver_schema.sql` - Optimized database schema
 
-- **Primary**: Template-based optimization (current focus)
-- **Legacy**: Traditional job-shop scheduling (backward compatibility)
-- **Framework**: OR-Tools CP-SAT with 100% type safety (mypy)
+**Solver Engine**:
+- `src/solver/core/solver.py` - Main CP-SAT solver with 3-phase optimization
+- `src/solver/models/problem.py` - Problem models (SchedulingProblem, OptimizedTask, JobOptimizedPattern)
+- `src/solver/templates/optimized_optimizer.py` - Template-based optimization engine
 
-## Template Development Workflow (NEW STANDARD)
+**Constraint System**:
+- `src/solver/constraints/phase1/` - Core scheduling constraints (timing, capacity, precedence)
+- `src/solver/constraints/phase2/` - Advanced optimization (skill matching, shift calendars)
+- `src/solver/constraints/phase3/` - Multi-objective optimization (Pareto optimization)
 
-All development follows template-first methodology for optimal performance:
+**Performance & Monitoring**:
+- `src/performance/benchmarks.py` - Performance regression testing
+- `src/operations/performance_monitoring.py` - Real-time performance monitoring
+- `src/solver/visualization/trade_off_visualizer.py` - Solution trade-off analysis
 
-1. **Create Template**: Use `TemplateDatabaseLoader` with existing database structure
-2. **Benchmark**: Validate with `scripts/validate_template_performance.py`
-3. **Optimize**: Tune CP-SAT parameters using `/template-optimize-params`
-4. **Deploy**: Store blessed parameters with `/template-promote-params`
+**Framework**: OR-Tools CP-SAT with 100% type safety (mypy)
+**Approach**: Template-based optimization for efficient constraint solving
 
-### Template Optimization Priority
-1. **Symmetry Breaking** (highest impact): Manual lexicographical ordering
-2. **Parameter Tuning** (medium impact): `num_search_workers`, `search_branching`
-3. **Solution Hinting** (specialized): Template re-solving scenarios
+## Template Development Workflow
 
-### Performance Targets
-- Simple Templates (5-10 tasks): < 1s for 10+ instances
-- Medium Templates (20-50 tasks): < 10s for 5+ instances
-- Complex Templates (100+ tasks): < 60s for 3+ instances
+1. **Create**: Use `OptimizedDatabaseLoader`
+2. **Benchmark**: `scripts/validate_optimized_performance.py`
+3. **Optimize**: `/optimized-optimize-params <pattern_id>`
+4. **Deploy**: `/optimized-promote-params <pattern_id> <params.json>`
 
-## Cross-Session Context Preservation
+**Optimization Priority**: Symmetry Breaking > Parameter Tuning > Solution Hinting
 
-**Template Development Sessions** - Always preserve optimization history:
+## Context Loading
 
+**Context Loading Strategy**: Additional documentation is available on-demand rather than preloaded:
+```bash
+/standards     # Load STANDARDS.md when adding constraints
+/commands      # Load COMMANDS.md for complete command reference  
+/templates     # Load TEMPLATES.md for code generation
+/workflows     # Load WORKFLOWS.md for step-by-step processes
+/debug-help    # Load TROUBLESHOOTING.md for debugging workflows
+/prompts       # Load PROMPTS.md for effective prompt patterns
+/context       # Load CONTEXT.md for domain knowledge and edge cases
+/development   # Load DEVELOPMENT.md for core components and architecture details
+/docs-help     # Load documentation and report files on-demand
 ```
-"Continue template optimization for {template_id}.
-Last session: {baseline_time}s → {current_time}s ({speedup}x improvement)
-Techniques applied: {optimization_list}
-Current focus: {next_optimization_area}"
 
-Checkpoint every 30 minutes:
-"Template {template_id} checkpoint:
-- Performance: {baseline} → {current} ({improvement}x)
-- Status: {blessed|experimental|testing}
-- Next: {pending_optimizations}"
-```
+## Command Reference
 
-## Quick Command Reference
-
-See `.claude/COMMANDS.md` for complete list. Essential shortcuts:
 ```bash
 # Constraint Development
-/ac <name>     # Add constraint following STANDARDS.md
-/tc <name>     # Generate unit tests
-/cc <function> # Check against standards
+/ac <name>     # Add constraint
+/tc <name>     # Generate tests
+/cc <function> # Check standards
 
-# Template Optimization ⚡
-/template-benchmark <template_id>    # Performance analysis
-/template-optimize-params <template_id>  # Parameter tuning
-/template-promote-params <template_id> <params.json>  # Deploy to production
+# Optimization
+/optimized-benchmark <pattern_id>
+/optimized-optimize-params <pattern_id>
 
 # Debugging
-/ti            # Trace infeasible model
-/ps            # Profile solver performance
-/debug-slow    # Complete performance workflow
+/ti            # Trace infeasible
+/ps            # Profile performance
+/debug-slow    # Performance workflow
 ```
 
-## Type Safety (100% Compliance)
+## Standards
 
-All code must pass `mypy src/` with 0 errors. Use centralized type aliases from `.claude/TEMPLATES.md`.
+**Type Safety**: 100% mypy compliance required
+**Imports**: `from .types import TaskStartDict, TaskEndDict, TaskKey`
+**Functions**: Max 30 lines, single responsibility
+**Variables**: `task_starts[(job_id, task_id)]`
+**Time Units**: 15-minute intervals
+**Testing**: GIVEN-WHEN-THEN pattern
 
-```python
-# Standard imports for constraint functions
-from ortools.sat.python import cp_model
-from .types import TaskStartDict, TaskEndDict, TaskKey  # Centralized aliases
+## Worklog Maintenance
+
+**CRITICAL**: Keep `/docs/worklog/active/CURRENT.md` under 200 lines and current:
+
+- **Update frequently**: After major task transitions, blocker discoveries, or significant progress
+- **Remove completed items**: Archive finished work to `/docs/worklog/archive/YYYY-MM-DD.md`
+- **Focus on immediate context**: Current focus, active files, blockers, next 2-3 steps only
+- **Clean old entries**: Remove irrelevant discoveries and outdated next steps
+- **Archive daily**: Move CURRENT.md to archive at end of each development session
+
+## Session Continuity
+
+For template development sessions:
 ```
-
-## Key Standards
-
-**All functions must follow STANDARDS.md:**
-- Constraint functions: max 30 lines, single responsibility  
-- Variable naming: `task_starts[(job_id, task_id)]`
-- Type safety: 100% mypy compliance required
-- Time units: 15-minute intervals throughout
-- Testing: GIVEN-WHEN-THEN pattern
-
-## Architecture Files Reference
-
-- **Development Details**: `.claude/DEVELOPMENT.md` - Core components, design patterns, testing
-- **Troubleshooting**: `.claude/TROUBLESHOOTING.md` - Debug workflows, common issues
-- **Complete Workflows**: `.claude/WORKFLOWS.md` - Step-by-step development processes
-- **Standards**: `.claude/STANDARDS.md` - Coding standards, type safety, performance
-- **Commands**: `.claude/COMMANDS.md` - Complete OR-Tools command system
-- **Templates**: `.claude/TEMPLATES.md` - Code generation templates with type aliases
-- **Context**: `.claude/CONTEXT.md` - Domain knowledge, edge cases, performance insights
-- **Prompts**: `.claude/PROMPTS.md` - Effective prompt patterns
+"Continue template pattern {pattern_id}.
+Focus: {specific_area}"
+```
 
 ## Dependencies
 
-Install: `uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`
-
-**Note**: `ortools-stubs` essential for 100% type safety with OR-Tools CP-SAT framework.
+`uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`

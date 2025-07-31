@@ -22,33 +22,33 @@ from src.solver.models.problem import (
 class TestPhase1FullIntegration:
     """Test complete Phase 1 integration."""
 
-    @patch("src.data.loaders.template_database.create_client")
+    @patch("src.data.loaders.optimized_database.create_client")
     @patch("src.data.loaders.database.create_client")
     def test_full_pipeline_with_mocked_db(
-        self, mock_create_client, mock_template_create_client
+        self, mock_create_client, mock_optimized_create_client
     ):
         """Test complete pipeline from DB load to solution."""
         # GIVEN: Mock database with complete test data
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
 
-        # Mock template client as well
-        mock_template_client = MagicMock()
-        mock_template_create_client.return_value = mock_template_client
+        # Mock optimized client as well
+        mock_optimized_client = MagicMock()
+        mock_optimized_create_client.return_value = mock_optimized_client
 
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table
         mock_table.select.return_value = mock_table
         mock_table.eq.return_value = mock_table
 
-        # Mock template table access
-        mock_template_table = MagicMock()
-        mock_template_client.table.return_value = mock_template_table
-        mock_template_table.select.return_value = mock_template_table
-        mock_template_table.eq.return_value = mock_template_table
+        # Mock optimized table access
+        mock_optimized_table = MagicMock()
+        mock_optimized_client.table.return_value = mock_optimized_table
+        mock_optimized_table.select.return_value = mock_optimized_table
+        mock_optimized_table.eq.return_value = mock_optimized_table
 
-        # Template loader should return empty templates (use legacy mode)
-        mock_template_table.execute.return_value = MagicMock(data=[])
+        # Optimized loader should return empty optimizeds (use unique mode)
+        mock_optimized_table.execute.return_value = MagicMock(data=[])
 
         # Complete test data
         mock_responses = {

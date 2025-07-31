@@ -1,8 +1,8 @@
-"""End-to-end integration tests for template-based scheduling architecture.
+"""End-to-end integration tests for optimized-based scheduling architecture.
 
-Tests the complete pipeline from database loading through template solving to
+Tests the complete pipeline from database loading through optimized solving to
 solution persistence.
-Validates that the complete template architecture (Weeks 1-3) works end-to-end
+Validates that the complete optimized architecture (Weeks 1-3) works end-to-end
 with optimal performance.
 """
 
@@ -19,15 +19,15 @@ from src.solver.core.solver import FreshSolver
 logger = logging.getLogger(__name__)
 
 
-class TestTemplateIntegration:
-    """End-to-end integration tests for template-based scheduling."""
+class TestOptimizedIntegration:
+    """End-to-end integration tests for optimized-based scheduling."""
 
     def test_automatic_mode_detection(self, mock_database_loader):
         """Test that DatabaseLoader automatically detects and uses optimal loading mode.
 
-        Tests automatic selection of template vs legacy loading mode.
+        Tests automatic selection of optimized vs unique loading mode.
         """
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
 
         # This should automatically choose the best available loading method
         problem = loader.load_problem()
@@ -36,71 +36,71 @@ class TestTemplateIntegration:
         assert problem.total_task_count > 0
         assert problem.total_machine_count > 0
 
-        # Check if template mode was used
-        if problem.is_template_based:
-            logger.info("✓ Template mode automatically detected and used")
-            assert problem.job_template is not None
+        # Check if optimized mode was used
+        if problem.is_optimized_mode:
+            logger.info("✓ Optimized mode automatically detected and used")
+            assert problem.job_optimized_pattern is not None
             assert len(problem.job_instances) > 0
-            assert problem.template_task_count > 0
+            assert problem.optimized_task_count > 0
         else:
-            logger.info("✓ Legacy mode used (no template infrastructure)")
+            logger.info("✓ Unique mode used (no optimized infrastructure)")
             assert len(problem.jobs) > 0
 
-    def test_template_vs_legacy_compatibility(self, mock_database_loader):
-        """Test that both template and legacy modes produce valid, equivalent results.
+    def test_optimized_vs_unique_compatibility(self, mock_database_loader):
+        """Test that both optimized and unique modes produce valid, equivalent results.
 
-        Compares template and legacy loading modes for compatibility.
+        Compares optimized and unique loading modes for compatibility.
         """
         # Load same data using both approaches
-        template_loader = mock_database_loader(
-            use_test_tables=True, prefer_template_mode=True
+        optimized_loader = mock_database_loader(
+            use_test_tables=True, prefer_optimized_mode=True
         )
-        legacy_loader = mock_database_loader(
-            use_test_tables=True, prefer_template_mode=False
+        unique_loader = mock_database_loader(
+            use_test_tables=True, prefer_optimized_mode=False
         )
 
-        template_problem = template_loader.load_problem()
-        legacy_problem = legacy_loader.load_problem()
+        optimized_problem = optimized_loader.load_problem()
+        unique_problem = unique_loader.load_problem()
 
         # Both should be valid problems
-        assert template_problem is not None
-        assert legacy_problem is not None
+        assert optimized_problem is not None
+        assert unique_problem is not None
 
-        # If template mode was used, compare with legacy
-        if template_problem.is_template_based:
-            logger.info("Comparing template vs legacy loading...")
+        # If optimized mode was used, compare with unique
+        if optimized_problem.is_optimized_mode:
+            logger.info("Comparing optimized vs unique loading...")
 
             # Should have same machine count
             assert (
-                template_problem.total_machine_count
-                == legacy_problem.total_machine_count
+                optimized_problem.total_machine_count
+                == unique_problem.total_machine_count
             )
 
-            # Template should have structured data
-            assert template_problem.job_template is not None
-            assert len(template_problem.job_instances) > 0
+            # Optimized should have structured data
+            assert optimized_problem.job_optimized_pattern is not None
+            assert len(optimized_problem.job_instances) > 0
 
-            # Legacy should have traditional jobs
-            assert len(legacy_problem.jobs) > 0
+            # Unique should have traditional jobs
+            assert len(unique_problem.jobs) > 0
 
-            logger.info("✓ Template and legacy modes both produce valid problems")
+            logger.info("✓ Optimized and unique modes both produce valid problems")
         else:
-            logger.info("✓ No template infrastructure - both modes use legacy loading")
+            logger.info("✓ No optimized infrastructure - both modes use unique loading")
 
-    def test_template_solving_performance(self, mock_database_loader):
-        """Test template-based solving performance and correctness."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    def test_optimized_solving_performance(self, mock_database_loader):
+        """Test optimized-based solving performance and correctness."""
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=3)  # Limit for testing
 
-        if not problem.is_template_based:
-            pytest.skip("No template infrastructure available for performance testing")
+        if not problem.is_optimized_mode:
+            pytest.skip("No optimized infrastructure available for performance testing")
 
         logger.info(
-            f"Testing template problem: {problem.instance_count} instances, "
-            f"{problem.template_task_count} template tasks each"
+            f"Testing optimized problem: {problem.instance_count} instances, "
+            f"{problem.optimized_task_count} optimized tasks each"
         )
 
-        # Solve with template-optimized solver
+        # Solve with optimized-optimized solver
         start_time = time.time()
         solver = FreshSolver(problem)
         solution = solver.solve(time_limit=30)
@@ -118,54 +118,54 @@ class TestTemplateIntegration:
         assert len(scheduled_tasks) == expected_task_count
 
         logger.info(
-            f"✓ Template problem solved in {solve_time:.2f}s with makespan "
+            f"✓ Optimized problem solved in {solve_time:.2f}s with makespan "
             f"{solution.get('makespan')}"
         )
 
-    def test_template_constraint_optimization(self, mock_database_loader):
-        """Test that template constraints provide performance benefits."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    def test_optimized_constraint_optimization(self, mock_database_loader):
+        """Test that optimized constraints provide performance benefits."""
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=5)
 
-        if not problem.is_template_based:
+        if not problem.is_optimized_mode:
             pytest.skip(
-                "No template infrastructure for constraint optimization testing"
+                "No optimized infrastructure for constraint optimization testing"
             )
 
-        # Test template-optimized solver
-        template_solver = FreshSolver(problem)
+        # Test optimized-optimized solver
+        optimized_solver = FreshSolver(problem)
 
         start_time = time.time()
-        template_solution = template_solver.solve(time_limit=20)
-        template_time = time.time() - start_time
+        optimized_solution = optimized_solver.solve(time_limit=20)
+        optimized_time = time.time() - start_time
 
-        # Verify template solution
-        assert template_solution is not None
-        assert template_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
+        # Verify optimized solution
+        assert optimized_solution is not None
+        assert optimized_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
 
-        # Template solver should be efficient
-        assert template_time < 20
+        # Optimized solver should be efficient
+        assert optimized_time < 20
 
         logger.info(
-            f"✓ Template-optimized constraints completed in {template_time:.2f}s"
+            f"✓ Optimized-optimized constraints completed in {optimized_time:.2f}s"
         )
 
         # Log optimization insights
         logger.info("Problem characteristics:")
         logger.info(f"  - {problem.instance_count} identical job instances")
-        logger.info(f"  - {problem.template_task_count} tasks per instance")
+        logger.info(f"  - {problem.optimized_task_count} tasks per instance")
         logger.info(f"  - {problem.total_task_count} total tasks")
         logger.info(
-            f"  - {len(problem.job_template.template_precedences)} template precedences"
+            f"  - {len(problem.job_optimized_pattern.optimized_precedences)} optimized precedences"
         )
 
     def test_solution_persistence(self, mock_database_loader):
-        """Test that template solutions can be saved back to database."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+        """Test that optimized solutions can be saved back to database."""
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=2)
 
-        if not problem.is_template_based:
-            pytest.skip("No template infrastructure for solution persistence testing")
+        if not problem.is_optimized_mode:
+            pytest.skip("No optimized infrastructure for solution persistence testing")
 
         # Solve the problem
         solver = FreshSolver(problem)
@@ -188,37 +188,37 @@ class TestTemplateIntegration:
 
         # Test solution persistence (would save to instance_task_assignments table)
         try:
-            loader._template_loader.save_solution_assignments(problem, solution_data)
+            loader._optimized_loader.save_solution_assignments(problem, solution_data)
             logger.info("✓ Solution successfully persisted to database")
         except Exception as e:
             logger.warning(f"Solution persistence test skipped: {e}")
             # This is expected if database is read-only or table doesn't exist
 
-    def test_template_instance_creation(self, mock_database_loader):
-        """Test dynamic creation of job instances from templates."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    def test_optimized_instance_creation(self, mock_database_loader):
+        """Test dynamic creation of job instances from optimized_patterns."""
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
 
-        # Try to get available templates
-        templates = loader.load_available_templates()
+        # Try to get available optimized_patterns
+        optimized_patterns = loader.load_available_optimized_patterns()
 
-        if not templates:
-            pytest.skip("No templates available for instance creation testing")
+        if not optimized_patterns:
+            pytest.skip("No optimized_patterns available for instance creation testing")
 
-        template = templates[0]
-        logger.info(f"Testing instance creation for template: {template.name}")
+        optimized_pattern = optimized_patterns[0]
+        logger.info(f"Testing instance creation for optimized: {optimized.name}")
 
         # Test instance creation (would create new records in job_instances table)
         try:
-            instance_ids = loader.create_template_instances(
-                template.template_id, instance_count=2, base_description="Test Instance"
+            instance_ids = loader.create_optimized_instances(
+                optimized_pattern.pattern_id, instance_count=2, base_description="Test Instance"
             )
 
             assert len(instance_ids) == 2
             logger.info(f"✓ Created {len(instance_ids)} instances: {instance_ids}")
 
             # Test loading the newly created instances
-            problem = loader.load_template_problem(
-                template.template_id, max_instances=2
+            problem = loader.load_optimized_problem(
+                optimized_pattern.pattern_id, max_instances=2
             )
             assert problem.instance_count >= 2
 
@@ -227,87 +227,87 @@ class TestTemplateIntegration:
             # Expected if database is read-only
 
     def test_performance_comparison(self, mock_database_loader):
-        """Compare template vs legacy performance on identical data."""
-        # This test requires both template and legacy data representing the same problem
-        template_loader = mock_database_loader(
-            use_test_tables=True, prefer_template_mode=True
+        """Compare optimized vs unique performance on identical data."""
+        # This test requires both optimized and unique data representing the same problem
+        optimized_loader = mock_database_loader(
+            use_test_tables=True, prefer_optimized_mode=True
         )
-        legacy_loader = mock_database_loader(
-            use_test_tables=True, prefer_template_mode=False
+        unique_loader = mock_database_loader(
+            use_test_tables=True, prefer_optimized_mode=False
         )
 
         # Load problems
-        template_problem = template_loader.load_problem(max_instances=3)
-        legacy_problem = legacy_loader.load_problem()
+        optimized_problem = optimized_loader.load_problem(max_instances=3)
+        unique_problem = unique_loader.load_problem()
 
-        if not template_problem.is_template_based:
+        if not optimized_problem.is_optimized_mode:
             pytest.skip(
-                "Template infrastructure not available for performance comparison"
+                "Optimized infrastructure not available for performance comparison"
             )
 
-        # Test template performance
-        template_start = time.time()
-        template_solver = FreshSolver(template_problem)
-        template_solution = template_solver.solve(time_limit=20)
-        template_time = time.time() - template_start
+        # Test optimized performance
+        optimized_start = time.time()
+        optimized_solver = FreshSolver(optimized_problem)
+        optimized_solution = optimized_solver.solve(time_limit=20)
+        optimized_time = time.time() - optimized_start
 
-        # Test legacy performance
-        legacy_start = time.time()
-        legacy_solver = FreshSolver(legacy_problem)
-        legacy_solution = legacy_solver.solve(time_limit=20)
-        legacy_time = time.time() - legacy_start
+        # Test unique performance
+        unique_start = time.time()
+        unique_solver = FreshSolver(unique_problem)
+        unique_solution = unique_solver.solve(time_limit=20)
+        unique_time = time.time() - unique_start
 
         # Both should find solutions
-        assert template_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
-        assert legacy_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
+        assert optimized_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
+        assert unique_solution.get("status") in ["OPTIMAL", "FEASIBLE"]
 
         # Log performance comparison
-        speedup = legacy_time / template_time if template_time > 0 else 1.0
+        speedup = unique_time / optimized_time if optimized_time > 0 else 1.0
         logger.info("Performance comparison:")
-        logger.info(f"  Template mode: {template_time:.2f}s")
-        logger.info(f"  Legacy mode:   {legacy_time:.2f}s")
+        logger.info(f"  Optimized mode: {optimized_time:.2f}s")
+        logger.info(f"  Unique mode:   {unique_time:.2f}s")
         logger.info(f"  Speedup:       {speedup:.1f}x")
 
-        # Template should be competitive or better
-        assert template_time <= legacy_time * 1.5  # Allow 50% margin for small problems
+        # Optimized should be competitive or better
+        assert optimized_time <= unique_time * 1.5  # Allow 50% margin for small problems
 
     def test_mixed_loading_modes(self, mock_database_loader):
         """Test loading different types of problems in the same session."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
 
         # Test automatic mode detection
         auto_problem = loader.load_problem()
         assert auto_problem is not None
 
-        # Test explicit legacy loading
-        loader_legacy = mock_database_loader(
-            use_test_tables=True, prefer_template_mode=False
+        # Test explicit unique loading
+        loader_unique = mock_database_loader(
+            use_test_tables=True, prefer_optimized_mode=False
         )
-        legacy_problem = loader_legacy.load_problem()
-        assert legacy_problem is not None
+        unique_problem = loader_unique.load_problem()
+        assert unique_problem is not None
 
-        # If templates are available, test specific template loading
-        templates = loader.load_available_templates()
-        if templates:
-            template_problem = loader.load_template_problem(templates[0].template_id)
-            assert template_problem is not None
-            assert template_problem.is_template_based
+        # If optimized_patterns are available, test specific optimized loading
+        optimized_patterns = loader.load_available_optimized_patterns()
+        if optimized_patterns:
+            optimized_problem = loader.load_optimized_problem(optimized_patterns[0].pattern_id)
+            assert optimized_problem is not None
+            assert optimized_problem.is_optimized_mode
 
             logger.info("✓ Successfully tested mixed loading modes:")
             logger.info(
                 f"  - Auto detection: "
-                f"{'template' if auto_problem.is_template_based else 'legacy'}"
+                f"{'optimized' if auto_problem.is_optimized_mode else 'unique'}"
             )
-            logger.info("  - Explicit legacy: valid")
-            logger.info("  - Explicit template: valid")
+            logger.info("  - Explicit unique: valid")
+            logger.info("  - Explicit optimized: valid")
 
-    def test_template_validation(self, mock_database_loader):
-        """Test comprehensive validation of template-based problems."""
-        loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    def test_optimized_validation(self, mock_database_loader):
+        """Test comprehensive validation of optimized-based problems."""
+        loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem()
 
-        if not problem.is_template_based:
-            pytest.skip("No template infrastructure for validation testing")
+        if not problem.is_optimized_mode:
+            pytest.skip("No optimized infrastructure for validation testing")
 
         # Run comprehensive problem validation
         issues = problem.validate()
@@ -328,64 +328,64 @@ class TestTemplateIntegration:
             for issue in issues:
                 logger.warning(f"  - {issue}")
         else:
-            logger.info("✓ Template problem validation passed with no issues")
+            logger.info("✓ Optimized problem validation passed with no issues")
 
-        # Test template-specific validations
-        template_issues = problem.job_template.validate_template()
+        # Test optimized-specific validations
+        optimized_issues = problem.job_optimized_pattern.validate_optimized()
         assert (
-            len(template_issues) == 0
-        ), f"Template validation issues: {template_issues}"
+            len(optimized_issues) == 0
+        ), f"Optimized validation issues: {optimized_issues}"
 
-        logger.info("✓ Template validation completed successfully")
+        logger.info("✓ Optimized validation completed successfully")
 
 
 def test_convenience_functions(mock_database_loader):
-    """Test that convenience functions work correctly with template integration."""
+    """Test that convenience functions work correctly with optimized integration."""
     # Test automatic loading with mock
-    loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+    loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
     problem = loader.load_problem(max_instances=2)
     assert problem is not None
     assert problem.total_task_count > 0
 
-    # Test explicit legacy loading with mock
-    legacy_loader = mock_database_loader(
-        use_test_tables=True, prefer_template_mode=False
+    # Test explicit unique loading with mock
+    unique_loader = mock_database_loader(
+        use_test_tables=True, prefer_optimized_mode=False
     )
-    legacy_problem = legacy_loader.load_problem()
-    assert legacy_problem is not None
-    assert not legacy_problem.is_template_based
+    unique_problem = unique_loader.load_problem()
+    assert unique_problem is not None
+    assert not unique_problem.is_optimized_mode
 
     logger.info("✓ Convenience functions work correctly")
 
 
-def test_template_architecture_completeness(mock_database_loader):
-    """Test that the complete template architecture (Weeks 1-3) is integrated."""
-    loader = mock_database_loader(use_test_tables=True, prefer_template_mode=True)
+def test_optimized_architecture_completeness(mock_database_loader):
+    """Test that the complete optimized architecture (Weeks 1-3) is integrated."""
+    loader = mock_database_loader(use_test_tables=True, prefer_optimized_mode=True)
 
-    # Week 1: Template data models
+    # Week 1: Optimized data models
     problem = loader.load_problem()
-    if problem.is_template_based:
-        assert problem.job_template is not None
+    if problem.is_optimized_mode:
+        assert problem.job_optimized_pattern is not None
         assert len(problem.job_instances) > 0
-        logger.info("✓ Week 1: Template data models integrated")
+        logger.info("✓ Week 1: Optimized data models integrated")
 
-        # Week 2: Template-optimized constraints
+        # Week 2: Optimized-optimized constraints
         solver = FreshSolver(problem)
         solution = solver.solve(time_limit=15)
         assert solution.get("status") in ["OPTIMAL", "FEASIBLE"]
-        logger.info("✓ Week 2: Template-optimized constraints working")
+        logger.info("✓ Week 2: Optimized-optimized constraints working")
 
-        # Week 3: Template database architecture
-        templates = loader.load_available_templates()
-        assert len(templates) > 0
-        logger.info("✓ Week 3: Template database architecture operational")
+        # Week 3: Optimized database architecture
+        optimized_patterns = loader.load_available_optimized_patterns()
+        assert len(optimized_patterns) > 0
+        logger.info("✓ Week 3: Optimized database architecture operational")
 
         logger.info(
-            "✓ Complete template architecture (Weeks 1-3) successfully integrated"
+            "✓ Complete optimized architecture (Weeks 1-3) successfully integrated"
         )
     else:
         logger.info(
-            "Template infrastructure not available - using legacy compatibility mode"
+            "Optimized infrastructure not available - using unique compatibility mode"
         )
 
 
@@ -393,9 +393,9 @@ if __name__ == "__main__":
     # Run tests directly
     logging.basicConfig(level=logging.INFO)
 
-    test = TestTemplateIntegration()
+    test = TestOptimizedIntegration()
 
-    print("Running template integration tests...")
+    print("Running optimized integration tests...")
 
     try:
         # Create mock database loader for standalone execution
@@ -474,7 +474,7 @@ if __name__ == "__main__":
                 side_effect=create_mock_client,
             ),
             patch(
-                "src.data.loaders.template_database.create_client",
+                "src.data.loaders.optimized_database.create_client",
                 side_effect=create_mock_client,
             ),
             patch.dict(
@@ -486,19 +486,19 @@ if __name__ == "__main__":
             ),
         ):
             test.test_automatic_mode_detection(DatabaseLoader)
-            test.test_template_vs_legacy_compatibility(DatabaseLoader)
-            test.test_template_solving_performance(DatabaseLoader)
-            test.test_template_constraint_optimization(DatabaseLoader)
+            test.test_optimized_vs_unique_compatibility(DatabaseLoader)
+            test.test_optimized_solving_performance(DatabaseLoader)
+            test.test_optimized_constraint_optimization(DatabaseLoader)
             test.test_solution_persistence(DatabaseLoader)
-            test.test_template_instance_creation(DatabaseLoader)
+            test.test_optimized_instance_creation(DatabaseLoader)
             test.test_performance_comparison(DatabaseLoader)
             test.test_mixed_loading_modes(DatabaseLoader)
-            test.test_template_validation(DatabaseLoader)
+            test.test_optimized_validation(DatabaseLoader)
 
             test_convenience_functions(DatabaseLoader)
-            test_template_architecture_completeness(DatabaseLoader)
+            test_optimized_architecture_completeness(DatabaseLoader)
 
-        print("\n✅ All template integration tests passed!")
+        print("\n✅ All optimized integration tests passed!")
 
     except Exception as e:
         print(f"\n❌ Integration test failed: {e}")

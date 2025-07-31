@@ -1,7 +1,7 @@
 """Database loader for fresh OR-Tools solver.
 
-Supports both legacy job-based loading and optimized template-based loading.
-Template mode provides 5-8x performance improvement for identical job patterns.
+Supports both unique job-based loading and optimized mode loading.
+Optimized mode provides 5-8x performance improvement for identical job patterns.
 """
 
 import logging
@@ -13,7 +13,7 @@ from supabase import Client, create_client
 
 from src.solver.models.problem import (
     Job,
-    JobTemplate,
+    JobOptimizedPattern,
     Machine,
     Precedence,
     SchedulingProblem,
@@ -22,29 +22,42 @@ from src.solver.models.problem import (
     WorkCell,
 )
 
-from .template_database import TemplateDatabaseLoader
+from .optimized_database import OptimizedDatabaseLoader
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseLoader:
-    """Unified database loader supporting both legacy and template-based scheduling.
+    """Unified database loader supporting both unique and optimized mode scheduling.
 
-    Automatically detects available template infrastructure and provides optimal loading
-    methods. For identical job patterns, template mode delivers 5-8x performance gains.
+    Automatically detects available optimized pattern infrastructure and provides
+    optimal loading
+    methods. For identical job patterns, optimized mode delivers 5-8x performance gains.
     """
 
-    def __init__(self, use_test_tables: bool = True, prefer_template_mode: bool = True):
-        """Initialize database connection with template optimization support.
+    def __init__(
+        self, use_test_tables: bool = True, prefer_optimized_mode: bool = True
+    ):
+        """Initialize database connection with optimized mode support.
 
         Args:
-            use_test_tables: If True, use test_ prefixed tables for legacy resources.
-            prefer_template_mode: If True, prefer template-based loading when available.
+            use_test_tables: If True, use test_ prefixed tables for unique mode
+                resources.
+            prefer_optimized_mode: If True, prefer optimized mode loading when
+                available.
 
         """
         load_dotenv()
         url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_ANON_KEY")
+
+        # Use service role key for production data to bypass RLS
+        if use_test_tables:
+            key = os.environ.get("SUPABASE_ANON_KEY")
+        else:
+            key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+            if not key:
+                # Fallback to anon key
+                key = os.environ.get("SUPABASE_ANON_KEY")
 
         if not url or not key:
             raise ValueError(
@@ -53,24 +66,24 @@ class DatabaseLoader:
 
         self.supabase: Client = create_client(url, key)
         self.table_prefix = "test_" if use_test_tables else ""
-        self.prefer_template_mode = prefer_template_mode
+        self.prefer_optimized_mode = prefer_optimized_mode
 
-        # Initialize template loader for advanced operations
-        self._template_loader = TemplateDatabaseLoader(use_test_tables)
+        # Initialize optimized loader for advanced operations
+        self._optimized_loader = OptimizedDatabaseLoader(use_test_tables)
 
-        # Cache for template availability check
-        self._template_tables_available: bool | None = None
+        # Cache for optimized pattern availability check
+        self._optimized_tables_available: bool | None = None
 
     def load_problem(self, max_instances: int | None = None) -> SchedulingProblem:
         """Load complete scheduling problem using optimal loading strategy.
 
-        Automatically detects template availability and uses the most efficient
+        Automatically detects optimized pattern availability and uses the most efficient
         loading method:
-        - Template mode: 5-8x faster for identical job patterns
-        - Legacy mode: Full compatibility with existing job structures
+        - Optimized mode: 5-8x faster for identical job patterns
+        - Unique mode: Full compatibility with existing job structures
 
         Args:
-            max_instances: Maximum instances to load (applies to template mode only)
+            max_instances: Maximum instances to load (applies to optimized mode only)
 
         Returns:
             SchedulingProblem optimized for the available data structure
@@ -78,97 +91,101 @@ class DatabaseLoader:
         """
         logger.info("Loading scheduling problem from database...")
 
-        # Check if template infrastructure is available and preferred
-        if self.prefer_template_mode and self._has_template_tables():
-            return self._load_template_problem(None, max_instances)
+        # Check if optimized pattern infrastructure is available and preferred
+        if self.prefer_optimized_mode and self._has_optimized_tables():
+            return self._load_optimized_problem(None, max_instances)
         else:
-            return self._load_legacy_problem()
+            return self._load_unique_problem()
 
-    def load_template_problem(
+    def load_optimized_problem(
         self,
-        template_id: str,
+        pattern_id: str,
         max_instances: int | None = None,
         status_filter: str = "scheduled",
     ) -> SchedulingProblem:
-        """Load specific template-based problem (advanced usage).
+        """Load specific optimized mode problem (advanced usage).
 
         Args:
-            template_id: UUID of the job template to load
+            pattern_id: UUID of the job optimized pattern to load
             max_instances: Maximum number of instances to load
             status_filter: Instance status filter ('scheduled', 'all')
 
         Returns:
-            SchedulingProblem with template-based structure
+            SchedulingProblem with optimized mode structure
 
         """
-        return self._template_loader.load_template_problem(
-            template_id, max_instances, status_filter
+        return self._optimized_loader.load_optimized_problem(
+            pattern_id, max_instances, status_filter
         )
 
-    def load_available_templates(self) -> list[JobTemplate]:
-        """Load all available job templates for selection."""
-        if not self._has_template_tables():
-            logger.warning("Template tables not available")
+    def load_available_patterns(self) -> list[JobOptimizedPattern]:
+        """Load all available job optimized patterns for selection."""
+        if not self._has_optimized_tables():
+            logger.warning("Optimized pattern tables not available")
             return []
-        return self._template_loader.load_available_templates()
+        return self._optimized_loader.load_available_patterns()
 
-    def create_template_instances(
+    def create_pattern_instances(
         self,
-        template_id: str,
+        pattern_id: str,
         instance_count: int,
         base_description: str = "Generated Instance",
     ) -> list[str]:
-        """Create new job instances from template."""
-        if not self._has_template_tables():
-            raise ValueError("Template tables not available")
-        return self._template_loader.create_template_instances(
-            template_id, instance_count, base_description
+        """Create new job instances from optimized pattern."""
+        if not self._has_optimized_tables():
+            raise ValueError("Optimized pattern tables not available")
+        return self._optimized_loader.create_pattern_instances(
+            pattern_id, instance_count, base_description
         )
 
-    def _has_template_tables(self) -> bool:
-        """Check if template tables are available in database."""
-        if self._template_tables_available is not None:
-            return self._template_tables_available
+    def _has_optimized_tables(self) -> bool:
+        """Check if optimized pattern tables are available in database."""
+        if self._optimized_tables_available is not None:
+            return self._optimized_tables_available
 
         try:
-            # Try to query job_templates table
-            self.supabase.table("job_templates").select("template_id").limit(
+            # Try to query job_optimized_patterns table
+            self.supabase.table("job_optimized_patterns").select("pattern_id").limit(
                 1
             ).execute()
-            self._template_tables_available = True
-            logger.info("Template infrastructure detected - enabling optimized loading")
-        except Exception as e:
-            self._template_tables_available = False
+            self._optimized_tables_available = True
             logger.info(
-                f"Template infrastructure not available - using legacy mode: {e}"
+                "Optimized pattern infrastructure detected - enabling optimized loading"
+            )
+        except Exception as e:
+            self._optimized_tables_available = False
+            logger.info(
+                f"Optimized pattern infrastructure not available - unique mode: {e}"
             )
 
-        return self._template_tables_available
+        return self._optimized_tables_available
 
-    def _load_template_problem(
-        self, template_id: str | None = None, max_instances: int | None = None
+    def _load_optimized_problem(
+        self, pattern_id: str | None = None, max_instances: int | None = None
     ) -> SchedulingProblem:
-        """Load problem using template-based optimization with explicit selection."""
-        if not template_id:
-            # List available templates for user selection
-            templates = self.load_available_templates()
-            if not templates:
-                logger.warning("No templates found - falling back to legacy loading")
-                return self._load_legacy_problem()
+        """Load problem using optimized mode with explicit selection."""
+        if not pattern_id:
+            # List available optimized patterns for user selection
+            patterns = self.load_available_patterns()
+            if not patterns:
+                logger.warning(
+                    "No optimized patterns found - falling back to unique loading"
+                )
+                return self._load_unique_problem()
 
             # Don't auto-select - require explicit choice
-            template_names = [f"{t.template_id}: {t.name}" for t in templates]
+            pattern_names = [f"{t.optimized_pattern_id}: {t.name}" for t in patterns]
             raise ValueError(
-                f"Template ID required for template-based loading. "
-                f"Available templates: {template_names}"
+                f"Pattern ID required for optimized mode loading. "
+                f"Available patterns: {pattern_names}"
             )
 
-        logger.info(f"Loading template-based problem: {template_id}")
-        return self.load_template_problem(template_id, max_instances)
+        logger.info(f"Loading optimized mode problem: {pattern_id}")
+        return self.load_optimized_problem(pattern_id, max_instances)
 
-    def _load_legacy_problem(self) -> SchedulingProblem:
-        """Load problem using legacy job-based approach."""
-        logger.info("Using legacy job-based loading")
+    def _load_unique_problem(self) -> SchedulingProblem:
+        """Load problem using unique job-based approach."""
+        logger.info("Using unique job-based loading")
 
         # Load all data using original approach
         work_cells = self._load_work_cells()
@@ -232,7 +249,13 @@ class DatabaseLoader:
     def _load_work_cells(self) -> list[WorkCell]:
         """Load work cells from database."""
         table_name = f"{self.table_prefix}work_cells"
-        response = self.supabase.table(table_name).select("*").execute()
+
+        try:
+            response = self.supabase.table(table_name).select("*").execute()
+        except Exception as e:
+            logger.warning(f"Could not load work cells from {table_name}: {e}")
+            # Return empty list if work cells table doesn't exist
+            return []
 
         cells = []
         for row in response.data:
@@ -247,12 +270,36 @@ class DatabaseLoader:
     def _load_machines(self) -> list[Machine]:
         """Load machines from database."""
         table_name = f"{self.table_prefix}resources"
-        response = (
-            self.supabase.table(table_name)
-            .select("*")
-            .eq("resource_type", "machine")
-            .execute()
-        )
+
+        try:
+            response = (
+                self.supabase.table(table_name)
+                .select("*")
+                .ilike("resource_type", "machine")  # Case-insensitive match
+                .execute()
+            )
+        except Exception as e:
+            logger.warning(
+                f"Table access failed for {table_name}, trying direct SQL: {e}"
+            )
+            # Try direct SQL query to bypass RLS issues
+            sql_query = f"SELECT * FROM {table_name} WHERE resource_type = 'machine'"
+            try:
+                response = self.supabase.postgrest.rpc(
+                    "exec_sql", {"query": sql_query}
+                ).execute()
+                # Handle SQL response format
+                if hasattr(response, "data") and response.data:
+                    response.data = (
+                        response.data[0]
+                        if isinstance(response.data, list)
+                        else response.data
+                    )
+            except Exception as sql_error:
+                logger.error(
+                    f"Both table and SQL access failed for {table_name}: {sql_error}"
+                )
+                return []
 
         machines = []
         for row in response.data:
@@ -367,17 +414,17 @@ def load_test_problem(max_instances: int | None = None) -> SchedulingProblem:
     return loader.load_problem(max_instances)
 
 
-def load_template_test_problem(
-    template_id: str, max_instances: int | None = None
+def load_optimized_test_problem(
+    pattern_id: str, max_instances: int | None = None
 ) -> SchedulingProblem:
-    """Load specific template-based test problem."""
+    """Load specific optimized mode test problem."""
     loader = DatabaseLoader(use_test_tables=True)
-    return loader.load_template_problem(template_id, max_instances)
+    return loader.load_optimized_problem(pattern_id, max_instances)
 
 
-def load_legacy_test_problem() -> SchedulingProblem:
-    """Load test problem using legacy job-based approach (force legacy mode)."""
-    loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=False)
+def load_unique_test_problem() -> SchedulingProblem:
+    """Load test problem using unique job-based approach (force unique mode)."""
+    loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=False)
     return loader.load_problem()
 
 

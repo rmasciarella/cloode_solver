@@ -1,41 +1,41 @@
-"""Factory for creating template-based test problems."""
+"""Factory for creating optimized mode test problems."""
 
 from datetime import UTC, datetime, timedelta
 
 from src.solver.models.problem import (
     JobInstance,
-    JobTemplate,
+    JobOptimizedPattern,
     Machine,
     Operator,
     OperatorSkill,
+    OptimizedTask,
     ProficiencyLevel,
     SchedulingProblem,
     Skill,
     TaskMode,
     TaskSkillRequirement,
-    TemplateTask,
     WorkCell,
 )
 
 
-def create_template_test_problem(
+def create_optimized_test_problem(
     num_instances: int = 2,
-    template_tasks_count: int = 2,
+    optimized_tasks_count: int = 2,
     operators_count: int = 3,
     skills_count: int = 2,
     machines_count: int = 2,
 ) -> SchedulingProblem:
-    """Create a template-based scheduling problem for testing.
+    """Create an optimized mode scheduling problem for testing.
 
     Args:
         num_instances: Number of job instances
-        template_tasks_count: Number of tasks in the template
+        optimized_tasks_count: Number of tasks in the optimized pattern
         operators_count: Number of operators
         skills_count: Number of skills
         machines_count: Number of machines
 
     Returns:
-        SchedulingProblem configured for template-based testing
+        SchedulingProblem configured for optimized mode testing
 
     """
     # Create skills
@@ -94,53 +94,53 @@ def create_template_test_problem(
                     )
                 )
 
-    # Create template tasks
-    template_tasks = []
+    # Create optimized tasks
+    optimized_tasks = []
     task_skill_requirements = []
 
-    for i in range(template_tasks_count):
+    for i in range(optimized_tasks_count):
         # Create task modes for each machine
         modes = []
         for j, machine in enumerate(machines):
             modes.append(
                 TaskMode(
-                    task_mode_id=f"template_task_{i}_mode_{j}",
-                    task_id=f"template_task_{i}",
+                    task_mode_id=f"optimized_task_{i}_mode_{j}",
+                    task_id=f"optimized_task_{i}",
                     machine_resource_id=machine.resource_id,
                     duration_minutes=30 + (i * 15) + (j * 10),
                 )
             )
 
-        template_task = TemplateTask(
-            template_task_id=f"template_task_{i}",
-            name=f"Template Task {i}",
+        optimized_task = OptimizedTask(
+            optimized_task_id=f"optimized_task_{i}",
+            name=f"Optimized Task {i}",
             department_id="test_dept",
             modes=modes,
             min_operators=1,
             max_operators=min(2, operators_count),
             operator_efficiency_curve="linear",
         )
-        template_tasks.append(template_task)
+        optimized_tasks.append(optimized_task)
 
         # Add skill requirements (rotating pattern)
         for j, skill in enumerate(skills):
             if (i + j) % 3 == 0:  # Some tasks require some skills
                 task_skill_requirements.append(
                     TaskSkillRequirement(
-                        task_id=template_task.template_task_id,
+                        task_id=optimized_task.optimized_task_id,
                         skill_id=skill.skill_id,
                         required_proficiency=ProficiencyLevel.COMPETENT,
                         is_mandatory=True,
                     )
                 )
 
-    # Create job template
-    job_template = JobTemplate(
-        template_id="test_template",
-        name="Test Job Template",
-        description="Template for testing",
-        template_tasks=template_tasks,
-        template_precedences=[],
+    # Create job optimized pattern
+    job_optimized_pattern = JobOptimizedPattern(
+        optimized_pattern_id="test_optimized_pattern",
+        name="Test Job Optimized Pattern",
+        description="Optimized pattern for testing",
+        optimized_tasks=optimized_tasks,
+        optimized_precedences=[],
     )
 
     # Create job instances
@@ -149,7 +149,7 @@ def create_template_test_problem(
         job_instances.append(
             JobInstance(
                 instance_id=f"instance_{i}",
-                template_id=job_template.template_id,
+                optimized_pattern_id=job_optimized_pattern.optimized_pattern_id,
                 description=f"Job instance {i}",
                 due_date=datetime.now(UTC) + timedelta(hours=8),
             )
@@ -165,37 +165,37 @@ def create_template_test_problem(
 
     # Create the scheduling problem
     problem = SchedulingProblem(
-        jobs=[],  # No legacy jobs for template-based problem
+        jobs=[],  # No unique mode jobs for optimized mode problem
         machines=machines,
         work_cells=work_cells,
-        precedences=[],  # Template precedences handled separately
+        precedences=[],  # Optimized pattern precedences handled separately
         operators=operators,
         skills=skills,
         task_skill_requirements=task_skill_requirements,
-        is_template_based=True,
-        job_template=job_template,
+        is_optimized_mode=True,
+        job_optimized_pattern=job_optimized_pattern,
         job_instances=job_instances,
     )
 
     return problem
 
 
-def create_simple_template_problem() -> SchedulingProblem:
-    """Create a simple template problem for basic testing."""
-    return create_template_test_problem(
+def create_simple_optimized_problem() -> SchedulingProblem:
+    """Create a simple optimized mode problem for basic testing."""
+    return create_optimized_test_problem(
         num_instances=2,
-        template_tasks_count=2,
+        optimized_tasks_count=2,
         operators_count=2,
         skills_count=1,
         machines_count=1,
     )
 
 
-def create_complex_template_problem() -> SchedulingProblem:
-    """Create a complex template problem for advanced testing."""
-    return create_template_test_problem(
+def create_complex_optimized_problem() -> SchedulingProblem:
+    """Create a complex optimized mode problem for advanced testing."""
+    return create_optimized_test_problem(
         num_instances=5,
-        template_tasks_count=4,
+        optimized_tasks_count=4,
         operators_count=6,
         skills_count=4,
         machines_count=3,

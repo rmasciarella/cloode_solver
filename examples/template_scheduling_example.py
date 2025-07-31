@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Template-based scheduling example for Fresh OR-Tools solver.
+"""Optimized pattern scheduling example for Fresh OR-Tools solver.
 
-Week 3 Implementation: Demonstrates the efficiency gains from template-based
-architecture compared to traditional job-based scheduling.
+Week 3 Implementation: Demonstrates the efficiency gains from optimized pattern
+architecture compared to traditional job-based scheduling (5-8x improvement).
 
 Performance comparison:
 - Legacy approach: O(n³) - creates unique data for each job
-- Template approach: O(template_size × instances) - reuses template structure
+- Optimized pattern approach: O(pattern_size × instances) - reuses pattern structure
 
 This example shows:
-1. Loading template-based problems efficiently
+1. Loading optimized pattern problems efficiently
 2. Solving with OR-Tools CP-SAT
 3. Performance benchmarking
 4. Solution analysis and saving
@@ -23,85 +23,87 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.data.loaders.database import DatabaseLoader  # Legacy loader for comparison
-from src.data.loaders.template_database import (
-    TemplateDatabaseLoader,
-    load_available_templates,
+from src.data.loaders.optimized_database import (
+    OptimizedDatabaseLoader,
+    load_available_patterns,
 )
 from src.solver.fresh_solver import FreshSolver
 from src.solver.models.problem import SchedulingProblem
 
 
-class TemplateSchedulingDemo:
-    """Demonstrates template-based scheduling capabilities."""
+class OptimizedPatternSchedulingDemo:
+    """Demonstrates optimized pattern scheduling capabilities."""
 
     def __init__(self):
-        """Initialize the template scheduling demonstration."""
-        self.template_loader = TemplateDatabaseLoader()
+        """Initialize the optimized pattern scheduling demonstration."""
+        self.optimized_loader = OptimizedDatabaseLoader()
         self.legacy_loader = DatabaseLoader()
         self.solver = FreshSolver()
 
     def run_complete_demo(self):
-        """Run complete template scheduling demonstration."""
+        """Run complete optimized pattern scheduling demonstration."""
         print("=" * 80)
-        print("FRESH OR-TOOLS SOLVER - TEMPLATE-BASED SCHEDULING DEMO")
-        print("Week 3 Implementation: Template Architecture Performance")
+        print("FRESH OR-TOOLS SOLVER - OPTIMIZED PATTERN SCHEDULING DEMO")
+        print(
+            "Week 3 Implementation: Optimized Pattern Architecture (5-8x Performance)"
+        )
         print("=" * 80)
 
-        # Step 1: Show available templates
-        self.show_available_templates()
+        # Step 1: Show available patterns
+        self.show_available_patterns()
 
         # Step 2: Performance comparison
         self.compare_loading_performance()
 
-        # Step 3: Solve template-based problems
-        self.solve_template_problems()
+        # Step 3: Solve optimized pattern problems
+        self.solve_optimized_problems()
 
         # Step 4: Solution analysis
         self.analyze_solutions()
 
         print("\n" + "=" * 80)
-        print("TEMPLATE SCHEDULING DEMO COMPLETED")
+        print("OPTIMIZED PATTERN SCHEDULING DEMO COMPLETED")
         print("=" * 80)
 
-    def show_available_templates(self):
-        """Display available job templates."""
-        print("\n1. AVAILABLE JOB TEMPLATES")
+    def show_available_patterns(self):
+        """Display available job optimized patterns."""
+        print("\n1. AVAILABLE JOB OPTIMIZED PATTERNS")
         print("-" * 40)
 
-        templates = load_available_templates()
+        patterns = load_available_patterns()
 
-        if not templates:
-            print("No templates found. Run populate_template_test_data.py first.")
+        if not patterns:
+            print("No patterns found. Run populate_template_test_data.py first.")
             return []
 
-        print(f"Found {len(templates)} job templates:")
+        print(f"Found {len(patterns)} job patterns:")
         print()
 
-        for i, template in enumerate(templates, 1):
-            print(f"{i}. {template.name}")
-            print(f"   Description: {template.description}")
-            print(f"   Tasks: {template.task_count}")
-            print(f"   Precedences: {len(template.template_precedences)}")
-            print(f"   Min Duration: {template.total_min_duration} minutes")
+        for i, pattern in enumerate(patterns, 1):
+            print(f"{i}. {pattern.name}")
+            print(f"   Description: {pattern.description}")
+            print(f"   Tasks: {pattern.task_count}")
+            print(f"   Precedences: {len(pattern.optimized_precedences)}")
+            print(f"   Min Duration: {pattern.total_min_duration} minutes")
 
             # Show task breakdown
             print("   Task Breakdown:")
-            for task in template.template_tasks[:3]:  # Show first 3 tasks
+            for task in pattern.optimized_tasks[:3]:  # Show first 3 tasks
                 print(f"     - {task.name}: {len(task.modes)} modes")
-            if len(template.template_tasks) > 3:
-                print(f"     ... and {len(template.template_tasks) - 3} more tasks")
+            if len(pattern.optimized_tasks) > 3:
+                print(f"     ... and {len(pattern.optimized_tasks) - 3} more tasks")
             print()
 
-        return templates
+        return patterns
 
     def compare_loading_performance(self):
-        """Compare template vs legacy loading performance."""
+        """Compare optimized pattern vs legacy loading performance."""
         print("\n2. LOADING PERFORMANCE COMPARISON")
         print("-" * 40)
 
-        templates = load_available_templates()
-        if not templates:
-            print("No templates available for comparison")
+        patterns = load_available_patterns()
+        if not patterns:
+            print("No patterns available for comparison")
             return
 
         # Test with different instance counts
@@ -109,40 +111,42 @@ class TemplateSchedulingDemo:
 
         print("Testing loading performance with different job counts:")
         print()
-        print(f"{'Jobs':<8} {'Template (ms)':<15} {'Legacy (ms)':<15} {'Speedup':<10}")
+        print(f"{'Jobs':<8} {'Optimized (ms)':<15} {'Legacy (ms)':<15} {'Speedup':<10}")
         print("-" * 55)
 
         for instance_count in instance_counts:
-            # Template-based loading
-            template_time = self._benchmark_template_loading(
-                templates[0].template_id, instance_count
+            # Optimized pattern loading
+            optimized_time = self._benchmark_optimized_loading(
+                patterns[0].optimized_pattern_id, instance_count
             )
 
             # Legacy loading (simulate by loading existing test data)
             legacy_time = self._benchmark_legacy_loading()
 
-            speedup = legacy_time / template_time if template_time > 0 else float("inf")
+            speedup = (
+                legacy_time / optimized_time if optimized_time > 0 else float("inf")
+            )
 
             print(
-                f"{instance_count:<8} {template_time:<15.1f} "
+                f"{instance_count:<8} {optimized_time:<15.1f} "
                 f"{legacy_time:<15.1f} {speedup:<10.1f}x"
             )
 
         print()
         print("Key insights:")
-        print("- Template loading scales O(template_size × instances)")
+        print("- Optimized pattern loading scales O(pattern_size × instances)")
         print("- Legacy loading scales O(n³) with job complexity")
-        print("- Template approach reuses constraint structure efficiently")
+        print("- Optimized pattern approach reuses constraint structure efficiently")
         print()
 
-    def solve_template_problems(self):
-        """Solve problems of different sizes using templates."""
-        print("\n3. TEMPLATE-BASED SOLVING")
+    def solve_optimized_problems(self):
+        """Solve problems of different sizes using optimized patterns."""
+        print("\n3. OPTIMIZED PATTERN SOLVING")
         print("-" * 40)
 
-        templates = load_available_templates()
-        if not templates:
-            print("No templates available for solving")
+        patterns = load_available_patterns()
+        if not patterns:
+            print("No patterns available for solving")
             return
 
         # Test different problem sizes
@@ -157,10 +161,10 @@ class TemplateSchedulingDemo:
         for instance_count, size_name, target_time in test_cases:
             print(f"\nSolving {size_name} problem ({instance_count} identical jobs)...")
 
-            # Load template problem
+            # Load optimized pattern problem
             start_time = time.time()
-            problem = self.template_loader.load_template_problem(
-                templates[0].template_id, max_instances=instance_count
+            problem = self.optimized_loader.load_optimized_problem(
+                patterns[0].optimized_pattern_id, max_instances=instance_count
             )
             load_time = time.time() - start_time
 
@@ -222,13 +226,13 @@ class TemplateSchedulingDemo:
         print("\n4. SOLUTION ANALYSIS")
         print("-" * 40)
 
-        templates = load_available_templates()
-        if not templates:
+        patterns = load_available_patterns()
+        if not patterns:
             return
 
         # Load and solve a medium-sized problem for analysis
-        problem = self.template_loader.load_template_problem(
-            templates[0].template_id, max_instances=10
+        problem = self.optimized_loader.load_optimized_problem(
+            patterns[0].optimized_pattern_id, max_instances=10
         )
 
         solution = self.solver.solve(problem)
@@ -239,17 +243,17 @@ class TemplateSchedulingDemo:
         print(f"Analyzing solution for {len(problem.jobs)} identical jobs:")
         print()
 
-        # Template efficiency analysis
-        template = problem.job_template
-        if template:
-            print(f"Template: {template.name}")
-            print(f"- Tasks per job: {template.task_count}")
-            print(f"- Total template duration: {template.total_min_duration} minutes")
+        # Optimized pattern efficiency analysis
+        pattern = problem.job_optimized_pattern
+        if pattern:
+            print(f"Pattern: {pattern.name}")
+            print(f"- Tasks per job: {pattern.task_count}")
+            print(f"- Total pattern duration: {pattern.total_min_duration} minutes")
             print(f"- Actual makespan: {solution.makespan} time units")
             print()
 
             # Calculate efficiency metrics
-            theoretical_min = template.total_min_duration // 15  # Convert to time units
+            theoretical_min = pattern.total_min_duration // 15  # Convert to time units
             efficiency = (theoretical_min * len(problem.jobs)) / solution.makespan * 100
 
             print("Efficiency Analysis:")
@@ -273,33 +277,33 @@ class TemplateSchedulingDemo:
             print(f"- {machine_name}: {utilization:.1f}%")
         print()
 
-        # Template reuse benefits
-        print("Template Architecture Benefits:")
+        # Optimized pattern architecture benefits
+        print("Optimized Pattern Architecture Benefits:")
         print(
-            f"- Memory efficiency: {len(problem.jobs)} jobs share 1 template structure"
+            f"- Memory efficiency: {len(problem.jobs)} jobs share 1 pattern structure"
         )
         print(
             f"- Constraint reuse: {len(problem.precedences)} precedences from "
-            f"{len(template.template_precedences)} template rules"
+            f"{len(pattern.optimized_precedences)} pattern rules"
         )
         print(
             f"- Mode sharing: All jobs use same "
-            f"{sum(len(task.modes) for task in template.template_tasks)} "
+            f"{sum(len(task.modes) for task in pattern.optimized_tasks)} "
             f"mode definitions"
         )
 
         # Save solution to database (demonstration)
         print("\nSaving solution assignments to database...")
         solution_data = self._extract_solution_data(problem, solution)
-        self.template_loader.save_solution_assignments(problem, solution_data)
+        self.optimized_loader.save_solution_assignments(problem, solution_data)
         print("✓ Solution saved successfully")
 
-    def _benchmark_template_loading(
-        self, template_id: str, instance_count: int
+    def _benchmark_optimized_loading(
+        self, pattern_id: str, instance_count: int
     ) -> float:
-        """Benchmark template-based loading."""
+        """Benchmark optimized pattern loading."""
         start_time = time.time()
-        self.template_loader.load_template_problem(template_id, instance_count)
+        self.optimized_loader.load_optimized_problem(pattern_id, instance_count)
         return (time.time() - start_time) * 1000  # Return milliseconds
 
     def _benchmark_legacy_loading(self) -> float:
@@ -348,9 +352,9 @@ class TemplateSchedulingDemo:
 
 
 def main():
-    """Run the template scheduling demonstration."""
+    """Run the optimized pattern scheduling demonstration."""
     try:
-        demo = TemplateSchedulingDemo()
+        demo = OptimizedPatternSchedulingDemo()
         demo.run_complete_demo()
 
     except KeyboardInterrupt:

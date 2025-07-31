@@ -32,12 +32,12 @@ def add_task_duration_constraints(
         - interval variable spans from start to end with duration
 
     """
-    if problem.is_template_based and problem.job_template:
-        # Template-based: iterate over instances and template tasks
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
+        # Optimized mode: iterate over instances and optimized tasks
         for instance in problem.job_instances:
-            for template_task in problem.job_template.template_tasks:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
                 instance_task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_key = (instance.instance_id, instance_task_id)
 

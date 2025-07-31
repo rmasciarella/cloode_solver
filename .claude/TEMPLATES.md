@@ -27,59 +27,64 @@ MachineIntervalDict = Dict[MachineKey, List[cp_model.IntervalVar]]
 PrecedenceList = List[Tuple[TaskKey, TaskKey]]
 SetupTimeDict = Dict[AssignmentKey, int]  # Setup time in time units
 
-# Template-specific type aliases for 5-8x performance optimizations
-TemplateKey = str  # Template identifier
+# Sequence resource reservation types
+SequenceKey = str  # Sequence identifier (e.g., "Opto", "BAT")
+SequenceJobKey = Tuple[SequenceKey, str]  # (sequence_id, job_id)
+SequenceJobIntervalDict = Dict[SequenceJobKey, cp_model.IntervalVar]  # Sequence reservation intervals
+
+# Optimized mode type aliases for 5-8x performance optimizations
+OptimizedPatternKey = str  # Optimized pattern identifier
 InstanceKey = str  # Job instance identifier  
-TemplateTaskKey = str  # Template task identifier
-InstanceTaskKey = Tuple[InstanceKey, TemplateTaskKey]  # (instance_id, template_task_id)
-TemplateAssignmentKey = Tuple[InstanceKey, TemplateTaskKey, MachineKey]  # Template assignment
+OptimizedTaskKey = str  # Optimized task identifier
+InstanceTaskKey = Tuple[InstanceKey, OptimizedTaskKey]  # (instance_id, optimized_task_id)
+OptimizedAssignmentKey = Tuple[InstanceKey, OptimizedTaskKey, MachineKey]  # Optimized assignment
 
-# Template variable collections optimized for template-based scheduling
-TemplateTaskStartDict = Dict[InstanceTaskKey, cp_model.IntVar]
-TemplateTaskEndDict = Dict[InstanceTaskKey, cp_model.IntVar]
-TemplateTaskDurationDict = Dict[InstanceTaskKey, cp_model.IntVar]
-TemplateTaskIntervalDict = Dict[InstanceTaskKey, cp_model.IntervalVar]
-TemplateTaskAssignmentDict = Dict[TemplateAssignmentKey, cp_model.IntVar]
+# Optimized variable collections optimized for optimized mode scheduling
+OptimizedTaskStartDict = Dict[InstanceTaskKey, cp_model.IntVar]
+OptimizedTaskEndDict = Dict[InstanceTaskKey, cp_model.IntVar]
+OptimizedTaskDurationDict = Dict[InstanceTaskKey, cp_model.IntVar]
+OptimizedTaskIntervalDict = Dict[InstanceTaskKey, cp_model.IntervalVar]
+OptimizedTaskAssignmentDict = Dict[OptimizedAssignmentKey, cp_model.IntVar]
 
-# Template problem data structures
-TemplatePrecedenceList = List[Tuple[TemplateTaskKey, TemplateTaskKey]]
-TemplateSetupTimeDict = Dict[Tuple[TemplateTaskKey, TemplateTaskKey, MachineKey], int]
+# Optimized problem data structures
+OptimizedPrecedenceList = List[Tuple[OptimizedTaskKey, OptimizedTaskKey]]
+OptimizedSetupTimeDict = Dict[Tuple[OptimizedTaskKey, OptimizedTaskKey, MachineKey], int]
 ```
 
-### Template Type Safety Patterns
+### Optimized Mode Type Safety Patterns
 
-For template-based constraints, use these specialized type patterns for optimal performance:
+For optimized mode constraints, use these specialized type patterns for optimal performance:
 
 ```python
-# Template-aware constraint function signature
-def add_template_{constraint_type}_constraints(
+# Optimized mode constraint function signature
+def add_optimized_{constraint_type}_constraints(
     model: cp_model.CpModel,
-    task_starts: TemplateTaskStartDict,
-    task_ends: TemplateTaskEndDict,
-    problem: SchedulingProblem  # Contains template and instances
+    task_starts: OptimizedTaskStartDict,
+    task_ends: OptimizedTaskEndDict,
+    problem: SchedulingProblem  # Contains optimized pattern and instances
 ) -> None:
-    """Template-optimized constraint function for 5-8x performance."""
-    # Leverage template structure for O(template_size × instances) complexity
+    """Optimized mode constraint function for 5-8x performance."""
+    # Leverage optimized structure for O(pattern_size × instances) complexity
     
-# Template iteration pattern (preferred for performance)
+# Optimized iteration pattern (preferred for performance)
 for instance in problem.job_instances:
-    for template_task in problem.job_template.template_tasks:
-        instance_task_key = (instance.instance_id, template_task.template_task_id)
-        # Process template task instance...
+    for optimized_task in problem.job_optimized_pattern.optimized_tasks:
+        instance_task_key = (instance.instance_id, optimized_task.optimized_task_id)
+        # Process optimized task instance...
 
-# Legacy compatibility check pattern
+# Unique mode compatibility check pattern
 def add_hybrid_{constraint_type}_constraints(
     model: cp_model.CpModel,
-    task_starts: Union[TaskStartDict, TemplateTaskStartDict],
+    task_starts: Union[TaskStartDict, OptimizedTaskStartDict],
     problem: SchedulingProblem
 ) -> None:
-    """Hybrid constraint supporting both legacy and template modes."""
-    if problem.is_template_based:
-        # Use template-optimized path
-        _add_template_logic(model, task_starts, problem)
+    """Hybrid constraint supporting both unique and optimized modes."""
+    if problem.is_optimized_mode:
+        # Use optimized mode path
+        _add_optimized_logic(model, task_starts, problem)
     else:
-        # Use legacy path for backward compatibility
-        _add_legacy_logic(model, task_starts, problem)
+        # Use unique mode path for backward compatibility
+        _add_unique_logic(model, task_starts, problem)
 ```
 
 ### Usage Example

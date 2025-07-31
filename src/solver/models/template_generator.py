@@ -1,6 +1,6 @@
-"""Template-based test data generator for identical jobs scheduling.
+"""Optimized mode test data generator for identical jobs scheduling.
 
-This module creates test data using job templates to enable efficient
+This module creates test data using job optimized patterns to enable efficient
 scheduling of multiple identical job instances.
 """
 
@@ -8,33 +8,33 @@ from datetime import UTC, datetime, timedelta
 
 from src.solver.models.problem import (
     JobInstance,
-    JobTemplate,
+    JobOptimizedPattern,
     Machine,
+    OptimizedPrecedence,
+    OptimizedTask,
     SchedulingProblem,
     TaskMode,
-    TemplatePrecedence,
-    TemplateTask,
     WorkCell,
 )
 
 
-def create_manufacturing_job_template() -> JobTemplate:
-    """Create a realistic manufacturing job template.
+def create_manufacturing_job_optimized_pattern() -> JobOptimizedPattern:
+    """Create a realistic manufacturing job optimized pattern.
 
-    This template represents a typical manufacturing process with:
+    This optimized pattern represents a typical manufacturing process with:
     - Setup tasks
     - Production tasks
     - Quality control
     - Cleanup/teardown
 
     Returns:
-        JobTemplate with realistic manufacturing workflow
+        JobOptimizedPattern with realistic manufacturing workflow
 
     """
-    # Define template tasks
-    template_tasks = [
-        TemplateTask(
-            template_task_id="setup_machine",
+    # Define optimized tasks
+    optimized_tasks = [
+        OptimizedTask(
+            optimized_task_id="setup_machine",
             name="Machine Setup",
             department_id="production",
             is_setup=True,
@@ -47,8 +47,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 45 minutes
             ],
         ),
-        TemplateTask(
-            template_task_id="load_material",
+        OptimizedTask(
+            optimized_task_id="load_material",
             name="Load Raw Material",
             department_id="production",
             modes=[
@@ -60,8 +60,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 20 minutes
             ],
         ),
-        TemplateTask(
-            template_task_id="primary_operation",
+        OptimizedTask(
+            optimized_task_id="primary_operation",
             name="Primary Manufacturing Operation",
             department_id="production",
             modes=[
@@ -76,8 +76,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 2 hours (slower machine)
             ],
         ),
-        TemplateTask(
-            template_task_id="secondary_operation",
+        OptimizedTask(
+            optimized_task_id="secondary_operation",
             name="Secondary Manufacturing Operation",
             department_id="production",
             modes=[
@@ -89,8 +89,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 45 minutes
             ],
         ),
-        TemplateTask(
-            template_task_id="quality_check",
+        OptimizedTask(
+            optimized_task_id="quality_check",
             name="Quality Control Inspection",
             department_id="quality",
             modes=[
@@ -99,8 +99,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 30 minutes
             ],
         ),
-        TemplateTask(
-            template_task_id="packaging",
+        OptimizedTask(
+            optimized_task_id="packaging",
             name="Package Finished Product",
             department_id="packaging",
             modes=[
@@ -109,8 +109,8 @@ def create_manufacturing_job_template() -> JobTemplate:
                 ),  # 20 minutes
             ],
         ),
-        TemplateTask(
-            template_task_id="cleanup",
+        OptimizedTask(
+            optimized_task_id="cleanup",
             name="Machine Cleanup",
             department_id="production",
             is_setup=True,
@@ -123,26 +123,26 @@ def create_manufacturing_job_template() -> JobTemplate:
     ]
 
     # Define precedence relationships (manufacturing workflow)
-    template_precedences = [
-        TemplatePrecedence("setup_machine", "load_material"),
-        TemplatePrecedence("load_material", "primary_operation"),
-        TemplatePrecedence("primary_operation", "secondary_operation"),
-        TemplatePrecedence("secondary_operation", "quality_check"),
-        TemplatePrecedence("quality_check", "packaging"),
-        TemplatePrecedence("packaging", "cleanup"),
+    optimized_precedences = [
+        OptimizedPrecedence("setup_machine", "load_material"),
+        OptimizedPrecedence("load_material", "primary_operation"),
+        OptimizedPrecedence("primary_operation", "secondary_operation"),
+        OptimizedPrecedence("secondary_operation", "quality_check"),
+        OptimizedPrecedence("quality_check", "packaging"),
+        OptimizedPrecedence("packaging", "cleanup"),
     ]
 
-    return JobTemplate(
-        template_id="manufacturing_job_template",
+    return JobOptimizedPattern(
+        optimized_pattern_id="manufacturing_job_optimized_pattern",
         name="Standard Manufacturing Job",
         description="Complete manufacturing process from setup to packaging",
-        template_tasks=template_tasks,
-        template_precedences=template_precedences,
+        optimized_tasks=optimized_tasks,
+        optimized_precedences=optimized_precedences,
     )
 
 
 def create_test_machines() -> list[Machine]:
-    """Create realistic test machines for manufacturing template."""
+    """Create realistic test machines for manufacturing optimized pattern."""
     return [
         Machine(
             resource_id="machine_1",
@@ -196,22 +196,22 @@ def create_test_work_cells() -> list[WorkCell]:
     ]
 
 
-def create_template_problem(
-    template: JobTemplate,
+def create_optimized_problem(
+    pattern: JobOptimizedPattern,
     num_instances: int,
     base_due_hours: float = 24.0,
     due_hour_increment: float = 2.0,
 ) -> SchedulingProblem:
-    """Create a scheduling problem from job template with multiple instances.
+    """Create a scheduling problem from job optimized pattern with multiple instances.
 
     Args:
-        template: The job template to instantiate
+        pattern: The job optimized pattern to instantiate
         num_instances: Number of identical job instances to create
         base_due_hours: Hours from now for first job due date
         due_hour_increment: Hours to add between job due dates
 
     Returns:
-        SchedulingProblem with template-based structure
+        SchedulingProblem with optimized mode structure
 
     """
     # Create job instances
@@ -223,31 +223,31 @@ def create_template_problem(
 
         instance = JobInstance(
             instance_id=f"job_instance_{i:03d}",
-            template_id=template.template_id,
+            optimized_pattern_id=pattern.optimized_pattern_id,
             description=f"Manufacturing Job Instance {i + 1}",
             due_date=due_date,
         )
         job_instances.append(instance)
 
-    # Convert template structure to current SchedulingProblem format
-    # This is a bridge implementation until full template support is added
+    # Convert optimized pattern structure to current SchedulingProblem format
+    # This is a bridge implementation until full optimized mode support is added
     jobs = []
     all_precedences = []
 
     from src.solver.models.problem import Job, Precedence, Task
 
     for instance in job_instances:
-        # Create tasks for this job instance based on template
+        # Create tasks for this job instance based on optimized pattern
         instance_tasks = []
-        for template_task in template.template_tasks:
+        for optimized_task in pattern.optimized_tasks:
             task = Task(
-                task_id=f"{instance.instance_id}_{template_task.template_task_id}",
+                task_id=f"{instance.instance_id}_{optimized_task.optimized_task_id}",
                 job_id=instance.instance_id,
-                name=template_task.name,
-                department_id=template_task.department_id,
-                is_unattended=template_task.is_unattended,
-                is_setup=template_task.is_setup,
-                modes=template_task.modes,  # Reuse template task modes
+                name=optimized_task.name,
+                department_id=optimized_task.department_id,
+                is_unattended=optimized_task.is_unattended,
+                is_setup=optimized_task.is_setup,
+                modes=optimized_task.modes,  # Reuse optimized task modes
             )
             instance_tasks.append(task)
 
@@ -263,10 +263,10 @@ def create_template_problem(
         jobs.append(job)
 
         # Create precedences for this job instance
-        for template_prec in template.template_precedences:
+        for optimized_prec in pattern.optimized_precedences:
             precedence = Precedence(
-                predecessor_task_id=f"{instance.instance_id}_{template_prec.predecessor_template_task_id}",
-                successor_task_id=f"{instance.instance_id}_{template_prec.successor_template_task_id}",
+                predecessor_task_id=f"{instance.instance_id}_{optimized_prec.predecessor_optimized_task_id}",
+                successor_task_id=f"{instance.instance_id}_{optimized_prec.successor_optimized_task_id}",
             )
             all_precedences.append(precedence)
 
@@ -282,42 +282,42 @@ def create_template_problem(
     return problem
 
 
-def create_small_template_problem() -> SchedulingProblem:
-    """Create a small template-based problem for testing (5 identical jobs)."""
-    template = create_manufacturing_job_template()
-    return create_template_problem(template, num_instances=5)
+def create_small_optimized_problem() -> SchedulingProblem:
+    """Create a small optimized mode problem for testing (5 identical jobs)."""
+    pattern = create_manufacturing_job_optimized_pattern()
+    return create_optimized_problem(pattern, num_instances=5)
 
 
-def create_medium_template_problem() -> SchedulingProblem:
-    """Create a medium template-based problem for testing (50 identical jobs)."""
-    template = create_manufacturing_job_template()
-    return create_template_problem(template, num_instances=50)
+def create_medium_optimized_problem() -> SchedulingProblem:
+    """Create a medium optimized mode problem for testing (50 identical jobs)."""
+    pattern = create_manufacturing_job_optimized_pattern()
+    return create_optimized_problem(pattern, num_instances=50)
 
 
-def create_large_template_problem() -> SchedulingProblem:
-    """Create a large template-based problem for scalability (200 identical jobs)."""
-    template = create_manufacturing_job_template()
-    return create_template_problem(template, num_instances=200)
+def create_large_optimized_problem() -> SchedulingProblem:
+    """Create a large optimized mode problem for scalability (200 identical jobs)."""
+    pattern = create_manufacturing_job_optimized_pattern()
+    return create_optimized_problem(pattern, num_instances=200)
 
 
 if __name__ == "__main__":
-    # Test template generation
-    template = create_manufacturing_job_template()
-    print(f"Created template: {template.name}")
-    print(f"Template tasks: {template.task_count}")
-    print(f"Template precedences: {len(template.template_precedences)}")
+    # Test optimized pattern generation
+    pattern = create_manufacturing_job_optimized_pattern()
+    print(f"Created optimized pattern: {pattern.name}")
+    print(f"Optimized pattern tasks: {pattern.task_count}")
+    print(f"Optimized pattern precedences: {len(pattern.optimized_precedences)}")
 
-    # Validate template
-    issues = template.validate_template()
+    # Validate optimized pattern
+    issues = pattern.validate_pattern()
     if issues:
-        print("Template validation issues:")
+        print("Optimized pattern validation issues:")
         for issue in issues:
             print(f"  - {issue}")
     else:
-        print("Template validation: PASSED")
+        print("Optimized pattern validation: PASSED")
 
     # Create small test problem
-    problem = create_small_template_problem()
+    problem = create_small_optimized_problem()
     print(f"\nGenerated problem with {len(problem.jobs)} identical jobs")
     print(f"Total tasks: {problem.total_task_count}")
     print(f"Total precedences: {len(problem.precedences)}")

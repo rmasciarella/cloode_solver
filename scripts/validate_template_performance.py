@@ -108,7 +108,7 @@ class PerformanceValidator:
         """Validate template-optimized constraint generation."""
         logger.info("\n2. Constraint Generation Performance")
 
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=5)
 
         if not problem.is_template_based:
@@ -184,7 +184,7 @@ class PerformanceValidator:
         """Validate template-optimized solving performance."""
         logger.info("\n3. Solving Performance Validation")
 
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=3)
 
         # Measure solving performance
@@ -246,7 +246,7 @@ class PerformanceValidator:
             try:
                 # Load problem at this scale
                 load_start = time.time()
-                loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+                loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
                 problem = loader.load_problem(max_instances=scale)
                 load_time = time.time() - load_start
 
@@ -307,7 +307,7 @@ class PerformanceValidator:
         try:
             # Step 1: Auto-detect optimal loading
             detect_start = time.time()
-            loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+            loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
             detect_time = time.time() - detect_start
 
             # Step 2: Load problem
@@ -473,7 +473,7 @@ class PerformanceValidator:
     def _has_template_infrastructure(self) -> bool:
         """Check if template infrastructure is available."""
         try:
-            loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+            loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
             return loader._has_template_tables()
         except Exception:
             return False
@@ -481,7 +481,7 @@ class PerformanceValidator:
     def _measure_template_loading(self, instance_count: int) -> dict[str, Any]:
         """Measure template loading performance."""
         start_time = time.time()
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=True)
+        loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=True)
         problem = loader.load_problem(max_instances=instance_count)
         load_time = time.time() - start_time
 
@@ -498,7 +498,7 @@ class PerformanceValidator:
     def _measure_legacy_loading(self) -> dict[str, Any]:
         """Measure legacy loading performance."""
         start_time = time.time()
-        loader = DatabaseLoader(use_test_tables=True, prefer_template_mode=False)
+        loader = DatabaseLoader(use_test_tables=True, prefer_optimized_mode=False)
         problem = loader.load_problem()
         load_time = time.time() - start_time
 

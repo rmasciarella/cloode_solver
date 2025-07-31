@@ -32,17 +32,17 @@ try:
         phase = ConstraintLifecycleHooks.detect_constraint_phase(constraint)
         print(f"  • {constraint} → Phase {phase}")
 
-    # Demo 2: Template Generation
-    print("\n🔧 **Demo 2: Constraint Template Generation**")
+    # Demo 2: Optimized Generation
+    print("\n🔧 **Demo 2: Constraint Optimized Generation**")
     print("Generating Phase 2 skill matching constraint...")
 
-    template = ConstraintLifecycleHooks.generate_constraint_template(
+    optimized = ConstraintLifecycleHooks.generate_constraint_optimized(
         "skill_matching", "phase2"
     )
 
     print("Generated constraint function (preview):")
     print("```python")
-    print(template[:800] + "..." if len(template) > 800 else template)
+    print(optimized[:800] + "..." if len(optimized) > 800 else optimized)
     print("```\n")
 
     # Demo 3: Test Generation
@@ -177,8 +177,8 @@ try:
         "pre_constraint_validation",
         "post_constraint_validation",
         "constraint_integration",
-        "template_session_start",
-        "template_checkpoint",
+        "optimized_session_start",
+        "optimized_checkpoint",
         "performance_gate_check",
     ]
 
@@ -197,7 +197,7 @@ try:
     print("  • Validates compliance in real-time")
     print("  • Suggests optimal file locations")
 
-    print("\n⚡ **Template Optimization:**")
+    print("\n⚡ **Optimized Optimization:**")
     print("  • Preserves optimization context across sessions")
     print("  • Auto-checkpoints every 30 minutes")
     print("  • Detects performance regressions")
@@ -212,7 +212,7 @@ try:
     print("\n📈 **Expected Impact:**")
     print("  • 50-70% reduction in repetitive constraint development")
     print("  • Automated quality assurance and compliance")
-    print("  • Improved cross-session continuity for template optimization")
+    print("  • Improved cross-session continuity for optimized optimization")
     print("  • Future-proof extensibility for Phase 2/3 development")
 
     print("\n" + "=" * 70)

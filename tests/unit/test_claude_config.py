@@ -211,32 +211,32 @@ class ClaudeConfigTester:
             )
 
     def test_code_generation(self):
-        """Test code generation from templates."""
+        """Test code generation from optimizeds."""
         tests = [
-            # Test 1: Generate constraint from template
+            # Test 1: Generate constraint from optimized
             {
-                "name": "Constraint from template",
+                "name": "Constraint from optimized",
                 "prompt": "Generate a resource capacity constraint using TEMPLATES.md",
                 "expected": [
                     "def add_resource_capacity_constraints",
                     "__post_init__",
                     "30 lines",
                 ],
-                "description": "Should follow constraint template exactly",
+                "description": "Should follow constraint optimized exactly",
             },
             # Test 2: Generate data model
             {
                 "name": "Data model generation",
-                "prompt": "Create a Worker data model with skills using the template",
+                "prompt": "Create a Worker data model with skills using the optimized",
                 "expected": ["@dataclass", "__post_init__", "validation"],
-                "description": "Should follow data model template",
+                "description": "Should follow data model optimized",
             },
             # Test 3: Generate search strategy
             {
                 "name": "Search strategy",
-                "prompt": "Generate a critical path search strategy from template",
+                "prompt": "Generate a critical path search strategy from optimized",
                 "expected": ["AddDecisionStrategy", "CHOOSE_FIRST", "SELECT_MIN_VALUE"],
-                "description": "Should follow search strategy template",
+                "description": "Should follow search strategy optimized",
             },
         ]
 
@@ -327,9 +327,9 @@ To fully test the Claude configuration:
    - Try: "/tc maintenance_window" (should generate tests)
    - Try: "/ti" (should start infeasibility trace)
 
-2. **Test Template Generation**:
+2. **Test Optimized Generation**:
    - Ask: "Generate a skill matching constraint using TEMPLATES.md"
-   - Verify it follows the exact template structure
+   - Verify it follows the exact optimized structure
 
 3. **Test Workflow Integration**:
    - Start a complex task: "Help me debug why my solver takes 120 seconds"

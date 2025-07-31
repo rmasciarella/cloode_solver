@@ -6,18 +6,18 @@ from src.solver.core.solver import FreshSolver
 from src.solver.models.problem import (
     Job,
     JobInstance,
-    JobTemplate,
+    JobOptimizedPattern,
     Machine,
     SchedulingProblem,
     Task,
     TaskMode,
-    TemplateTask,
+    OptimizedTask,
     WorkCell,
 )
 
 
-def test_complete_unattended_workflow_legacy():
-    """Test complete unattended task workflow with legacy job structure."""
+def test_complete_unattended_workflow_unique():
+    """Test complete unattended task workflow with unique job structure."""
     # GIVEN: A job with both setup and execution phases for unattended process
     setup_task = Task(
         task_id="unattended_setup",
@@ -101,56 +101,56 @@ def test_complete_unattended_workflow_legacy():
     assert execution_scheduled, "Execution task not found in schedule"
 
 
-def test_unattended_template_integration():
-    """Test unattended task constraints with template-based scheduling."""
-    # GIVEN: A template with unattended setup and execution tasks
-    setup_template_task = TemplateTask(
-        template_task_id="template_setup",
-        name="Template Setup Phase",
+def test_unattended_optimized_integration():
+    """Test unattended task constraints with optimized-based scheduling."""
+    # GIVEN: A optimized with unattended setup and execution tasks
+    setup_optimized_task = OptimizedTask(
+        optimized_task_id="optimized_setup",
+        name="Optimized Setup Phase",
         is_unattended=True,
         is_setup=True,
-        modes=[TaskMode("setup_mode", "template_setup", "machine_1", 45)],  # 45 min
+        modes=[TaskMode("setup_mode", "optimized_setup", "machine_1", 45)],  # 45 min
     )
 
-    execution_template_task = TemplateTask(
-        template_task_id="template_execution",
-        name="Template Execution Phase",
+    execution_optimized_task = OptimizedTask(
+        optimized_task_id="optimized_execution",
+        name="Optimized Execution Phase",
         is_unattended=True,
         is_setup=False,
         modes=[
-            TaskMode("exec_mode", "template_execution", "machine_1", 1440)
+            TaskMode("exec_mode", "optimized_execution", "machine_1", 1440)
         ],  # 24 hours
     )
 
-    template = JobTemplate(
-        template_id="unattended_template",
-        name="Unattended Process Template",
-        description="Template for unattended processes",
-        template_tasks=[setup_template_task, execution_template_task],
+    optimized = JobOptimizedPattern(
+        optimized_pattern_id="unattended_optimized",
+        name="Unattended Process Optimized",
+        description="Optimized for unattended processes",
+        optimized_tasks=[setup_optimized_task, execution_optimized_task],
     )
 
-    # Create multiple instances to test template optimization
+    # Create multiple instances to test optimized optimization
     instances = [
         JobInstance(
             instance_id=f"instance_{i}",
-            template_id="unattended_template",
+            optimized_id="unattended_optimized",
             description=f"Unattended Instance {i}",
-            due_date=datetime.now(UTC) + timedelta(days=2),  # Realistic due date
+            due_date=datetime.now(UTC) + timedelta(days=4),  # Realistic due date for 3 sequential instances
         )
         for i in range(3)
     ]
 
-    machine = Machine("machine_1", "cell_1", "Template Machine", capacity=1)
-    work_cell = WorkCell("cell_1", "Template Cell", machines=[machine])
+    machine = Machine("machine_1", "cell_1", "Optimized Machine", capacity=1)
+    work_cell = WorkCell("cell_1", "Optimized Cell", machines=[machine])
 
-    problem = SchedulingProblem.create_from_template(
-        job_template=template,
+    problem = SchedulingProblem.create_from_optimized(
+        job_optimized=optimized,
         job_instances=instances,
         machines=[machine],
         work_cells=[work_cell],
     )
 
-    # WHEN: Solving template-based unattended problem
+    # WHEN: Solving optimized-based unattended problem
     solver = FreshSolver(problem)
     solution = solver.solve(time_limit=60)
 
@@ -158,12 +158,12 @@ def test_unattended_template_integration():
     assert solution["status"] in [
         "OPTIMAL",
         "FEASIBLE",
-    ], f"Template solver failed: {solution['status']}"
-    assert solution["makespan"] > 0, "No valid template schedule found"
+    ], f"Optimized solver failed: {solution['status']}"
+    assert solution["makespan"] > 0, "No valid optimized schedule found"
 
     # Verify each instance follows unattended constraints
     schedule = solution["schedule"]
-    setup_tasks = [task for task in schedule if "template_setup" in task["task_id"]]
+    setup_tasks = [task for task in schedule if "optimized_setup" in task["task_id"]]
 
     assert len(setup_tasks) == 3, f"Expected 3 setup tasks, found {len(setup_tasks)}"
 
@@ -172,10 +172,10 @@ def test_unattended_template_integration():
         day = start_time // 96
         start_offset = start_time % 96
 
-        assert day < 5, f"Template setup on weekend day {day}"
+        assert day < 5, f"Optimized setup on weekend day {day}"
         assert (
             28 <= start_offset <= 68
-        ), f"Template setup start {start_offset} outside business hours"
+        ), f"Optimized setup start {start_offset} outside business hours"
 
 
 def test_weekend_long_process_optimization():

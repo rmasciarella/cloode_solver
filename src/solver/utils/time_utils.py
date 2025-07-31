@@ -19,22 +19,31 @@ def calculate_horizon(problem: SchedulingProblem) -> int:
 
     Returns time units (15-minute intervals) from now to latest due date plus buffer.
     """
-    if problem.is_template_based:
-        # Template-based horizon calculation
+    if problem.is_optimized_mode:
+        # Optimized mode horizon calculation
         if not problem.job_instances:
             # No instances, use default horizon
             return 100
 
         # Find the latest due date from job instances
-        latest_due = max(instance.due_date for instance in problem.job_instances)
+        due_dates = [
+            instance.due_date
+            for instance in problem.job_instances
+            if instance.due_date is not None
+        ]
+        if due_dates:
+            latest_due = max(due_dates)
+        else:
+            # No due dates, use default horizon
+            return 100
 
-        # Calculate total work content from template
-        if problem.job_template:
-            template_work_minutes = sum(
-                template_task.min_duration
-                for template_task in problem.job_template.template_tasks
+        # Calculate total work content from optimized pattern
+        if problem.job_optimized_pattern:
+            pattern_work_minutes = sum(
+                optimized_task.min_duration
+                for optimized_task in problem.job_optimized_pattern.optimized_tasks
             )
-            total_work_minutes = template_work_minutes * len(problem.job_instances)
+            total_work_minutes = pattern_work_minutes * len(problem.job_instances)
         else:
             total_work_minutes = 0
     else:
@@ -43,7 +52,12 @@ def calculate_horizon(problem: SchedulingProblem) -> int:
             return 100
 
         # Find the latest due date
-        latest_due = max(job.due_date for job in problem.jobs)
+        due_dates = [job.due_date for job in problem.jobs if job.due_date is not None]
+        if due_dates:
+            latest_due = max(due_dates)
+        else:
+            # No due dates, use default horizon
+            return 100
 
         # Calculate total work content (sum of all minimum durations)
         total_work_minutes = sum(
@@ -86,6 +100,9 @@ def calculate_latest_start(task: Task, job: Job, horizon: int) -> int:
 
     """
     # Convert due date to time units from now
+    if job.due_date is None:
+        return horizon  # No due date constraint
+
     now = datetime.now(UTC)
     time_to_due = job.due_date - now
     due_time_units = int(time_to_due.total_seconds() / 900)
@@ -229,14 +246,14 @@ def extract_solution(
     total_lateness = 0
     now = datetime.now(UTC)
 
-    if problem.is_template_based and problem.job_template:
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
         # Template-based solution extraction
         for instance in problem.job_instances:
             instance_end_time = 0
 
-            for template_task in problem.job_template.template_tasks:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
                 instance_task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_key = (instance.instance_id, instance_task_id)
 
@@ -272,8 +289,8 @@ def extract_solution(
                     {
                         "job_id": instance.instance_id,  # Use instance ID as job ID
                         "task_id": instance_task_id,
-                        "task_name": template_task.name,
-                        "template_task_id": template_task.template_task_id,
+                        "task_name": optimized_task.name,
+                        "optimized_task_id": optimized_task.optimized_task_id,
                         "start_time": start_time,
                         "end_time": end_time,
                         "start_datetime": start_datetime.isoformat(),
@@ -281,7 +298,7 @@ def extract_solution(
                         "duration_minutes": (end_time - start_time) * 15,
                         "machine_id": assigned_machine,
                         "machine_name": machine_name,
-                        "is_template_based": True,
+                        "is_optimized_mode": True,
                     }
                 )
 
@@ -289,7 +306,10 @@ def extract_solution(
 
             # Calculate instance lateness
             instance_end_datetime = now + timedelta(minutes=instance_end_time * 15)
-            if instance_end_datetime > instance.due_date:
+            if (
+                instance.due_date is not None
+                and instance_end_datetime > instance.due_date
+            ):
                 lateness_minutes = (
                     instance_end_datetime - instance.due_date
                 ).total_seconds() / 60
@@ -340,7 +360,7 @@ def extract_solution(
                         "duration_minutes": (end_time - start_time) * 15,
                         "machine_id": assigned_machine,
                         "machine_name": machine_name,
-                        "is_template_based": False,
+                        "is_optimized_mode": False,
                     }
                 )
 
@@ -348,7 +368,7 @@ def extract_solution(
 
             # Calculate job lateness
             job_end_datetime = now + timedelta(minutes=job_end_time * 15)
-            if job_end_datetime > job.due_date:
+            if job.due_date is not None and job_end_datetime > job.due_date:
                 lateness_minutes = (
                     job_end_datetime - job.due_date
                 ).total_seconds() / 60

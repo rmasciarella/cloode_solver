@@ -47,13 +47,13 @@ Solver takes > 60 seconds on medium datasets (20 jobs, 500 tasks)
 3. **Search strategy** - order variables by criticality (critical path first)
 4. **Solver parameters** - tune `num_search_workers`, `linearization_level`
 
-### Template Performance Issues
-For template-based models underperforming:
+### Optimized Mode Performance Issues
+For optimized mode models underperforming:
 ```bash
-/template-benchmark <template_id>    # Compare against targets
-/template-optimize-params <template_id>  # Systematic parameter tuning
+/optimized-benchmark <pattern_id>    # Compare against targets
+/optimized-optimize-params <pattern_id>  # Systematic parameter tuning
 # Check symmetry breaking implementation
-# Verify template structure exploitation
+# Verify optimized pattern structure exploitation
 ```
 
 ## Memory Issues
@@ -67,9 +67,9 @@ Out of memory errors with large datasets
    - Eliminate unnecessary intermediate variables
    - Consider constraint programming vs integer programming formulation
 
-2. **Template approach** for identical jobs:
-   - Share template structure across job instances
-   - O(template_size × instances) vs O(total_tasks²) memory complexity
+2. **Optimized mode approach** for identical jobs:
+   - Share optimized pattern structure across job instances
+   - O(pattern_size × instances) vs O(total_tasks²) memory complexity
 
 3. **Batch processing** for very large problems:
    - Decompose by time horizons or machine groups
@@ -122,11 +122,11 @@ Solver times out without finding feasible solution
    - Increase solver time limit for complex problems
    - Use solution limit for good-enough solutions: `solver.parameters.solution_limit = 100`
 
-### Template-Specific Timeouts
-Templates should solve faster than legacy. If timeout occurs:
+### Optimized Mode Timeouts
+Optimized mode should solve faster than unique mode. If timeout occurs:
 - Verify symmetry breaking constraints are active
 - Check parameter tuning status (blessed vs default)
-- Validate template structure exploitation
+- Validate optimized pattern structure exploitation
 
 ## Unit Test Failures
 
@@ -223,12 +223,12 @@ mypy errors preventing code execution
 ## Performance Regression Detection
 
 ### Symptom
-Previously fast templates now solve slowly
+Previously fast optimized patterns now solve slowly
 
 ### Diagnosis Process
 1. **Regression testing**:
    ```bash
-   /template-regression-test           # Test all templates
+   /optimized-regression-test           # Test all optimized patterns
    ```
 
 2. **Parameter drift detection**:
@@ -244,14 +244,14 @@ Previously fast templates now solve slowly
 ### Recovery Actions
 1. **Parameter re-optimization**:
    ```bash
-   /template-optimize-params <template_id>  # Re-tune parameters
-   /template-promote-params <template_id> <new_params.json>
+   /optimized-optimize-params <pattern_id>  # Re-tune parameters
+   /optimized-promote-params <pattern_id> <new_params.json>
    ```
 
 2. **Constraint validation**:
    - Verify symmetry breaking constraints still active
    - Check for new constraints impacting performance
-   - Validate template structure exploitation
+   - Validate optimized pattern structure exploitation
 
 3. **Infrastructure changes**:
    - Check solver version changes

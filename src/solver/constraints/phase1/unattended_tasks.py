@@ -33,20 +33,22 @@ def add_business_hours_setup_constraints(
 
     Performance: O(n) where n = number of unattended tasks with setup
     """
-    if problem.is_template_based:
-        _add_template_business_hours_constraints(model, task_starts, task_ends, problem)
+    if problem.is_optimized_mode:
+        _add_optimized_business_hours_constraints(
+            model, task_starts, task_ends, problem
+        )
     else:
-        _add_legacy_business_hours_constraints(model, task_starts, task_ends, problem)
+        _add_unique_business_hours_constraints(model, task_starts, task_ends, problem)
 
 
-def _add_template_business_hours_constraints(
+def _add_optimized_business_hours_constraints(
     model: cp_model.CpModel,
     task_starts: dict[tuple[str, str], cp_model.IntVar],
     task_ends: dict[tuple[str, str], cp_model.IntVar],
     problem: SchedulingProblem,
 ) -> None:
-    """Add business hours constraints for template-based problems."""
-    if not problem.job_template:
+    """Add business hours constraints for optimized mode problems."""
+    if not problem.job_optimized_pattern:
         return
 
     # Business hours: 7am-4pm = time units 28-68 (7*4 to 16*4) per day
@@ -56,13 +58,13 @@ def _add_template_business_hours_constraints(
     daily_cycle = 96  # 24 hours
 
     for instance in problem.job_instances:
-        for template_task in problem.job_template.template_tasks:
+        for optimized_task in problem.job_optimized_pattern.optimized_tasks:
             # Only apply to setup tasks for unattended processes
-            if not (template_task.is_setup and template_task.is_unattended):
+            if not (optimized_task.is_setup and optimized_task.is_unattended):
                 continue
 
             instance_task_id = problem.get_instance_task_id(
-                instance.instance_id, template_task.template_task_id
+                instance.instance_id, optimized_task.optimized_task_id
             )
             task_key = (instance.instance_id, instance_task_id)
 
@@ -82,7 +84,7 @@ def _add_template_business_hours_constraints(
 
                 # Boolean variable for whether task is scheduled on this business day
                 scheduled_this_day = model.NewBoolVar(
-                    f"business_day_{day}_{instance.instance_id}_{template_task.template_task_id}"
+                    f"business_day_{day}_{instance.instance_id}_{optimized_task.optimized_task_id}"
                 )
                 business_day_choices.append(scheduled_this_day)
 
@@ -99,13 +101,13 @@ def _add_template_business_hours_constraints(
             model.AddExactlyOne(business_day_choices)
 
 
-def _add_legacy_business_hours_constraints(
+def _add_unique_business_hours_constraints(
     model: cp_model.CpModel,
     task_starts: dict[tuple[str, str], cp_model.IntVar],
     task_ends: dict[tuple[str, str], cp_model.IntVar],
     problem: SchedulingProblem,
 ) -> None:
-    """Add business hours constraints for legacy job-based problems."""
+    """Add business hours constraints for unique mode job-based problems."""
     # Business hours: 7am-4pm = time units 28-68 per day
     business_start_offset = 28
     business_end_offset = 68
@@ -175,20 +177,20 @@ def add_unattended_execution_constraints(
 
     Performance: O(n) where n = number of unattended execution tasks
     """
-    if problem.is_template_based:
-        _add_template_execution_constraints(model, task_starts, task_ends, problem)
+    if problem.is_optimized_mode:
+        _add_optimized_execution_constraints(model, task_starts, task_ends, problem)
     else:
-        _add_legacy_execution_constraints(model, task_starts, task_ends, problem)
+        _add_unique_execution_constraints(model, task_starts, task_ends, problem)
 
 
-def _add_template_execution_constraints(
+def _add_optimized_execution_constraints(
     model: cp_model.CpModel,
     task_starts: dict[tuple[str, str], cp_model.IntVar],
     task_ends: dict[tuple[str, str], cp_model.IntVar],
     problem: SchedulingProblem,
 ) -> None:
-    """Add 24/7 execution constraints for template-based problems."""
-    if not problem.job_template:
+    """Add 24/7 execution constraints for optimized mode problems."""
+    if not problem.job_optimized_pattern:
         return
 
     # Find setup-execution pairs for unattended tasks
@@ -196,20 +198,20 @@ def _add_template_execution_constraints(
         setup_tasks = []
         execution_tasks = []
 
-        for template_task in problem.job_template.template_tasks:
+        for optimized_task in problem.job_optimized_pattern.optimized_tasks:
             instance_task_id = problem.get_instance_task_id(
-                instance.instance_id, template_task.template_task_id
+                instance.instance_id, optimized_task.optimized_task_id
             )
             task_key = (instance.instance_id, instance_task_id)
 
             if task_key not in task_starts:
                 continue
 
-            if template_task.is_unattended:
-                if template_task.is_setup:
-                    setup_tasks.append((template_task, task_key))
+            if optimized_task.is_unattended:
+                if optimized_task.is_setup:
+                    setup_tasks.append((optimized_task, task_key))
                 else:
-                    execution_tasks.append((template_task, task_key))
+                    execution_tasks.append((optimized_task, task_key))
 
         # Link setup completion to execution start
         for _setup_task, setup_key in setup_tasks:
@@ -223,13 +225,13 @@ def _add_template_execution_constraints(
                 model.Add(execution_start >= setup_end)
 
 
-def _add_legacy_execution_constraints(
+def _add_unique_execution_constraints(
     model: cp_model.CpModel,
     task_starts: dict[tuple[str, str], cp_model.IntVar],
     task_ends: dict[tuple[str, str], cp_model.IntVar],
     problem: SchedulingProblem,
 ) -> None:
-    """Add 24/7 execution constraints for legacy job-based problems."""
+    """Add 24/7 execution constraints for unique mode job-based problems."""
     for job in problem.jobs:
         setup_tasks = []
         execution_tasks = []
@@ -283,20 +285,20 @@ def add_weekend_optimization_constraints(
     weekend_start_day_5 = 5 * 96  # Saturday start
     weekend_start_day_6 = 6 * 96  # Sunday start
 
-    if problem.is_template_based and problem.job_template:
+    if problem.is_optimized_mode and problem.job_optimized_pattern:
         for instance in problem.job_instances:
-            for template_task in problem.job_template.template_tasks:
-                if not template_task.is_unattended or template_task.is_setup:
+            for optimized_task in problem.job_optimized_pattern.optimized_tasks:
+                if not optimized_task.is_unattended or optimized_task.is_setup:
                     continue
 
                 # Check if this is a long-running task
                 if (
-                    template_task.min_duration < long_task_threshold * 15
+                    optimized_task.min_duration < long_task_threshold * 15
                 ):  # Convert to minutes
                     continue
 
                 instance_task_id = problem.get_instance_task_id(
-                    instance.instance_id, template_task.template_task_id
+                    instance.instance_id, optimized_task.optimized_task_id
                 )
                 task_key = (instance.instance_id, instance_task_id)
 
@@ -307,10 +309,10 @@ def add_weekend_optimization_constraints(
 
                 # Create weekend start incentive variables
                 weekend_start_sat = model.NewBoolVar(
-                    f"weekend_start_sat_{instance.instance_id}_{template_task.template_task_id}"
+                    f"weekend_start_sat_{instance.instance_id}_{optimized_task.optimized_task_id}"
                 )
                 weekend_start_sun = model.NewBoolVar(
-                    f"weekend_start_sun_{instance.instance_id}_{template_task.template_task_id}"
+                    f"weekend_start_sun_{instance.instance_id}_{optimized_task.optimized_task_id}"
                 )
 
                 # Define weekend start conditions

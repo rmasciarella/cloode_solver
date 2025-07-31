@@ -195,7 +195,7 @@ def mock_database_loader():
             "src.data.loaders.database.create_client", side_effect=create_mock_client
         ),
         patch(
-            "src.data.loaders.template_database.create_client",
+            "src.data.loaders.optimized_database.create_client",
             side_effect=create_mock_client,
         ),
         patch.dict(

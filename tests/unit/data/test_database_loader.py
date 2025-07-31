@@ -254,23 +254,23 @@ class TestDatabaseLoader:
         os.environ,
         {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_ANON_KEY": "test_key"},
     )
-    @patch("src.data.loaders.template_database.create_client")
+    @patch("src.data.loaders.optimized_database.create_client")
     @patch("src.data.loaders.database.create_client")
     def test_load_problem_complete(
-        self, mock_create_client, mock_template_create_client, _mock_print
+        self, mock_create_client, mock_optimized_create_client, _mock_print
     ):
         """Test loading complete problem with associations."""
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
 
-        # Mock template client to return empty templates (use legacy mode)
-        mock_template_client = MagicMock()
-        mock_template_create_client.return_value = mock_template_client
-        mock_template_table = MagicMock()
-        mock_template_client.table.return_value = mock_template_table
-        mock_template_table.select.return_value = mock_template_table
-        mock_template_table.limit.return_value = mock_template_table
-        mock_template_table.execute.return_value = MagicMock(data=[])
+        # Mock optimized client to return empty optimizeds (use unique mode)
+        mock_optimized_client = MagicMock()
+        mock_optimized_create_client.return_value = mock_optimized_client
+        mock_optimized_table = MagicMock()
+        mock_optimized_client.table.return_value = mock_optimized_table
+        mock_optimized_table.select.return_value = mock_optimized_table
+        mock_optimized_table.limit.return_value = mock_optimized_table
+        mock_optimized_table.execute.return_value = MagicMock(data=[])
 
         # Mock all table responses
         mock_table = mock_client.table
@@ -379,23 +379,23 @@ class TestDatabaseLoader:
         os.environ,
         {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_ANON_KEY": "test_key"},
     )
-    @patch("src.data.loaders.template_database.create_client")
+    @patch("src.data.loaders.optimized_database.create_client")
     @patch("src.data.loaders.database.create_client")
     def test_load_problem_with_validation_issues(
-        self, mock_create_client, mock_template_create_client, mock_logger
+        self, mock_create_client, mock_optimized_create_client, mock_logger
     ):
         """Test loading problem with validation issues."""
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
 
-        # Mock template client to return empty templates (use legacy mode)
-        mock_template_client = MagicMock()
-        mock_template_create_client.return_value = mock_template_client
-        mock_template_table = MagicMock()
-        mock_template_client.table.return_value = mock_template_table
-        mock_template_table.select.return_value = mock_template_table
-        mock_template_table.limit.return_value = mock_template_table
-        mock_template_table.execute.return_value = MagicMock(data=[])
+        # Mock optimized client to return empty optimizeds (use unique mode)
+        mock_optimized_client = MagicMock()
+        mock_optimized_create_client.return_value = mock_optimized_client
+        mock_optimized_table = MagicMock()
+        mock_optimized_client.table.return_value = mock_optimized_table
+        mock_optimized_table.select.return_value = mock_optimized_table
+        mock_optimized_table.limit.return_value = mock_optimized_table
+        mock_optimized_table.execute.return_value = MagicMock(data=[])
 
         # Set up minimal mock data that will cause validation issues
         mock_table = mock_client.table
