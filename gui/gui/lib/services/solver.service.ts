@@ -297,6 +297,36 @@ export class SolverService extends BaseService {
       console.warn('Failed to record solver performance metrics:', error)
     }
   }
+
+  /**
+   * Generic request handler with error handling and monitoring
+   */
+  protected async handleRequest<T>(operation: () => Promise<T>): Promise<ServiceResponse<T>> {
+    const startTime = Date.now()
+    
+    try {
+      const data = await operation()
+      const duration = Date.now() - startTime
+      
+      // Record performance metrics
+      await this.monitorSolverPerformance('request', duration)
+      
+      return {
+        data,
+        error: null,
+        success: true
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime
+      await this.monitorSolverPerformance('request_error', duration, { error: error instanceof Error ? error.message : 'Unknown error' })
+      
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        success: false
+      }
+    }
+  }
 }
 
 // Export singleton instance

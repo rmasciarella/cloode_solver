@@ -1,0 +1,35 @@
+# Fresh Solver - Ruff ignore file
+# Ignoring style preferences that don't affect functionality
+
+# Docstring style preferences
+D107    # Ignore missing docstrings in __init__ methods
+D205    # Ignore missing blank line after summary line
+D400    # Ignore missing trailing period in first line of docstring
+D401    # Ignore first line should be in imperative mood
+D415    # Ignore missing punctuation in first line of docstring
+
+# Line length for URLs and complex SQL (project uses 88 char limit)
+E501    # Ignore line too long - many are for URLs, SQL, or complex expressions
+
+# Import style preferences 
+E402    # Ignore module level import not at top - some conditionally imported
+
+# Whitespace style (non-functional)
+W291    # Ignore trailing whitespace - auto-formatters handle this
+W293    # Ignore blank line contains whitespace
+
+# Variable usage (mostly in exception handlers)
+F841    # Ignore unused variable - some used for debugging/logging
+ARG001  # Ignore unused function argument - some for compatibility
+
+# Code style preferences
+SIM102  # Ignore collapsible if - sometimes clearer when separate
+SIM103  # Ignore needless bool - sometimes clearer for readability
+B007    # Ignore unused loop control variable - some used for counting
+B904    # Ignore raise without from - some exception handling styles
+E722    # Ignore bare except - some legacy exception handling
+UP038   # Ignore isinstance not using union - backward compatibility
+
+# Performance/security checks - keep enabled
+# S (security checks) - NOT ignored, keep all security warnings
+# PERF (performance) - NOT ignored, keep performance warnings

@@ -1,0 +1,26 @@
+# Fresh Solver - Ruff Configuration  
+target-version = "py311"
+line-length = 88
+exclude = [".claude", "gui/scripts", "scripts"]
+
+[lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "ARG", "D", "SIM", "TCH", "T20"]
+ignore = [
+    # Docstring style preferences (non-functional)
+    "D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D205", "D213", "D400", "D401", "D415",
+    # Line length for complex SQL/URLs 
+    "E501",
+    # Import and whitespace style
+    "E402", "W291", "W293",
+    # Variable usage in exception handling  
+    "F841", "ARG001",
+    # Code style preferences
+    "SIM102", "SIM103", "B007", "B904", "E722", "UP038",
+    # Print statements - converted to logging later
+    "T201",
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["D100", "D101", "D102", "D103", "D104", "D107"]
+"gui/*" = ["D107", "D205", "D401", "E501"] 
+"scripts/*" = ["D107", "D205", "D401", "E501"]

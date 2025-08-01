@@ -5,15 +5,12 @@ Achieves O(pattern_size × instances) performance instead of O(n³).
 """
 
 import logging
-import os
 from datetime import datetime
 from typing import Any
 
 from dotenv import load_dotenv
-from supabase import Client, create_client
 
 from src.data.clients.secure_database_client import get_database_client
-
 from src.solver.models.problem import (
     Job,
     JobInstance,
@@ -43,7 +40,7 @@ class OptimizedDatabaseLoader:
 
         """
         load_dotenv()
-        
+
         # Use secure database client for solver operations
         # This automatically uses service role for backend operations
         self.supabase = get_database_client("solver")

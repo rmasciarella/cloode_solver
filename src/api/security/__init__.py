@@ -15,7 +15,7 @@ from .service_role import ServiceRoleManager
 
 __all__ = [
     "AuthConfig",
-    "AuthenticatedRequest", 
+    "AuthenticatedRequest",
     "SecurityLevel",
     "AuthenticationMiddleware",
     "InputValidationMiddleware",

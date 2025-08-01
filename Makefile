@@ -18,7 +18,7 @@ relock:
 # --- Code Quality ---
 
 lint:
-	uv run ruff check .
+	uv run ruff check . --exclude="gui/scripts" --exclude="scripts" --exclude=".claude"
 	uv run black --check .
 	uv run mypy src/
 

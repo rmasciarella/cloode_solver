@@ -25,16 +25,19 @@ def run_command(cmd: str, cwd: str = None, capture=False):
         print(f"Error: {e}")
         sys.exit(1)
 
+
 def gui_dev():
     """Start GUI development server."""
     print("🎨 Starting GUI development server...")
     os.chdir("gui")
     subprocess.run(["npm", "run", "dev"])
 
+
 def backend_watch():
     """Watch backend files and run tests on changes."""
     print("🔧 Watching backend files...")
     subprocess.run(["uv", "run", "ptw", "--", "--cov=src"])
+
 
 def full_test():
     """Run comprehensive test suite for both stacks."""
@@ -52,6 +55,7 @@ def full_test():
 
     print("✅ All tests passed!")
 
+
 def type_check():
     """Check types for both backend and frontend."""
     print("📝 Type checking...")
@@ -67,6 +71,7 @@ def type_check():
     os.chdir("..")
 
     print("✅ Type checking passed!")
+
 
 def db_sync():
     """Sync database schema and regenerate types."""
@@ -85,6 +90,7 @@ def db_sync():
 
     print("✅ Database sync complete!")
 
+
 def integration_test():
     """Test GUI to solver integration."""
     print("🔗 Testing GUI-solver integration...")
@@ -100,10 +106,12 @@ def integration_test():
     finally:
         gui_process.terminate()
 
+
 def solver_run():
     """Quick solver test with sample data."""
     print("⚡ Running solver test...")
     run_command("uv run python scripts/run_production_solver.py")
+
 
 def deploy_check():
     """Full production readiness check."""
@@ -125,6 +133,7 @@ def deploy_check():
     run_command("make lint")
 
     print("✅ Production ready!")
+
 
 def main():
     """Dispatch workflow commands."""
@@ -153,6 +162,7 @@ def main():
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

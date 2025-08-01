@@ -30,6 +30,7 @@ from src.solver.utils.logging_config import setup_logging
 performance_monitor = PerformanceMonitor()
 security_config_manager = get_security_config_manager()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler for startup and shutdown."""
@@ -44,11 +45,13 @@ async def lifespan(app: FastAPI):
         # Test database connection
         loader = OptimizedDatabaseLoader(use_test_tables=True)
         patterns = loader.load_available_patterns()
-        logger.info(f"Database connection successful - {len(patterns)} patterns available")
+        logger.info(
+            f"Database connection successful - {len(patterns)} patterns available"
+        )
 
         # Record startup performance
         performance_monitor.record_startup_metric("database_init", True)
-        
+
         # Initialize security system
         security_config = get_security_config()
         logger.info(f"Security system initialized - enabled: {security_config.enabled}")
@@ -67,6 +70,7 @@ async def lifespan(app: FastAPI):
     performance_monitor.stop_monitoring()
     logger.info("API shutdown complete")
 
+
 # Setup logging
 setup_logging(level="INFO", enable_file_logging=True)
 logger = logging.getLogger(__name__)
@@ -78,7 +82,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add security middleware (before other middleware for proper ordering)
@@ -101,6 +105,7 @@ app.add_middleware(
 # Setup security exception handlers
 setup_security_exception_handlers(app)
 
+
 # Add performance monitoring middleware
 @app.middleware("http")
 async def performance_middleware(request: Request, call_next):
@@ -116,7 +121,7 @@ async def performance_middleware(request: Request, call_next):
         endpoint=str(request.url.path),
         method=request.method,
         status_code=response.status_code,
-        response_time=process_time
+        response_time=process_time,
     )
 
     # Add performance headers
@@ -124,23 +129,23 @@ async def performance_middleware(request: Request, call_next):
 
     return response
 
+
 # Include solver endpoints
 app.include_router(solver_router)
+
 
 # Add security management endpoint
 @app.get("/api/v1/security")
 async def get_security_status():
     """Get current security configuration and status."""
-    return {
-        "success": True,
-        "security": security_config_manager.get_security_summary()
-    }
+    return {"success": True, "security": security_config_manager.get_security_summary()}
+
 
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
     security_summary = security_config_manager.get_security_summary()
-    
+
     return {
         "name": "Fresh OR-Tools Solver API",
         "version": "1.0.0",
@@ -156,9 +161,10 @@ async def root():
             "solve": "/api/v1/solve",
             "validate": "/api/v1/validate",
             "security": "/api/v1/security",
-            "docs": "/docs"
-        }
+            "docs": "/docs",
+        },
     }
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
@@ -169,18 +175,15 @@ async def global_exception_handler(request, exc):
         content={
             "success": False,
             "error": "Internal server error",
-            "detail": str(exc) if logger.level <= logging.DEBUG else "Contact administrator"
-        }
+            "detail": (
+                str(exc) if logger.level <= logging.DEBUG else "Contact administrator"
+            ),
+        },
     )
+
 
 if __name__ == "__main__":
     import uvicorn
 
     logger.info("Starting Fresh OR-Tools Solver API server...")
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

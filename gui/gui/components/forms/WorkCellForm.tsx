@@ -299,7 +299,11 @@ export default function WorkCellForm() {
           if (editingId) {
             return await workCellService.update(editingId, data)
           } else {
-            return await workCellService.create(data)
+            // Ensure name is present for create operations
+            if (!data.name) {
+              throw new Error('Name is required for creating work cells')
+            }
+            return await workCellService.create(data as WorkCellFormData & { name: string })
           }
         },
         'WorkCellForm',

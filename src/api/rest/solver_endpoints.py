@@ -17,6 +17,7 @@ from src.solver.models.problem import SchedulingProblem
 
 logger = logging.getLogger(__name__)
 
+
 # Pydantic models for API validation
 class JobInstanceRequest(BaseModel):
     instance_id: str
@@ -106,7 +107,7 @@ async def health_check():
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "patterns_available": len(patterns)
+            "patterns_available": len(patterns),
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -122,26 +123,21 @@ async def get_available_patterns():
 
         pattern_info = []
         for pattern in patterns:
-            pattern_info.append(PatternInfo(
-                pattern_id=pattern.optimized_pattern_id,
-                name=pattern.name,
-                description=pattern.description or "",
-                task_count=pattern.task_count,
-                total_min_duration_minutes=pattern.total_min_duration_minutes,
-                critical_path_length_minutes=pattern.critical_path_length_minutes
-            ))
+            pattern_info.append(
+                PatternInfo(
+                    pattern_id=pattern.optimized_pattern_id,
+                    name=pattern.name,
+                    description=pattern.description or "",
+                    task_count=pattern.task_count,
+                    total_min_duration_minutes=pattern.total_min_duration_minutes,
+                    critical_path_length_minutes=pattern.critical_path_length_minutes,
+                )
+            )
 
-        return PatternsResponse(
-            success=True,
-            patterns=pattern_info
-        )
+        return PatternsResponse(success=True, patterns=pattern_info)
     except Exception as e:
         logger.error(f"Failed to fetch patterns: {e}")
-        return PatternsResponse(
-            success=False,
-            patterns=[],
-            error=str(e)
-        )
+        return PatternsResponse(success=False, patterns=[], error=str(e))
 
 
 @router.post("/solve", response_model=SolverResponse)
@@ -150,7 +146,9 @@ async def solve_scheduling_problem(request: SolverJobRequest):
     try:
         # Validate request
         if not request.instances:
-            raise HTTPException(status_code=400, detail="At least one job instance is required")
+            raise HTTPException(
+                status_code=400, detail="At least one job instance is required"
+            )
 
         # Load problem from database
         loader = OptimizedDatabaseLoader(use_test_tables=True)
@@ -164,12 +162,13 @@ async def solve_scheduling_problem(request: SolverJobRequest):
                 existing_instances.append(instance_req.instance_id)
             except:
                 # Create new instance if it doesn't exist
-                logger.info(f"Instance {instance_req.instance_id} not found, would create new one")
+                logger.info(
+                    f"Instance {instance_req.instance_id} not found, would create new one"
+                )
 
         # Load the scheduling problem
         problem = loader.load_optimized_problem(
-            pattern_id=request.pattern_id,
-            max_instances=len(request.instances)
+            pattern_id=request.pattern_id, max_instances=len(request.instances)
         )
 
         # Apply constraint settings if provided
@@ -185,14 +184,16 @@ async def solve_scheduling_problem(request: SolverJobRequest):
 
             # Extract task assignments from solution
             for task_id, assignment in solution_data.get("assignments", {}).items():
-                assignments.append(TaskAssignment(
-                    instance_id=assignment.get("instance_id", ""),
-                    task_id=task_id,
-                    machine_id=assignment.get("machine_id", ""),
-                    start_time=assignment.get("start_time", 0),
-                    end_time=assignment.get("end_time", 0),
-                    mode_id=assignment.get("mode_id", "")
-                ))
+                assignments.append(
+                    TaskAssignment(
+                        instance_id=assignment.get("instance_id", ""),
+                        task_id=task_id,
+                        machine_id=assignment.get("machine_id", ""),
+                        start_time=assignment.get("start_time", 0),
+                        end_time=assignment.get("end_time", 0),
+                        mode_id=assignment.get("mode_id", ""),
+                    )
+                )
 
             # Calculate resource utilization
             machine_usage = {}
@@ -205,57 +206,53 @@ async def solve_scheduling_problem(request: SolverJobRequest):
 
             total_time = max([a.end_time for a in assignments]) if assignments else 1
             for machine_id, usage in machine_usage.items():
-                resource_util.append(ResourceUtilization(
-                    machine_id=machine_id,
-                    utilization_percent=min(100.0, (usage / total_time) * 100),
-                    total_runtime_minutes=usage
-                ))
+                resource_util.append(
+                    ResourceUtilization(
+                        machine_id=machine_id,
+                        utilization_percent=min(100.0, (usage / total_time) * 100),
+                        total_runtime_minutes=usage,
+                    )
+                )
 
             solution = SolutionResult(
                 status=solution_data.get("status", "FEASIBLE"),
                 objective_value=solution_data.get("objective_value", 0.0),
                 total_duration_minutes=solution_data.get("total_duration", 0),
                 assignments=assignments,
-                resource_utilization=resource_util
+                resource_utilization=resource_util,
             )
 
             performance = PerformanceMetrics(
                 solve_time_seconds=solution_data.get("solve_time", 0.0),
                 variables_count=solution_data.get("variables", 0),
                 constraints_count=solution_data.get("constraints", 0),
-                memory_usage_mb=solution_data.get("memory_mb", 0.0)
+                memory_usage_mb=solution_data.get("memory_mb", 0.0),
             )
 
             return SolverResponse(
-                success=True,
-                solution=solution,
-                performance_metrics=performance
+                success=True, solution=solution, performance_metrics=performance
             )
         else:
             return SolverResponse(
-                success=False,
-                error=solution_data.get("error", "Solver failed")
+                success=False, error=solution_data.get("error", "Solver failed")
             )
 
     except Exception as e:
         logger.error(f"Solver API error: {e}")
-        return SolverResponse(
-            success=False,
-            error=str(e)
-        )
+        return SolverResponse(success=False, error=str(e))
 
 
 def solve_problem_with_constraints(
-    problem: SchedulingProblem,
-    settings: ConstraintSettings
+    problem: SchedulingProblem, settings: ConstraintSettings
 ) -> dict[str, Any]:
     """Solve scheduling problem with specific constraint settings.
-    
+
     This is a simplified wrapper around the main solver.
     In production, this would integrate with the full 3-phase system.
     """
     try:
         import time
+
         start_time = time.time()
 
         # For now, use the basic solver
@@ -264,30 +261,38 @@ def solve_problem_with_constraints(
         try:
             solver_result = solver_main()
             # Create a mock solution object for now
-            solution = type('Solution', (), {
-                'assignments': solver_result.get('assignments', {}),
-                'optimal': solver_result.get('status') == 'OPTIMAL',
-                'objective_value': solver_result.get('objective_value', 0.0),
-                'total_duration': solver_result.get('total_duration', 0),
-                'variables_count': solver_result.get('variables', 0),
-                'constraints_count': solver_result.get('constraints', 0)
-            })()
+            solution = type(
+                "Solution",
+                (),
+                {
+                    "assignments": solver_result.get("assignments", {}),
+                    "optimal": solver_result.get("status") == "OPTIMAL",
+                    "objective_value": solver_result.get("objective_value", 0.0),
+                    "total_duration": solver_result.get("total_duration", 0),
+                    "variables_count": solver_result.get("variables", 0),
+                    "constraints_count": solver_result.get("constraints", 0),
+                },
+            )()
         except Exception as e:
             logger.warning(f"Solver execution failed, using mock solution: {e}")
             # Return a mock solution for API testing
-            solution = type('Solution', (), {
-                'assignments': {},
-                'optimal': False,
-                'objective_value': 0.0,
-                'total_duration': 0,
-                'variables_count': 0,
-                'constraints_count': 0
-            })()
+            solution = type(
+                "Solution",
+                (),
+                {
+                    "assignments": {},
+                    "optimal": False,
+                    "objective_value": 0.0,
+                    "total_duration": 0,
+                    "variables_count": 0,
+                    "constraints_count": 0,
+                },
+            )()
 
         solve_time = time.time() - start_time
 
         # Transform solution to expected format
-        if hasattr(solution, 'assignments') and solution.assignments:
+        if hasattr(solution, "assignments") and solution.assignments:
             assignments = {}
             for task_id, assignment in solution.assignments.items():
                 assignments[task_id] = {
@@ -295,31 +300,25 @@ def solve_problem_with_constraints(
                     "machine_id": assignment.get("machine_id", ""),
                     "start_time": assignment.get("start_time", 0),
                     "end_time": assignment.get("end_time", 0),
-                    "mode_id": assignment.get("mode_id", "")
+                    "mode_id": assignment.get("mode_id", ""),
                 }
 
             return {
                 "success": True,
                 "status": "OPTIMAL" if solution.optimal else "FEASIBLE",
-                "objective_value": getattr(solution, 'objective_value', 0.0),
-                "total_duration": getattr(solution, 'total_duration', 0),
+                "objective_value": getattr(solution, "objective_value", 0.0),
+                "total_duration": getattr(solution, "total_duration", 0),
                 "assignments": assignments,
                 "solve_time": solve_time,
-                "variables": getattr(solution, 'variables_count', 0),
-                "constraints": getattr(solution, 'constraints_count', 0),
-                "memory_mb": 0.0  # Would need actual memory tracking
+                "variables": getattr(solution, "variables_count", 0),
+                "constraints": getattr(solution, "constraints_count", 0),
+                "memory_mb": 0.0,  # Would need actual memory tracking
             }
         else:
-            return {
-                "success": False,
-                "error": "No solution found"
-            }
+            return {"success": False, "error": "No solution found"}
     except Exception as e:
         logger.error(f"Solver execution failed: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 @router.get("/status/{job_id}")
@@ -329,7 +328,7 @@ async def get_job_status(job_id: str):
     return {
         "job_id": job_id,
         "status": "completed",
-        "message": "Job completed successfully"
+        "message": "Job completed successfully",
     }
 
 
@@ -347,17 +346,20 @@ async def validate_constraint_system():
         phase3_result = await test_phase3_constraints()
 
         return {
-            "success": all([phase1_result["success"], phase2_result["success"], phase3_result["success"]]),
+            "success": all(
+                [
+                    phase1_result["success"],
+                    phase2_result["success"],
+                    phase3_result["success"],
+                ]
+            ),
             "phase1": phase1_result,
             "phase2": phase2_result,
-            "phase3": phase3_result
+            "phase3": phase3_result,
         }
     except Exception as e:
         logger.error(f"Constraint system validation failed: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 async def test_phase1_constraints():
@@ -370,11 +372,13 @@ async def test_phase1_constraints():
             return {"success": False, "error": "No patterns available for testing"}
 
         # Load a small problem to test basic constraints
-        problem = loader.load_optimized_problem(patterns[0].optimized_pattern_id, max_instances=2)
+        problem = loader.load_optimized_problem(
+            patterns[0].optimized_pattern_id, max_instances=2
+        )
 
         return {
             "success": True,
-            "message": f"Phase 1 test passed - loaded {len(problem.jobs)} jobs with {problem.total_task_count} tasks"
+            "message": f"Phase 1 test passed - loaded {len(problem.jobs)} jobs with {problem.total_task_count} tasks",
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -387,7 +391,7 @@ async def test_phase2_constraints():
 
         return {
             "success": True,
-            "message": "Phase 2 constraints module loaded successfully"
+            "message": "Phase 2 constraints module loaded successfully",
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -400,7 +404,7 @@ async def test_phase3_constraints():
 
         return {
             "success": True,
-            "message": "Phase 3 constraints module loaded successfully"
+            "message": "Phase 3 constraints module loaded successfully",
         }
     except Exception as e:
         return {"success": False, "error": str(e)}

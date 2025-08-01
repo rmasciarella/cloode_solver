@@ -80,7 +80,7 @@ export default function MaintenanceTypeForm() {
   const { toast } = useToast()
 
   // Performance monitoring setup  
-  const performanceMonitor = usePerformanceMonitor()
+  const performanceMonitor = usePerformanceMonitor('MaintenanceTypeForm')
   const formLoadTimeRef = useRef<number>(Date.now())
   const validationTimesRef = useRef<ValidationPerformanceMetric[]>([])
   const interactionCountRef = useRef<FormPerformanceMetrics>({
@@ -423,18 +423,14 @@ export default function MaintenanceTypeForm() {
       ...originalRegister,
       onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         recordInteraction('focus')
-        if (originalRegister.onFocus) {
-          originalRegister.onFocus(e)
-        }
       },
       onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const validationStartTime = Date.now()
         
         // Trigger validation
         let validationResult
-        if (originalRegister.onBlur) {
-          validationResult = originalRegister.onBlur(e)
-        }
+        // Call original onBlur if it exists
+        originalRegister.onBlur?.(e)
         
         // Record validation performance
         setTimeout(() => {

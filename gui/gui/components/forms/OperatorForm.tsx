@@ -109,7 +109,7 @@ export default function OperatorForm() {
       onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
         trackInteraction('focus', name)
         startValidation(name)
-        fieldRegistration.onFocus?.(e)
+        // fieldRegistration.onFocus is not available on UseFormRegisterReturn
       },
       onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
         trackInteraction('blur', name)

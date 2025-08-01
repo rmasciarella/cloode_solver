@@ -336,10 +336,10 @@ export default function SequenceResourceForm() {
                   value={watch('department_id') || undefined}
                   onValueChange={(value) => {
                     setValue('department_id', value)
-                    trackInteraction('change')
+                    trackInteraction('change', 'department_id')
                   }}
                   onOpenChange={(open) => {
-                    if (open) trackInteraction('click')
+                    if (open) trackInteraction('click', 'department_select')
                   }}
                 >
                   <SelectTrigger>
@@ -363,10 +363,10 @@ export default function SequenceResourceForm() {
                   value={watch('resource_type') || undefined}
                   onValueChange={(value) => {
                     setValue('resource_type', value)
-                    trackInteraction('change')
+                    trackInteraction('change', 'resource_type')
                   }}
                   onOpenChange={(open) => {
-                    if (open) trackInteraction('click')
+                    if (open) trackInteraction('click', 'resource_type_select')
                   }}
                 >
                   <SelectTrigger>
@@ -530,9 +530,9 @@ export default function SequenceResourceForm() {
                 checked={watch('is_active')}
                 onCheckedChange={(checked) => {
                   setValue('is_active', checked as boolean)
-                  trackInteraction('change')
+                  trackInteraction('change', 'is_active')
                 }}
-                onClick={() => trackInteraction('click')}
+                onClick={() => trackInteraction('click', 'is_active_checkbox')}
               />
               <Label htmlFor="is_active">Active</Label>
             </div>
@@ -545,7 +545,7 @@ export default function SequenceResourceForm() {
                   variant="outline" 
                   onClick={() => {
                     handleCancel()
-                    trackInteraction('click')
+                    trackInteraction('click', 'cancel_button')
                   }}
                 >
                   Cancel
@@ -554,7 +554,7 @@ export default function SequenceResourceForm() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                onClick={() => trackInteraction('click')}
+                onClick={() => trackInteraction('click', 'submit_button')}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingId ? 'Update' : 'Create'} Resource
@@ -626,7 +626,7 @@ export default function SequenceResourceForm() {
                               variant="outline"
                               onClick={() => {
                                 handleEdit(resource)
-                                trackInteraction('click')
+                                trackInteraction('click', 'edit_button')
                               }}
                             >
                               <Edit className="h-4 w-4" />
@@ -636,7 +636,7 @@ export default function SequenceResourceForm() {
                               variant="outline"
                               onClick={() => {
                                 handleDelete(resource.sequence_id)
-                                trackInteraction('click')
+                                trackInteraction('click', 'delete_button')
                               }}
                             >
                               <Trash2 className="h-4 w-4" />

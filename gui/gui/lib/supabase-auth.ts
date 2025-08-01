@@ -76,7 +76,7 @@ export class AuthAwareSupabaseClient {
     }
 
     // Build query
-    let query = this.client.from(table)
+    let query: any = this.client.from(table)
 
     switch (operation) {
       case 'select':

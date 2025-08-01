@@ -24,6 +24,7 @@ class PerformanceMetrics:
     success: bool
     error_msg: str | None = None
 
+
 class PerformanceMonitor:
     def __init__(self, output_file: str = "performance_metrics.json"):
         self.output_file = Path(output_file)
@@ -42,7 +43,7 @@ class PerformanceMonitor:
 
     def _save_metrics(self):
         """Save metrics to file."""
-        with open(self.output_file, 'w') as f:
+        with open(self.output_file, "w") as f:
             json.dump([asdict(metric) for metric in self.metrics], f, indent=2)
 
     def measure_solver_performance(self, problem_size: int):
@@ -52,10 +53,19 @@ class PerformanceMonitor:
 
         try:
             # Run solver
-            result = subprocess.run([
-                "uv", "run", "python", "scripts/run_production_solver.py",
-                "--problem-size", str(problem_size)
-            ], capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/run_production_solver.py",
+                    "--problem-size",
+                    str(problem_size),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
             success = result.returncode == 0
             error_msg = result.stderr if not success else None
@@ -78,7 +88,7 @@ class PerformanceMonitor:
             memory_mb=end_memory - start_memory,
             cpu_percent=psutil.cpu_percent(),
             success=success,
-            error_msg=error_msg
+            error_msg=error_msg,
         )
 
         self.metrics.append(metric)
@@ -91,9 +101,13 @@ class PerformanceMonitor:
         start_memory = psutil.virtual_memory().used / 1024 / 1024
 
         try:
-            result = subprocess.run([
-                "npm", "run", "build"
-            ], cwd="gui", capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                ["npm", "run", "build"],
+                cwd="gui",
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
             success = result.returncode == 0
             error_msg = result.stderr if not success else None
@@ -116,7 +130,7 @@ class PerformanceMonitor:
             memory_mb=end_memory - start_memory,
             cpu_percent=psutil.cpu_percent(),
             success=success,
-            error_msg=error_msg
+            error_msg=error_msg,
         )
 
         self.metrics.append(metric)
@@ -130,9 +144,13 @@ class PerformanceMonitor:
 
         try:
             # Run integration tests
-            result = subprocess.run([
-                "npm", "run", "test"
-            ], cwd="gui", capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                ["npm", "run", "test"],
+                cwd="gui",
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
             success = result.returncode == 0
             error_msg = result.stderr if not success else None
@@ -155,7 +173,7 @@ class PerformanceMonitor:
             memory_mb=end_memory - start_memory,
             cpu_percent=psutil.cpu_percent(),
             success=success,
-            error_msg=error_msg
+            error_msg=error_msg,
         )
 
         self.metrics.append(metric)
@@ -178,16 +196,21 @@ class PerformanceMonitor:
             "summary": {
                 "total_measurements": len(self.metrics),
                 "components_tested": list(by_component.keys()),
-                "success_rate": sum(1 for m in self.metrics if m.success) / len(self.metrics)
+                "success_rate": sum(1 for m in self.metrics if m.success)
+                / len(self.metrics),
             },
-            "by_component": {}
+            "by_component": {},
         }
 
         for component, metrics in by_component.items():
             successful_metrics = [m for m in metrics if m.success]
             if successful_metrics:
-                avg_duration = sum(m.duration_ms for m in successful_metrics) / len(successful_metrics)
-                avg_memory = sum(m.memory_mb for m in successful_metrics) / len(successful_metrics)
+                avg_duration = sum(m.duration_ms for m in successful_metrics) / len(
+                    successful_metrics
+                )
+                avg_memory = sum(m.memory_mb for m in successful_metrics) / len(
+                    successful_metrics
+                )
             else:
                 avg_duration = 0
                 avg_memory = 0
@@ -199,11 +222,13 @@ class PerformanceMonitor:
                 "avg_memory_mb": round(avg_memory, 2),
                 "recent_failures": [
                     {"operation": m.operation, "error": m.error_msg}
-                    for m in metrics[-5:] if not m.success
-                ]
+                    for m in metrics[-5:]
+                    if not m.success
+                ],
             }
 
         return report
+
 
 def main():
     """Main performance monitoring CLI."""
@@ -241,6 +266,7 @@ def main():
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

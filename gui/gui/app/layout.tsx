@@ -6,6 +6,9 @@ import { NavigationHeader } from '@/components/layout/navigation-header';
 
 const inter = Inter({ subsets: ['latin'] });
 
+// Force dynamic rendering to avoid SSG issues with Supabase
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Fresh Solver OR-Tools Scheduling System',
   description: 'Production scheduling data entry system with Supabase integration',

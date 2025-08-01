@@ -154,7 +154,14 @@ export function PerformanceDebugPanel({
         )}
 
         {/* Performance Recommendations */}
-        <PerformanceRecommendations metrics={metrics} thresholds={thresholds} />
+        <PerformanceRecommendations 
+          metrics={metrics} 
+          thresholds={{
+            slowLoad: thresholds?.slowLoad ?? 1000,
+            slowSubmission: thresholds?.slowSubmission ?? 2000,
+            highErrorRate: thresholds?.highErrorRate ?? 0.1
+          }} 
+        />
       </CardContent>
     </Card>
   )

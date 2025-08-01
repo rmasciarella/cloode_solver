@@ -279,13 +279,12 @@ class DatabaseLoader:
                 .execute()
             )
         except Exception as e:
-            logger.warning(
-                f"Table access failed for {table_name}: {e}"
-            )
+            logger.warning(f"Table access failed for {table_name}: {e}")
             # Use service role for backend operations if regular access fails
             try:
                 # Use secure database client for backend operations
                 from src.data.clients.secure_database_client import get_database_client
+
                 service_client = get_database_client("solver")
                 response = (
                     service_client.table(table_name)

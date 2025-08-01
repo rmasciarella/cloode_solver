@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
 """Apply RLS migration to Supabase database."""
 
-import os
-import sys
 from pathlib import Path
+
 
 def apply_migration():
     """Apply RLS migration using Supabase CLI."""
     print("🔐 Applying RLS Migration")
     print("=" * 50)
-    
+
     # Check for migration files
     migration_files = [
         "migrations/001_initial_rls_setup.sql",
         "migrations/003_add_auth_and_rls_foundation.sql",
-        "schema/auth_and_rls_foundation.sql"
+        "schema/auth_and_rls_foundation.sql",
     ]
-    
+
     print("\n📁 Available migration files:")
     for file in migration_files:
         if Path(file).exists():
             print(f"  ✅ {file}")
         else:
             print(f"  ❌ {file} (not found)")
-    
+
     print("\n📝 Migration Instructions:")
     print("-" * 50)
     print("Since the API keys appear to be invalid, please:")
@@ -49,6 +48,7 @@ def apply_migration():
     print("Alternative: Use Supabase CLI if installed:")
     print("   supabase db push")
     print("-" * 50)
+
 
 if __name__ == "__main__":
     apply_migration()

@@ -25,7 +25,7 @@ class SecurityLevel(Enum):
 class DatabaseSecurityConfig:
     """Configuration for database security features."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize security configuration from environment."""
         load_dotenv()
 
@@ -174,7 +174,7 @@ class DatabaseSecurityConfig:
         """
         issues = []
         warnings = []
-        
+
         # Development bypass
         if (
             os.environ.get("ENVIRONMENT") == "development"
@@ -256,7 +256,7 @@ BEGIN
     IF current_setting('role') = 'service_role' THEN
         RETURN TRUE;
     END IF;
-    
+
     -- PERMISSIVE: Allow all access including anon
     RETURN TRUE;
 END;
@@ -274,7 +274,7 @@ BEGIN
     IF current_setting('role') = 'service_role' THEN
         RETURN TRUE;
     END IF;
-    
+
     -- Require authentication
     RETURN auth.uid() IS NOT NULL;
 END;
@@ -295,20 +295,20 @@ BEGIN
     IF current_setting('role') = 'service_role' THEN
         RETURN TRUE;
     END IF;
-    
+
     -- Must be authenticated
     IF auth.uid() IS NULL THEN
         RETURN FALSE;
     END IF;
-    
+
     -- Admins can access all departments
     IF EXISTS (
-        SELECT 1 FROM public.user_profiles 
+        SELECT 1 FROM public.user_profiles
         WHERE id = auth.uid() AND role = 'admin'
     ) THEN
         RETURN TRUE;
     END IF;
-    
+
     -- Check department match (implementation depends on context)
     RETURN TRUE; -- Simplified for this example
 END;
@@ -329,20 +329,20 @@ BEGIN
     IF current_setting('role') = 'service_role' THEN
         RETURN TRUE;
     END IF;
-    
+
     -- Must be authenticated
     IF auth.uid() IS NULL THEN
         RETURN FALSE;
     END IF;
-    
+
     -- Super admins can access all tenants
     IF EXISTS (
-        SELECT 1 FROM public.user_profiles 
+        SELECT 1 FROM public.user_profiles
         WHERE id = auth.uid() AND role = 'admin' AND permissions ? 'super_admin'
     ) THEN
         RETURN TRUE;
     END IF;
-    
+
     -- Check tenant isolation (implementation depends on context)
     RETURN TRUE; -- Simplified for this example
 END;

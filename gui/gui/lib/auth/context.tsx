@@ -112,8 +112,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const securityLevel = featureSecurity[feature]
     
     switch (securityLevel) {
-      case SecurityLevel.PUBLIC:
-        return true
       case SecurityLevel.OPTIONAL:
         return true // Always accessible, auth just enhances experience
       case SecurityLevel.REQUIRED:

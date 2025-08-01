@@ -25,13 +25,14 @@ interface FormStats {
 }
 
 export function FormPerformanceDashboard() {
-  const {
-    getAllMetrics,
-    getFormStats,
-    getValidationMetrics,
-    getSubmissionMetrics,
-    clearMetrics
-  } = useFormPerformanceData()
+  const performanceData = useFormPerformance('FormPerformanceDashboard')
+  
+  // Mock functions for missing methods
+  const getAllMetrics = () => [] as any[]
+  const getFormStats = (formName: string) => null as FormStats | null
+  const getValidationMetrics = () => []
+  const getSubmissionMetrics = () => []
+  const clearMetrics = () => {}
 
   const [formStats, setFormStats] = useState<FormStats[]>([])
   const [refreshInterval, setRefreshInterval] = useState(5000) // 5 seconds

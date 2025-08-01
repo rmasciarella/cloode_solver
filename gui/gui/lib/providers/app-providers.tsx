@@ -46,7 +46,6 @@ function DevTools() {
       <RealtimeStatus />
       <ReactQueryDevtools 
         initialIsOpen={false}
-        buttonPosition="bottom-right"
       />
     </div>
   )

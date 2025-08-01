@@ -13,7 +13,9 @@ def run_command(cmd: str, cwd: str = None, capture=False):
     """Run shell command with proper error handling."""
     try:
         if capture:
-            result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, shell=True, cwd=cwd, capture_output=True, text=True
+            )
             return result.stdout.strip()
         else:
             subprocess.run(cmd, shell=True, cwd=cwd, check=True)
@@ -22,16 +24,19 @@ def run_command(cmd: str, cwd: str = None, capture=False):
         print(f"Error: {e}")
         sys.exit(1)
 
+
 def gui_dev():
     """Start GUI development server."""
     print("🎨 Starting GUI development server...")
     os.chdir("gui")
     subprocess.run(["npm", "run", "dev"])
 
+
 def backend_watch():
     """Watch backend files and run tests on changes."""
     print("🔧 Watching backend files...")
     subprocess.run(["uv", "run", "ptw", "--", "--cov=src"])
+
 
 def full_test():
     """Run comprehensive test suite for both stacks."""
@@ -49,6 +54,7 @@ def full_test():
 
     print("✅ All tests passed!")
 
+
 def type_check():
     """Check types for both backend and frontend."""
     print("📝 Type checking...")
@@ -65,6 +71,7 @@ def type_check():
 
     print("✅ Type checking passed!")
 
+
 def db_sync():
     """Sync database schema and regenerate types."""
     print("🗄️ Syncing database...")
@@ -74,10 +81,13 @@ def db_sync():
 
     # Regenerate TypeScript types
     os.chdir("gui")
-    run_command("supabase gen types typescript --project-id hnrysjrydbhrnqqkrqir > lib/database.types.ts")
+    run_command(
+        "supabase gen types typescript --project-id hnrysjrydbhrnqqkrqir > lib/database.types.ts"
+    )
     os.chdir("..")
 
     print("✅ Database sync complete!")
+
 
 def integration_test():
     """Test GUI to solver integration."""
@@ -94,10 +104,12 @@ def integration_test():
     finally:
         gui_process.terminate()
 
+
 def solver_run():
     """Quick solver test with sample data."""
     print("⚡ Running solver test...")
     run_command("uv run python scripts/run_production_solver.py")
+
 
 def deploy_check():
     """Full production readiness check."""
@@ -120,11 +132,14 @@ def deploy_check():
 
     print("✅ Production ready!")
 
+
 def main():
     """Main workflow dispatcher."""
     if len(sys.argv) < 2:
         print("Usage: python scripts/dev_workflow.py <command>")
-        print("Commands: gui-dev, full-test, type-check, db-sync, integration-test, solver-run, deploy-check")
+        print(
+            "Commands: gui-dev, full-test, type-check, db-sync, integration-test, solver-run, deploy-check"
+        )
         sys.exit(1)
 
     command = sys.argv[1]
@@ -144,6 +159,7 @@ def main():
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
