@@ -1,9 +1,9 @@
 [build]
-  # Build command - use netlify-specific build script
-  command = "npm run build:netlify"
+  # Base directory for build context
+  base = "gui/gui"
   
-  # Publish directory - where Next.js builds the site
-  publish = "gui/gui/.next"
+  # Build command - install and build from correct directory
+  command = "npm install --prefer-offline && npm run build"
 
 # Use Netlify's Next.js plugin for seamless deployment
 [[plugins]]
