@@ -1,0 +1,34 @@
+[build]
+  # Build command - only build the frontend for Netlify
+  command = "cd gui/gui && npm ci && npm run build"
+  
+  # Publish directory - where Next.js builds the site
+  publish = "gui/gui/.next"
+  
+  # Node.js version
+  environment = { NODE_VERSION = "18" }
+
+# Use Netlify's Next.js plugin for seamless deployment
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  # Netlify build environment variables
+  NPM_FLAGS = "--prefix gui/gui"
+  NODE_ENV = "production"
+
+# Redirects for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"

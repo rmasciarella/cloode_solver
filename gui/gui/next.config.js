@@ -121,7 +121,7 @@ const nextConfig = {
             value: 'http'
           }
         ],
-        destination: 'https://yourdomain.com/:path*',
+        destination: 'https://$host/:path*',
         permanent: true
       }] : [])
     ]
