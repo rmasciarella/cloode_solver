@@ -5,9 +5,7 @@
   # Build command with debugging and error handling - ensure node_modules exists before plugin runs
   command = "echo 'Starting build...' && npm --version && node --version && npm install && echo 'Dependencies installed, building...' && npm run build && echo 'Build completed successfully' && ls -la node_modules"
 
-# Use Netlify's Next.js plugin for serverless deployment
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# Netlify will auto-detect Next.js and use the appropriate plugin version
 
 [build.environment]
   # Netlify build environment variables
