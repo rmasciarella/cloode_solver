@@ -1,12 +1,19 @@
 [build]
-  # Build command - install root dependencies and build frontend
-  command = "npm install --ignore-scripts && npm run build:frontend"
+  # Build command - use netlify-specific build script
+  command = "npm run build:netlify"
   
   # Publish directory - where Next.js builds the site
   publish = "gui/gui/.next"
   
   # Node.js version
   environment = { NODE_VERSION = "18" }
+  
+  # Build cache configuration
+  cache_dirs = [
+    "node_modules",
+    "gui/gui/node_modules",
+    "gui/gui/.next/cache"
+  ]
 
 # Use Netlify's Next.js plugin for seamless deployment
 [[plugins]]

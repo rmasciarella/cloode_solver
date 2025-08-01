@@ -76,7 +76,7 @@ logs/
 # Node.js files (from .claude/ directory)
 node_modules/
 .claude/node_modules/
-package-lock.json
+.claude/package-lock.json
 
 # Development and debugging files
 debug_*.py

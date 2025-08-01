@@ -15,7 +15,7 @@
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report",
     "test:legacy": "node comprehensive_gui_test.js",
-    "prepare": "husky install",
+    "prepare": "echo 'Skipping husky install in CI/CD'",
     "type-check": "tsc --noEmit"
   },
   "lint-staged": {
