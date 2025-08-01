@@ -4,16 +4,6 @@
   
   # Publish directory - where Next.js builds the site
   publish = "gui/gui/.next"
-  
-  # Node.js version
-  environment = { NODE_VERSION = "18" }
-  
-  # Build cache configuration
-  cache_dirs = [
-    "node_modules",
-    "gui/gui/node_modules",
-    "gui/gui/.next/cache"
-  ]
 
 # Use Netlify's Next.js plugin for seamless deployment
 [[plugins]]
@@ -22,6 +12,7 @@
 [build.environment]
   # Netlify build environment variables
   NODE_ENV = "production"
+  NODE_VERSION = "18"
 
 # Redirects for SPA routing
 [[redirects]]
