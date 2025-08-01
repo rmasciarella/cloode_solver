@@ -1,9 +1,13 @@
 [build]
-  # Build command - run from root to handle workspace properly  
-  command = "cd gui/gui && npm install && npm run build"
+  # Base directory for Next.js app
+  base = "gui/gui"
   
-  # Publish the built Next.js application
-  publish = "gui/gui/.next"
+  # Build command for Next.js
+  command = "npm install && npm run build"
+
+# Use Netlify's Next.js plugin for serverless deployment
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build.environment]
   # Netlify build environment variables
