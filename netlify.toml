@@ -1,13 +1,9 @@
 [build]
-  # Base directory for build context
-  base = "gui/gui"
+  # Build command - run from root to handle workspace properly  
+  command = "cd gui/gui && npm install && npm run build"
   
-  # Build command - install and build from correct directory
-  command = "npm install --prefer-offline && npm run build"
-
-# Use Netlify's Next.js plugin for seamless deployment
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+  # Publish the built Next.js application
+  publish = "gui/gui/.next"
 
 [build.environment]
   # Netlify build environment variables
