@@ -92,5 +92,15 @@ export const securityHelpers = {
   }
 }
 
-// Export current configuration
-export const currentSecurityConfig = getSecurityConfig()
+// Export current configuration as a getter function
+let _cachedSecurityConfig: SecurityConfig | null = null
+
+export function getCurrentSecurityConfig(): SecurityConfig {
+  if (!_cachedSecurityConfig) {
+    _cachedSecurityConfig = getSecurityConfig()
+  }
+  return _cachedSecurityConfig
+}
+
+// For backward compatibility
+export const currentSecurityConfig = getCurrentSecurityConfig

@@ -93,7 +93,9 @@ const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     // Enable modern bundling optimizations
-    optimizeCss: true
+    optimizeCss: true,
+    // Enable instrumentation hook for serverless initialization
+    instrumentationHook: true
   },
 
   // TypeScript configuration

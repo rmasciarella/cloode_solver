@@ -7,6 +7,7 @@
 
 import { BaseService, ServiceResponse } from './base.service'
 import { Database } from '@/lib/database.types'
+import { createLazyServiceProxy } from '@/lib/utils/service-factory'
 
 // Types for solver integration
 export interface SolverJobRequest {
@@ -90,11 +91,17 @@ export interface ValidationResult {
  * including validation, problem solving, and performance monitoring.
  */
 export class SolverService extends BaseService {
-  private solverBaseUrl: string
+  private _solverBaseUrl: string | null = null
 
   constructor() {
     super()
-    this.solverBaseUrl = process.env.NEXT_PUBLIC_SOLVER_API_URL || 'http://localhost:8000'
+  }
+
+  private get solverBaseUrl(): string {
+    if (!this._solverBaseUrl) {
+      this._solverBaseUrl = process.env.NEXT_PUBLIC_SOLVER_API_URL || 'http://localhost:8000'
+    }
+    return this._solverBaseUrl
   }
 
   /**
@@ -329,5 +336,5 @@ export class SolverService extends BaseService {
   }
 }
 
-// Export singleton instance
-export const solverService = new SolverService()
+// Export lazy-initialized singleton instance
+export const solverService = createLazyServiceProxy('solverService', SolverService)

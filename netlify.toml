@@ -5,7 +5,8 @@
   # Simple build command
   command = "npm install && npm run build"
   
-  # Don't set publish directory for Next.js serverless
+  # Explicitly set publish directory for Next.js
+  publish = ".next"
 
 [build.environment]
   # Netlify build environment variables

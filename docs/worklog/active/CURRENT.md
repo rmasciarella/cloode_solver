@@ -1,101 +1,110 @@
 # Active Development Context - 2025-08-01
 
-## 🎯 CURRENT FOCUS (Last Updated: 07:45)
-**Primary Task**: Security Implementation Completion & API Key Resolution
-**Status**: Security architecture implemented but blocked by invalid API keys
-**Immediate Goal**: Obtain valid Supabase API keys to enable authentication
+## 🎯 CURRENT FOCUS (Last Updated: 19:20)
+**Primary Task**: Netlify Deployment Runtime Error Resolution
+**Status**: Fixed multiple issues but still seeing AuthProvider errors
+**Immediate Goal**: Resolve persistent "useAuth must be used within AuthProvider" error
 
 ## 🚨 KNOWN ISSUES
 
 ### Critical Blockers
-1. **Invalid API Keys** (401 Authentication Error)
-   - Both anon and service role keys return "Invalid API key"
-   - Database connectivity completely blocked
-   - Development bypass implemented as temporary workaround
+1. **AuthProvider Context Error**
+   - Error: "useAuth must be used within AuthProvider"
+   - Persists even after fixing all import paths
+   - Fixed: Supabase lazy initialization (proxy pattern)
+   - Fixed: AuthProvider hierarchy (NavigationHeader now inside providers)
+   - Fixed: All imports now use @/lib/auth/context
+   - Issue: Error still occurs, possibly caching or build issue
 
-### Code Quality Issues
-1. **Linting Status: ✅ RESOLVED**
-   - All ruff, black, and mypy checks passing
-   - Previous whitespace issues in SQL templates resolved
-
-### Security Configuration
-1. **Development Mode Active**
-   - `DATABASE_SECURITY_LEVEL=permissive` (should be `authenticated`)
-   - `DEVELOPMENT_BYPASS_AUTH=true` flag active
-   - Multiple .env files need consolidation
+### Deployment Issues
+1. **Netlify Serverless Compatibility**
+   - Successfully restructured from gui/gui/ to frontend/
+   - Fixed Node.js version (18 → 22)
+   - Fixed dependency placement (@tanstack/react-query moved to dependencies)
+   - Supabase environment variables ARE configured in Netlify
 
 ## ✅ COMPLETED WORK
 
-### Security Implementation
-- Row Level Security (RLS) foundation with 4-phase migration
-- Secure database client factory (`src/data/clients/secure_database_client.py`)
-- Authentication providers for React frontend
-- Performance monitoring infrastructure
-- Audit logging with created_by/updated_by tracking
-- Emergency RLS disable/enable functions
+### Serverless Fixes Implemented
+- Created `service-factory.ts` for lazy service initialization
+- Fixed Supabase clients with `supabase-client.ts` lazy loading
+- Implemented proxy pattern in `/frontend/lib/supabase.ts` for lazy initialization
+- Fixed AuthProvider hierarchy - NavigationHeader now inside providers
+- Created AppLayout component for proper component nesting
+- Fixed all useAuth imports to use @/lib/auth/context
+- Renamed old AuthProvider.tsx to avoid conflicts
 
-### Frontend Enhancements
-- AuthProvider component with Supabase integration
-- AuthGuard for protected routes
-- Performance monitoring hooks
-- System integration dashboard
-- Enhanced form components with validation
+### Project Structure
+- Moved Next.js app from nested gui/gui/ to clean frontend/ directory
+- Updated all build configurations and package.json files
+- Fixed Netlify deployment configuration
 
 ## 📋 TODO LIST
 
 ### Immediate Priority
-1. **Get Valid API Keys**
-   - Access Supabase dashboard
-   - Copy correct anon and service role keys
-   - Update .env file with valid credentials
-   - Remove `DEVELOPMENT_BYPASS_AUTH` flag
+1. **Debug Application Root Errors**
+   - Check Netlify function logs for actual error messages
+   - Search for remaining module-level Supabase access
+   - Look for circular dependencies in imports
+   - Check for SSR/client-side code mismatches
 
-2. **Code Quality: ✅ COMPLETE**
-   - All linting issues resolved
-   - Full compliance: ruff + black + mypy
+2. **Complete Service Migration**
+   - Update remaining 12 singleton services:
+     * machineService
+     * jobTemplateService
+     * realtimeManager (check listener cleanup!)
+     * departmentService
+     * workCellService
+     * performanceMonitor
+     * navigationRegistry
+     * solverIntegration
+     * formPerformanceTracker
+     * uiRegistry
+     * serviceRegistry
+     * authAwareSupabase
 
-3. **Test Security Functions**
-   - Verify authentication works with valid keys
-   - Test RLS policies are enforcing correctly
-   - Validate service role escalation
+3. **Verify Fix Effectiveness**
+   - Deploy with all lazy initialization complete
+   - Monitor for new error patterns
+   - Check cold-start performance
 
 ### Next Phase
-1. **Consolidate Environment Files**
-   - Merge scattered .env files
-   - Create clear .env.example template
-   - Document all required variables
+1. **Add Development Safeguards**
+   - ESLint rule: no-module-side-effects
+   - Pre-commit hook to check for module-level env access
+   - Update contribution guidelines
 
-2. **Update Security Level**
-   - Change from `permissive` to `authenticated`
-   - Test GUI still functions with auth required
-   - Consider gradual rollout strategy
-
-3. **Documentation**
-   - Update README with security setup
-   - Document API key configuration process
-   - Create migration guide for existing deployments
+2. **Performance Monitoring**
+   - Track cold-start times after lazy initialization
+   - Consider memoization for heavy clients
+   - Add performance metrics to deployment
 
 ## 🔧 ACTIVE FILES
-- `.env` - Main configuration (needs API keys)
-- `config/database_security_config.py` - Security configuration
-- `src/data/clients/secure_database_client.py` - Database client factory
-- `src/api/security/auth.py` - Authentication models
-- `gui/gui/components/auth/AuthProvider.tsx` - Frontend auth
+- `frontend/lib/utils/service-factory.ts` - Lazy initialization utility
+- `frontend/lib/supabase-client.ts` - Fixed Supabase client
+- `frontend/lib/services/*.service.ts` - Services needing migration
+- `frontend/lib/auth.ts` - Partially fixed auth configuration
+- `frontend/instrumentation.ts` - Serverless initialization
 
 ## ⚡ QUICK COMMANDS
 ```bash
-# Check current security validation
-uv run python -c "from src.data.clients.secure_database_client import validate_database_security; print(validate_database_security())"
+# Deploy to Netlify
+cd /Users/quanta/projects/fresh_solver
+netlify deploy --prod
 
-# Run linting
-make lint
+# Check Netlify logs
+netlify logs:function ___netlify-server-handler
 
-# Test database connection
-uv run python scripts/test_connection.py
+# Run local development
+cd frontend && npm run dev
+
+# Check for module-level side effects
+grep -r "export const.*=.*new\|process\.env" frontend/lib/
 ```
 
 ## 🔍 SESSION NOTES
-- Commit f2fc34a pushed to GitHub with security implementation
-- Development bypass allows system to run without valid keys
-- Security architecture is sound, just needs valid credentials
-- Consider using Supabase dashboard to regenerate keys if needed
+- Consensus from 3 AI models: fixes are correct, just need complete implementation
+- Application Root errors suggest issue is in React component initialization
+- Environment variables ARE set in Netlify, so it's not a missing env var issue
+- The lazy initialization pattern is correct but may have introduced timing issues
+- Need to check _app.tsx, layout.tsx, and provider components for early Supabase access

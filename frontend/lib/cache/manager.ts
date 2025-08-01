@@ -4,6 +4,7 @@
  */
 
 import { serviceRegistry } from '@/lib/hooks/service.hooks'
+import { createLazyServiceProxy } from '@/lib/utils/service-factory'
 
 interface CacheConfig {
   enableServiceCache: boolean
@@ -269,8 +270,8 @@ export const queryKeys = {
   })
 }
 
-// Global cache manager instance
-export const cacheManager = new CacheManager()
+// Global cache manager instance with lazy initialization
+export const cacheManager = createLazyServiceProxy('cacheManager', CacheManager)
 
 // Hook for accessing cache statistics
 export function useCacheStats() {
