@@ -11,10 +11,6 @@
 # Use Netlify's Next.js plugin for serverless deployment
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  
-  [plugins.inputs]
-    # Skip the plugin's dependency scan during build
-    skipDependencyInstallation = true
 
 [build.environment]
   # Netlify build environment variables
