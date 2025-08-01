@@ -2,8 +2,8 @@
   # Base directory for Next.js app
   base = "gui/gui"
   
-  # Build command with debugging and error handling
-  command = "echo 'Starting build...' && npm --version && node --version && npm install && echo 'Dependencies installed, building...' && npm run build && echo 'Build completed successfully'"
+  # Build command with debugging and error handling - ensure node_modules exists before plugin runs
+  command = "echo 'Starting build...' && npm --version && node --version && npm install && echo 'Dependencies installed, building...' && npm run build && echo 'Build completed successfully' && ls -la node_modules"
 
 # Use Netlify's Next.js plugin for serverless deployment
 [[plugins]]
