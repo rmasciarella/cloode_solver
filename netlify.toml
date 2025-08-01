@@ -12,7 +12,7 @@
 [build.environment]
   # Netlify build environment variables
   NODE_ENV = "production"
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
   # Disable Next.js telemetry that might cause issues
   NEXT_TELEMETRY_DISABLED = "1"
 
