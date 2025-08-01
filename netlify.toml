@@ -1,6 +1,6 @@
 [build]
-  # Build command - only build the frontend for Netlify
-  command = "cd gui/gui && npm ci && npm run build"
+  # Build command - install root dependencies and build frontend
+  command = "npm install --ignore-scripts && npm run build:frontend"
   
   # Publish directory - where Next.js builds the site
   publish = "gui/gui/.next"
@@ -14,7 +14,6 @@
 
 [build.environment]
   # Netlify build environment variables
-  NPM_FLAGS = "--prefix gui/gui"
   NODE_ENV = "production"
 
 # Redirects for SPA routing
