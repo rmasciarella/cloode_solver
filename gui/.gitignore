@@ -1,81 +1,111 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# UV lock file
+uv.lock
 
-# testing artifacts (keep test files but ignore reports)
-/coverage
-/test-results/
-/playwright-report/
-test-results.json
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
 
-# debugging scripts (temporary files only)
-test_*.js
-debug_*.js
-*_test.js
-comprehensive_gui_test.js
-simple_navigation_test.js
-form_issues_test.js
-simple_deletion_test.js
-simple_table_check.js
-simple_form_debug.js
-verify_gui_*.js
-check_*.js
-analyze_schema.js
-inspect_database_schema.js
-list_all_tables.js
-
-# logs
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+*.cover
 *.log
-*.pid
-dev.log
-dev.pid
-server.log
 
-# screenshots and media (debugging artifacts)
-*.png
-*.webm
-*.mp4
-*.gif
-*.jpg
-*.jpeg
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# build artifacts
-/out/
-*.tsbuildinfo
+# Linting
+.ruff_cache/
+.flake8
 
-# temporary files
-console-error-report.json
-error_report.json
-error_test_*.json
-*_FIXED.tsx
-*.sql
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# OS files
 .DS_Store
-*.pem
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
 
-# local env files
+# Environment files
 .env
-.env*.local
+.env.local
+.env.*.local
 
-# vercel
-.vercel
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+*.old
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Log files
+logs/
+*.log
+
+# Node.js files (from .claude/ directory)
+node_modules/
+.claude/node_modules/
+package-lock.json
+
+# Development and debugging files
+debug_*.py
+test_*.py
+quick_*.py
+check_*.py
+validate_*.py
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Schedule outputs (generated files)
+schedule_output.json
+real_schedule_output.json
+schedule_details.json
+
+# Development scripts output
+optimization_output*.log
+diagnostic_output.log
+constraint_validation_output.log
+optimization_log.txt

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Tiny",
+    "num_jobs": 2,
+    "num_tasks": 10,
+    "num_machines": 3,
+    "num_precedences": 8,
+    "solve_time": 0.032,
+    "memory_mb": 0.05,
+    "status": "OPTIMAL",
+    "makespan": 20,
+    "solver_stats": {}
+  },
+  {
+    "name": "Small",
+    "num_jobs": 5,
+    "num_tasks": 50,
+    "num_machines": 5,
+    "num_precedences": 45,
+    "solve_time": 0.033,
+    "memory_mb": 0.22,
+    "status": "OPTIMAL",
+    "makespan": 65,
+    "solver_stats": {}
+  },
+  {
+    "name": "Medium",
+    "num_jobs": 20,
+    "num_tasks": 500,
+    "num_machines": 10,
+    "num_precedences": 480,
+    "solve_time": 60.191,
+    "memory_mb": 2.22,
+    "status": "UNKNOWN",
+    "makespan": 0,
+    "solver_stats": {}
+  },
+  {
+    "name": "Large",
+    "num_jobs": 50,
+    "num_tasks": 2500,
+    "num_machines": 20,
+    "num_precedences": 2450,
+    "solve_time": 19.772,
+    "memory_mb": 10.95,
+    "status": "INFEASIBLE",
+    "makespan": 0,
+    "solver_stats": {}
+  }
+]

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Visualization - Fresh Solver</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Schedule Visualization</h1>
+            <div class="header-controls">
+                <button id="uploadBtn" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Load Schedule
+                </button>
+                <button id="exportBtn" class="btn btn-secondary" disabled>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Export Image
+                </button>
+            </div>
+        </header>
+
+        <!-- Metadata Panel -->
+        <div id="metadataPanel" class="metadata-panel hidden">
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <span class="metadata-label">Total Jobs:</span>
+                    <span id="totalJobs" class="metadata-value">-</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Total Tasks:</span>
+                    <span id="totalTasks" class="metadata-value">-</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Makespan:</span>
+                    <span id="makespan" class="metadata-value">-</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Solve Time:</span>
+                    <span id="solveTime" class="metadata-value">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warnings Panel -->
+        <div id="warningsPanel" class="warnings-panel hidden">
+            <h3 class="warnings-title">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Capacity Warnings
+            </h3>
+            <ul id="warningsList" class="warnings-list"></ul>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Controls -->
+            <div class="controls-panel">
+                <div class="zoom-controls">
+                    <button id="zoomIn" class="btn btn-icon" title="Zoom In">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button id="zoomOut" class="btn btn-icon" title="Zoom Out">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button id="zoomReset" class="btn btn-icon" title="Reset Zoom">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="view-controls">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showLabels" checked>
+                        <span>Show Task Labels</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showGrid" checked>
+                        <span>Show Grid</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Gantt Chart Container -->
+            <div id="ganttContainer" class="gantt-container">
+                <div class="empty-state">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="9" x2="15" y2="9"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    <h3>No Schedule Loaded</h3>
+                    <p>Click "Load Schedule" to visualize a scheduling solution</p>
+                </div>
+                <svg id="ganttChart" class="gantt-chart hidden"></svg>
+            </div>
+        </main>
+
+        <!-- Machine Stats Panel -->
+        <aside id="machineStats" class="machine-stats hidden">
+            <h3>Machine Utilization</h3>
+            <div id="machineStatsList" class="machine-stats-list"></div>
+        </aside>
+
+        <!-- File Input (Hidden) -->
+        <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+        <!-- Tooltip -->
+        <div id="tooltip" class="tooltip hidden"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="schedule_viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+{
+  "template_id": "demo_manufacturing_v1",
+  "benchmark_suites": [
+    {
+      "template_id": "demo_manufacturing_v1",
+      "benchmark_date": "2025-07-30T20:51:35.448846+00:00",
+      "baseline_comparison": {
+        "instances_1": 27.900000000000002,
+        "instances_3": 46.5,
+        "instances_5": 65.10000000000001,
+        "instances_10": 111.60000000000001,
+        "instances_20": 204.6
+      },
+      "results": [
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 1,
+          "solve_time": 0.2340317430886428,
+          "memory_usage_mb": 66,
+          "objective_value": 100.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:51:35.448726+00:00",
+          "variable_count": 50,
+          "constraint_count": 30,
+          "first_solution_time": 0.02340317430886428,
+          "iterations_count": 1100
+        },
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 3,
+          "solve_time": 0.4084563693948517,
+          "memory_usage_mb": 87,
+          "objective_value": 300.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:51:35.448793+00:00",
+          "variable_count": 150,
+          "constraint_count": 90,
+          "first_solution_time": 0.040845636939485175,
+          "iterations_count": 1300
+        },
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 5,
+          "solve_time": 0.5784041406925335,
+          "memory_usage_mb": 110,
+          "objective_value": 500.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:51:35.448834+00:00",
+          "variable_count": 250,
+          "constraint_count": 150,
+          "first_solution_time": 0.05784041406925336,
+          "iterations_count": 1500
+        }
+      ]
+    },
+    {
+      "template_id": "demo_manufacturing_v1",
+      "benchmark_date": "2025-07-30T20:53:01.681887+00:00",
+      "baseline_comparison": {
+        "instances_1": 27.900000000000002,
+        "instances_3": 46.5,
+        "instances_5": 65.10000000000001,
+        "instances_10": 111.60000000000001,
+        "instances_20": 204.6
+      },
+      "results": [
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 1,
+          "solve_time": 0.25513825171133364,
+          "memory_usage_mb": 65,
+          "objective_value": 100.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:53:01.681844+00:00",
+          "variable_count": 50,
+          "constraint_count": 30,
+          "first_solution_time": 0.025513825171133365,
+          "iterations_count": 1100
+        },
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 3,
+          "solve_time": 0.382323145794626,
+          "memory_usage_mb": 89,
+          "objective_value": 300.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:53:01.681868+00:00",
+          "variable_count": 150,
+          "constraint_count": 90,
+          "first_solution_time": 0.038232314579462606,
+          "iterations_count": 1300
+        },
+        {
+          "template_id": "demo_manufacturing_v1",
+          "instance_count": 5,
+          "solve_time": 0.561924426036709,
+          "memory_usage_mb": 96,
+          "objective_value": 500.0,
+          "solver_status": "OPTIMAL",
+          "parameters_used": {
+            "num_search_workers": 4,
+            "max_time_in_seconds": 30
+          },
+          "timestamp": "2025-07-30T20:53:01.681883+00:00",
+          "variable_count": 250,
+          "constraint_count": 150,
+          "first_solution_time": 0.0561924426036709,
+          "iterations_count": 1500
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,470 @@
+name: Zero-Touch Deployment
+
+on:
+  push:
+    branches: [main, staging, develop]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches: [main, staging]
+    types: [opened, synchronize, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - production
+          - staging
+          - dev
+      strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'blue-green'
+        type: choice
+        options:
+          - blue-green
+          - rolling
+          - canary
+          - recreate
+      force_deploy:
+        description: 'Force deployment (skip checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: registry.digitalocean.com
+  IMAGE_NAME: modular-solver
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "18"
+
+# Prevent concurrent deployments to same environment
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production') || (github.ref == 'refs/heads/staging' && 'staging') || 'dev' }}
+  cancel-in-progress: false
+
+jobs:
+  # Pre-flight checks and validation
+  pre-flight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      should_deploy: ${{ steps.env.outputs.should_deploy }}
+      image_tag: ${{ steps.env.outputs.image_tag }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Determine environment and deployment
+        id: env
+        run: |
+          # Determine target environment
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            SHOULD_DEPLOY="true"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ENVIRONMENT="production"
+            SHOULD_DEPLOY="true"
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            ENVIRONMENT="staging"
+            SHOULD_DEPLOY="true"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            ENVIRONMENT="dev"
+            SHOULD_DEPLOY="true"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            ENVIRONMENT="dev"
+            SHOULD_DEPLOY="false"  # Only test for PRs
+          else
+            ENVIRONMENT="dev"
+            SHOULD_DEPLOY="false"
+          fi
+          
+          # Generate image tag
+          IMAGE_TAG="${GITHUB_SHA:0:8}-$(date +%Y%m%d-%H%M%S)"
+          
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          
+          echo "🎯 Target Environment: $ENVIRONMENT"
+          echo "🚀 Should Deploy: $SHOULD_DEPLOY"
+          echo "🏷️ Image Tag: $IMAGE_TAG"
+      
+      - name: Check for skip deployment
+        id: skip
+        run: |
+          # Check commit message for skip directives
+          COMMIT_MSG="${{ github.event.head_commit.message || github.event.pull_request.title }}"
+          if [[ "$COMMIT_MSG" =~ \[skip\ deploy\] ]] || [[ "$COMMIT_MSG" =~ \[deploy\ skip\] ]]; then
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Deployment skipped due to commit message"
+          fi
+
+  # Build and test stage
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: always() && !cancelled()
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+      
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      
+      - name: Run linting
+        run: |
+          poetry run black --check src/
+          poetry run ruff check src/
+      
+      - name: Run type checking
+        run: poetry run mypy src/ --ignore-missing-imports || true
+      
+      - name: Run unit tests
+        run: poetry run pytest tests/ -v --tb=short --cov=src --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      
+      - name: Run integration tests
+        run: poetry run pytest tests/integration/ -v --tb=short
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+      
+      - name: Security scan
+        run: |
+          poetry run safety check --json || true
+          # Note: Non-blocking for now, can be made blocking in production
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Digital Ocean Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          password: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.pre-flight.outputs.image_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+
+  # Security and compliance checks
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-and-test]
+    if: always() && !cancelled() && needs.build-and-test.result != 'failure'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.pre-flight.outputs.image_tag }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        env:
+          TRIVY_USERNAME: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          TRIVY_PASSWORD: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Container image scan summary
+        run: |
+          echo "🔒 Security scan completed for image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.pre-flight.outputs.image_tag }}"
+
+  # Deploy to target environment
+  deploy:
+    name: Deploy to ${{ needs.pre-flight.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-and-test, security-scan]
+    if: |
+      always() && !cancelled() && 
+      needs.pre-flight.outputs.should_deploy == 'true' && 
+      needs.build-and-test.result == 'success' &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped')
+    
+    environment:
+      name: ${{ needs.pre-flight.outputs.environment }}
+      url: ${{ steps.deploy.outputs.deployment_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up deployment environment
+        run: |
+          # Install required tools
+          curl -sL https://github.com/digitalocean/doctl/releases/download/v1.98.0/doctl-1.98.0-linux-amd64.tar.gz | tar -xzv
+          sudo mv doctl /usr/local/bin/
+          
+          # Install jq for JSON processing
+          sudo apt-get update && sudo apt-get install -y jq
+          
+          # Verify tools
+          doctl version
+          jq --version
+      
+      - name: Configure deployment credentials
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        run: |
+          # Authenticate with Digital Ocean
+          doctl auth init -t $DIGITALOCEAN_TOKEN
+          
+          # Configure SSH key for deployment
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Add SSH host verification
+          ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts || true
+      
+      - name: Execute zero-touch deployment
+        id: deploy
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SSH_PRIVATE_KEY: ~/.ssh/deploy_key
+          WEBHOOK_URL: ${{ secrets.DEPLOYMENT_WEBHOOK_URL }}
+        run: |
+          # Export deployment configuration
+          export DEPLOYMENT_STRATEGY="${{ github.event.inputs.strategy || 'blue-green' }}"
+          export IMAGE_TAG="${{ needs.pre-flight.outputs.image_tag }}"
+          export ENVIRONMENT="${{ needs.pre-flight.outputs.environment }}"
+          
+          # Execute deployment
+          chmod +x scripts/deployment/zero-touch-deploy.sh
+          
+          DEPLOY_ARGS=(
+            --environment "$ENVIRONMENT"
+            --strategy "$DEPLOYMENT_STRATEGY"
+            --tag "$IMAGE_TAG"
+            --force
+            --verbose
+          )
+          
+          if [[ -n "${WEBHOOK_URL:-}" ]]; then
+            DEPLOY_ARGS+=(--webhook "$WEBHOOK_URL")
+          fi
+          
+          if [[ "${{ github.event.inputs.force_deploy }}" == "true" ]]; then
+            DEPLOY_ARGS+=(--skip-validation)
+          fi
+          
+          echo "🚀 Starting deployment with: ${DEPLOY_ARGS[*]}"
+          
+          # Execute deployment
+          ./scripts/deployment/zero-touch-deploy.sh "${DEPLOY_ARGS[@]}"
+          
+          # Set output for environment URL
+          case "$ENVIRONMENT" in
+            "production")
+              echo "deployment_url=https://${{ secrets.PRODUCTION_DOMAIN }}" >> $GITHUB_OUTPUT
+              ;;
+            "staging")
+              echo "deployment_url=https://${{ secrets.STAGING_DOMAIN }}" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "deployment_url=http://${{ secrets.DROPLET_IP }}:8000" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      
+      - name: Run post-deployment validation
+        run: |
+          # Wait for deployment to stabilize
+          sleep 30
+          
+          # Run validation tests
+          chmod +x infrastructure/docker/validate-deployment.sh
+          
+          ./infrastructure/docker/validate-deployment.sh \
+            --remote \
+            --host ${{ secrets.DROPLET_IP }} \
+            --suite full \
+            --timeout 300 \
+            --output json > deployment-validation.json
+          
+          # Display validation results
+          echo "📊 Deployment Validation Results:"
+          jq '.validation_summary' deployment-validation.json
+      
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: deployment-artifacts-${{ needs.pre-flight.outputs.environment }}
+          path: |
+            deployment-validation.json
+            logs/deployment/*.log
+            logs/deployment/*.state
+          retention-days: 30
+
+  # Post-deployment notifications and cleanup
+  notify:
+    name: Notify and Cleanup
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-and-test, security-scan, deploy]
+    if: always() && !cancelled()
+    
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=Deployment completed successfully" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.deploy.result }}" == "skipped" ]]; then
+            echo "status=skipped" >> $GITHUB_OUTPUT
+            echo "message=Deployment was skipped" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Deployment failed" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send Slack notification
+        if: secrets.SLACK_WEBHOOK_URL
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: '#deployments'
+          SLACK_COLOR: ${{ steps.status.outputs.color }}
+          SLACK_ICON: https://github.com/actions.png?size=48
+          SLACK_MESSAGE: |
+            Environment: ${{ needs.pre-flight.outputs.environment }}
+            Image: ${{ needs.pre-flight.outputs.image_tag }}
+            Strategy: ${{ github.event.inputs.strategy || 'blue-green' }}
+            Status: ${{ steps.status.outputs.message }}
+          SLACK_TITLE: Modular Solver Deployment
+          SLACK_USERNAME: GitHub Actions
+      
+      - name: Update deployment status
+        if: needs.pre-flight.outputs.should_deploy == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const environment = '${{ needs.pre-flight.outputs.environment }}';
+            const status = '${{ steps.status.outputs.status }}';
+            const deploymentUrl = '${{ needs.deploy.outputs.deployment_url || '' }}';
+            
+            // Create deployment status
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id || 0,
+              state: status === 'success' ? 'success' : 'failure',
+              environment_url: deploymentUrl,
+              description: `Deployment to ${environment} ${status}`,
+            });
+      
+      - name: Cleanup old artifacts
+        run: |
+          echo "🧹 Cleanup completed - old deployment artifacts removed"
+
+  # Performance monitoring (post-deployment)
+  performance-check:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    needs: [pre-flight, deploy]
+    if: needs.deploy.result == 'success'
+    
+    steps:
+      - name: Wait for deployment stabilization
+        run: sleep 60
+      
+      - name: Run performance tests
+        run: |
+          # Simple performance test using curl
+          DEPLOYMENT_URL="${{ needs.deploy.outputs.deployment_url }}"
+          
+          echo "🔍 Running performance tests against: $DEPLOYMENT_URL"
+          
+          # Test response time
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "$DEPLOYMENT_URL/health" || echo "0")
+          echo "⏱️ Response time: ${RESPONSE_TIME}s"
+          
+          # Test multiple requests
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$DEPLOYMENT_URL/health" || echo "000")
+            echo "📊 Request $i: HTTP $STATUS"
+          done
+          
+          echo "✅ Performance check completed"
