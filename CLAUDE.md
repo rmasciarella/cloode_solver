@@ -136,6 +136,12 @@ Focus: {specific_area}"
 
 **Supabase Project**: `https://hnrysjrydbhrnqqkrqir.supabase.co`
 
+## Netlify MCP Integration
+
+**MCP Configuration**: `.mcp-config.json` - Enables AI agents to manage Netlify deployments
+**Documentation**: `NETLIFY_MCP.md` - Full setup and usage guide
+**Requirements**: Node.js 22+ (✅ Current: v22.16.0)
+
 ## Dependencies
 
 `uv add ortools ortools-stubs supabase python-dotenv pytest pytest-cov ruff black mypy`

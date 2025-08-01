@@ -1,24 +1,21 @@
 [build]
-  # Base directory for Next.js app
+  # Set the base to the Next.js app directory
   base = "gui/gui"
   
-  # Build command with debugging and error handling - ensure node_modules exists before plugin runs
-  command = "echo 'Starting build...' && npm --version && node --version && npm install && echo 'Dependencies installed, building...' && npm run build && echo 'Build completed successfully' && ls -la node_modules"
-
-# Netlify will auto-detect Next.js and use the appropriate plugin version
+  # Simple build command
+  command = "npm install && npm run build"
+  
+  # Don't set publish directory for Next.js serverless
 
 [build.environment]
   # Netlify build environment variables
   NODE_ENV = "production"
   NODE_VERSION = "22"
-  # Disable Next.js telemetry that might cause issues
+  # Disable Next.js telemetry
   NEXT_TELEMETRY_DISABLED = "1"
 
-# Redirects for SPA routing
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Let Netlify auto-detect Next.js
+# No manual plugin configuration
 
 # Security headers
 [[headers]]
