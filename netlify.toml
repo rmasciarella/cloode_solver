@@ -2,11 +2,8 @@
   # Base directory for Next.js app
   base = "gui/gui"
   
-  # Build command - install dependencies before plugin runs
-  command = "npm install"
-  
-  # Publish directory (will be overridden by plugin)
-  publish = ".next"
+  # Build command - install dependencies and build Next.js app
+  command = "npm install && npm run build"
 
 # Use Netlify's Next.js plugin for serverless deployment
 [[plugins]]
