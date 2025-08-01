@@ -2,8 +2,8 @@
   # Base directory for Next.js app
   base = "gui/gui"
   
-  # Build command - install dependencies and build Next.js app
-  command = "npm install && npm run build"
+  # Build command with debugging and error handling
+  command = "echo 'Starting build...' && npm --version && node --version && npm install && echo 'Dependencies installed, building...' && npm run build && echo 'Build completed successfully'"
 
 # Use Netlify's Next.js plugin for serverless deployment
 [[plugins]]
@@ -13,6 +13,8 @@
   # Netlify build environment variables
   NODE_ENV = "production"
   NODE_VERSION = "18"
+  # Disable Next.js telemetry that might cause issues
+  NEXT_TELEMETRY_DISABLED = "1"
 
 # Redirects for SPA routing
 [[redirects]]
