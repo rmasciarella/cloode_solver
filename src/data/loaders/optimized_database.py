@@ -12,6 +12,8 @@ from typing import Any
 from dotenv import load_dotenv
 from supabase import Client, create_client
 
+from src.data.clients.secure_database_client import get_database_client
+
 from src.solver.models.problem import (
     Job,
     JobInstance,
@@ -33,7 +35,7 @@ class OptimizedDatabaseLoader:
     """Efficient optimized mode database loader for OR-Tools solver."""
 
     def __init__(self, use_test_tables: bool = True):
-        """Initialize database connection.
+        """Initialize database connection with secure client.
 
         Args:
             use_test_tables: If True, use test_ prefixed tables for resources.
@@ -41,15 +43,12 @@ class OptimizedDatabaseLoader:
 
         """
         load_dotenv()
-        url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_ANON_KEY")
+        
+        # Use secure database client for solver operations
+        # This automatically uses service role for backend operations
+        self.supabase = get_database_client("solver")
+        logger.info("Using secure database client for solver operations")
 
-        if not url or not key:
-            raise ValueError(
-                "SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment"
-            )
-
-        self.supabase: Client = create_client(url, key)
         self.table_prefix = "test_" if use_test_tables else ""
 
     def load_optimized_problem(

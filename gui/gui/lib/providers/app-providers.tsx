@@ -13,6 +13,7 @@ import { ensurePerformanceSystemInitialized } from '@/lib/performance/init'
 import { Toaster } from '@/components/ui/toaster'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { RealtimeStatus } from '@/lib/realtime/manager'
+import { AuthProvider } from '@/components/auth/AuthProvider'
 
 // Create query client with our configuration
 const queryClient = new QueryClient(queryClientConfig)
@@ -54,18 +55,20 @@ function DevTools() {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <ErrorBoundary context="Application Root" showErrorDetails={process.env.NODE_ENV === 'development'}>
-      <QueryClientProvider client={queryClient}>
-        <PerformanceInitializer />
-        
-        {/* Main application content */}
-        {children}
-        
-        {/* Global UI components */}
-        <Toaster />
-        
-        {/* Development tools */}
-        <DevTools />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <PerformanceInitializer />
+          
+          {/* Main application content */}
+          {children}
+          
+          {/* Global UI components */}
+          <Toaster />
+          
+          {/* Development tools */}
+          <DevTools />
+        </QueryClientProvider>
+      </AuthProvider>
     </ErrorBoundary>
   )
 }

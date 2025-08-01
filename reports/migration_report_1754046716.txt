@@ -1,0 +1,19 @@
+================================================================================
+SECURITY MIGRATION REPORT
+================================================================================
+
+Migration Status: FAILED
+Timestamp: 2025-08-01 07:11:56
+Security Level: permissive
+
+Prerequisites Validation:
+  Valid: True
+  Issues: 0
+  Warnings: 1
+
+Recommendations:
+  - Check logs for detailed error information
+
+================================================================================
+END REPORT
+================================================================================

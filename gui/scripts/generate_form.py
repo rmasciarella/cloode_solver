@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""
-Generate new form component following Fresh Solver patterns.
-"""
+"""Generate new form component following Fresh Solver patterns."""
 
+import re
 import sys
 from pathlib import Path
-import re
 
 FORM_TEMPLATE = '''import React from 'react'
 import { useForm } from 'react-hook-form'
@@ -67,7 +65,7 @@ export function {entity_name}Form({{ onSuccess, initialData }}: {entity_name}For
     <Form {{...form}}>
       <form onSubmit={{form.handleSubmit(onSubmit)}} className="space-y-6">
         {form_components}
-        
+
         <Button type="submit" className="w-full">
           Create {entity_name}
         </Button>
@@ -111,9 +109,9 @@ FIELD_TEMPLATES = {
             <FormItem>
               <FormLabel>{field_label}</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="Enter {field_label.lower()}" 
+                <Input
+                  type="number"
+                  placeholder="Enter {field_label.lower()}"
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
@@ -136,12 +134,12 @@ def generate_form(entity_name: str, fields: list[tuple[str, str, str]]):
     """Generate form component code."""
     entity_lower = entity_name.lower()
     table_name = to_snake_case(entity_name + 's')  # Pluralize for table name
-    
+
     # Generate Zod schema fields
     zod_fields = []
     default_values = []
     form_components = []
-    
+
     for field_name, field_type, field_label in fields:
         # Zod schema
         if field_type == 'number':
@@ -153,14 +151,14 @@ def generate_form(entity_name: str, fields: list[tuple[str, str, str]]):
         else:  # text
             zod_fields.append(f"  {field_name}: z.string().min(1)")
             default_values.append(f"      {field_name}: '',")
-        
+
         # Form component
         template = FIELD_TEMPLATES[field_type]
         form_components.append(template.format(
             field_name=field_name,
             field_label=field_label
         ))
-    
+
     # Fill in template
     code = FORM_TEMPLATE.format(
         entity_name=entity_name,
@@ -170,7 +168,7 @@ def generate_form(entity_name: str, fields: list[tuple[str, str, str]]):
         default_values='\\n'.join(default_values),
         form_components='\\n\\n'.join(form_components)
     )
-    
+
     return code
 
 def main():
@@ -179,19 +177,19 @@ def main():
         print("Usage: python scripts/generate_form.py <EntityName>")
         print("Interactive mode will prompt for fields.")
         sys.exit(1)
-    
+
     entity_name = to_pascal_case(sys.argv[1])
-    
+
     print(f"Generating form for: {entity_name}")
     print("Enter fields (field_name:type:label), type 'done' when finished:")
     print("Types: text, textarea, number")
-    
+
     fields = []
     while True:
         field_input = input("Field: ").strip()
         if field_input.lower() == 'done':
             break
-        
+
         try:
             field_name, field_type, field_label = field_input.split(':')
             if field_type not in ['text', 'textarea', 'number']:
@@ -201,20 +199,20 @@ def main():
         except ValueError:
             print("Format: field_name:type:label")
             continue
-    
+
     if not fields:
         print("No fields specified. Exiting.")
         sys.exit(1)
-    
+
     # Generate form code
     code = generate_form(entity_name, fields)
-    
+
     # Write to file
     output_path = Path(f"gui/components/forms/{entity_name}Form.tsx")
     output_path.write_text(code)
-    
+
     print(f"Generated: {output_path}")
-    print(f"Don't forget to add to your navigation and import!")
+    print("Don't forget to add to your navigation and import!")
 
 if __name__ == "__main__":
     main()

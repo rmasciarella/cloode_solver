@@ -29,7 +29,7 @@ import { useJobTemplates, useCreateJobTemplate, useUpdateJobTemplate, useDeleteJ
 import { useRealtime, useOptimisticRealtime } from '@/lib/realtime/manager'
 import { AdvancedFilter, BulkOperations, useAdvancedTable } from '@/components/ui/advanced-patterns'
 import { FormErrorBoundary, useAsyncErrorHandler } from '@/components/error-boundary'
-import { usePerformanceMonitor } from '@/lib/performance/monitoring'
+import { usePerformanceMonitor } from '@/lib/performance'
 
 type JobTemplate = Database['public']['Tables']['job_optimized_patterns']['Row']
 

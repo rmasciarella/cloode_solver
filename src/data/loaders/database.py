@@ -280,24 +280,23 @@ class DatabaseLoader:
             )
         except Exception as e:
             logger.warning(
-                f"Table access failed for {table_name}, trying direct SQL: {e}"
+                f"Table access failed for {table_name}: {e}"
             )
-            # Try direct SQL query to bypass RLS issues
-            sql_query = f"SELECT * FROM {table_name} WHERE resource_type = 'machine'"
+            # Use service role for backend operations if regular access fails
             try:
-                response = self.supabase.postgrest.rpc(
-                    "exec_sql", {"query": sql_query}
-                ).execute()
-                # Handle SQL response format
-                if hasattr(response, "data") and response.data:
-                    response.data = (
-                        response.data[0]
-                        if isinstance(response.data, list)
-                        else response.data
-                    )
-            except Exception as sql_error:
+                # Use secure database client for backend operations
+                from src.data.clients.secure_database_client import get_database_client
+                service_client = get_database_client("solver")
+                response = (
+                    service_client.table(table_name)
+                    .select("*")
+                    .ilike("resource_type", "machine")
+                    .execute()
+                )
+                logger.info(f"Successfully accessed {table_name} with service role")
+            except Exception as service_error:
                 logger.error(
-                    f"Both table and SQL access failed for {table_name}: {sql_error}"
+                    f"Both regular and service role access failed for {table_name}: {service_error}"
                 )
                 return []
 

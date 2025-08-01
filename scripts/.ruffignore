@@ -1,0 +1,6 @@
+# Ignore line length for URLs and long strings that can't be broken
+# Ignore docstring formatting preferences for script files
+D205
+D401
+D107
+E501

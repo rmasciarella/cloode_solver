@@ -6,7 +6,10 @@ authors = [{ name = "Dev Team" }]
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 dependencies = [
+    "fastapi>=0.116.1",
     "psutil>=7.0.0",
+    "pyjwt>=2.10.1",
+    "uvicorn>=0.35.0",
 ]
 
 [tool.poetry]
