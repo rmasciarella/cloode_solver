@@ -99,12 +99,12 @@
     "vaul": "^0.9.9",
     "web-vitals": "^3.5.0",
     "zod": "^3.23.8",
-    "@netlify/plugin-nextjs": "^5.9.0"
+    "@netlify/plugin-nextjs": "^5.9.0",
+    "@tanstack/react-query": "^4.32.6",
+    "@tanstack/react-query-devtools": "^4.32.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.1",
-    "@tanstack/react-query": "^4.32.6",
-    "@tanstack/react-query-devtools": "^4.32.6",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0"
   }
