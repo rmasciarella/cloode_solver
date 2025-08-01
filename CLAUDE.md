@@ -82,7 +82,7 @@ uv run python scripts/run_production_solver.py         # Production template sol
 /cc <function> # Check standards
 
 # Full-Stack Development
-/gui-dev       # Start GUI dev server + watch backend
+/frontend-dev  # Start frontend dev server + watch backend
 /full-test     # Run both backend tests + GUI playwright tests
 /type-check    # Check types: mypy (backend) + tsc (frontend)
 /gui-form <name> # Generate new form component + validation

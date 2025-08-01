@@ -1,6 +1,6 @@
 [build]
   # Set the base to the Next.js app directory
-  base = "gui/gui"
+  base = "frontend"
   
   # Simple build command
   command = "npm install && npm run build"
