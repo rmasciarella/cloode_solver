@@ -2,12 +2,19 @@
   # Base directory for Next.js app
   base = "gui/gui"
   
-  # Build command for Next.js
-  command = "npm install && npm run build"
+  # Build command - install dependencies before plugin runs
+  command = "npm install"
+  
+  # Publish directory (will be overridden by plugin)
+  publish = ".next"
 
 # Use Netlify's Next.js plugin for serverless deployment
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  
+  [plugins.inputs]
+    # Skip the plugin's dependency scan during build
+    skipDependencyInstallation = true
 
 [build.environment]
   # Netlify build environment variables
