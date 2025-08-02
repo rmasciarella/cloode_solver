@@ -14,9 +14,9 @@ export function getSupabaseClient(): SupabaseClient<Database> {
 
     supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
       }
     })
   }

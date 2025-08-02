@@ -49,14 +49,14 @@ class PerformanceMonitor {
         timestamp: Date.now()
       })
 
-      // Log slow queries
-      if (duration > 1000) {
+      // Log slow queries (only on client)
+      if (typeof window !== 'undefined' && duration > 1000) {
         console.warn(`[PERF] Slow query detected: ${table}.${operation} took ${duration}ms`)
         this.reportSlowQuery(table, operation, duration)
       }
 
-      // Log to console in development
-      if (process.env.NODE_ENV === 'development') {
+      // Log to console in development (only on client)
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
         console.log(`[PERF] ${table}.${operation}: ${duration}ms`)
       }
     }, 1)
@@ -129,8 +129,8 @@ class PerformanceMonitor {
       timestamp: Date.now()
     })
 
-    // Log poor vitals
-    if (metric.rating === 'poor') {
+    // Log poor vitals (only on client)
+    if (typeof window !== 'undefined' && metric.rating === 'poor') {
       console.warn(`[WEB-VITALS] Poor ${metric.name}: ${metric.value}`)
     }
   }
@@ -215,8 +215,21 @@ class PerformanceMonitor {
   }
 }
 
-// Global instance
-export const performanceMonitor = new PerformanceMonitor()
+// Global instance - only create on client
+export const performanceMonitor = typeof window !== 'undefined' ? new PerformanceMonitor() : {
+  getMetrics: () => [],
+  getWebVitals: () => [],
+  getSlowQueries: () => [],
+  getAverageQueryTime: () => 0,
+  getPerformanceSummary: () => ({
+    totalQueries: 0,
+    slowQueries: 0,
+    averageQueryTime: 0,
+    poorWebVitals: 0,
+    lastUpdated: new Date().toISOString()
+  }),
+  clear: () => {}
+} as PerformanceMonitor
 
 // React hook for accessing performance data  
 export function usePerformanceMonitor() {

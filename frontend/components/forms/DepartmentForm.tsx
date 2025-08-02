@@ -24,8 +24,7 @@ import { Loader2, Plus, Edit, Trash2, Upload, Search, Filter } from 'lucide-reac
 
 type Department = Database['public']['Tables']['departments']['Row']
 
-// Import the performance monitoring hook
-import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
+// Performance monitoring removed to fix hydration errors
 
 export default function DepartmentForm() {
   const [departments, setDepartments] = useState<Department[]>([])
@@ -34,8 +33,7 @@ export default function DepartmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
   
-  // Performance tracking using the standard hook
-  const performanceTracker = useFormPerformanceMonitoring('DepartmentForm')
+  // Performance tracking removed to fix hydration errors
 
   // Advanced table functionality
   const advancedTable = useAdvancedTable(
@@ -115,21 +113,7 @@ export default function DepartmentForm() {
     }
   })
   
-  // Track validation errors when form state changes
-  useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      Object.keys(errors).forEach(field => {
-        performanceTracker.trackValidation(field, true, errors[field]?.message)
-      })
-    }
-  }, [errors, performanceTracker])
-  
-  // Ensure metrics are finalized on unmount
-  useEffect(() => {
-    return () => {
-      performanceTracker.finalizeMetrics()
-    }
-  }, [performanceTracker])
+  // Performance tracking removed to fix hydration errors
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true)
@@ -148,7 +132,7 @@ export default function DepartmentForm() {
         setDepartments(response.data)
       } else {
         console.error('Error fetching departments:', response.error)
-        performanceTracker.trackValidation('data_load', true, response.error || 'Data load failed')
+        // Performance tracking removed
         toast({
           title: "Error",
           description: response.error || "Failed to fetch departments",
@@ -156,7 +140,7 @@ export default function DepartmentForm() {
         })
       }
     } catch (error) {
-      performanceTracker.trackValidation('data_load', true, String(error))
+      // Performance tracking removed
       console.error('Error in fetchDepartments:', error)
     } finally {
       setLoading(false)
@@ -169,11 +153,10 @@ export default function DepartmentForm() {
 
   const onSubmit = async (data: DepartmentFormData) => {
     setIsSubmitting(true)
-    performanceTracker.trackSubmissionStart()
+    // Performance tracking removed
     
     try {
-      // Start validation timing
-      performanceTracker.startValidation('form_submission')
+      // Performance tracking removed
       
       // Ensure required fields are present
       const submitData = {
@@ -182,7 +165,7 @@ export default function DepartmentForm() {
         name: data.name || ''
       }
       
-      performanceTracker.trackValidation('form_submission', false)
+      // Performance tracking removed
       
       let response
       if (editingId) {
@@ -192,7 +175,7 @@ export default function DepartmentForm() {
       }
 
       if (response.success) {
-        performanceTracker.trackSubmissionEnd(true)
+        // Performance tracking removed
         
         toast({
           title: "Success",
@@ -202,8 +185,7 @@ export default function DepartmentForm() {
         setEditingId(null)
         fetchDepartments()
       } else {
-        performanceTracker.trackSubmissionEnd(false)
-        performanceTracker.trackValidation('submission', true, response.error || 'Submission failed')
+        // Performance tracking removed
         
         console.error('Error saving department:', response.error)
         toast({
@@ -213,8 +195,7 @@ export default function DepartmentForm() {
         })
       }
     } catch (error) {
-      performanceTracker.trackSubmissionEnd(false)
-      performanceTracker.trackValidation('submission', true, String(error))
+      // Performance tracking removed
       console.error('Error in onSubmit:', error)
     } finally {
       setIsSubmitting(false)
@@ -222,7 +203,7 @@ export default function DepartmentForm() {
   }
 
   const handleEdit = (department: Department) => {
-    performanceTracker.trackInteraction('click', 'edit_button')
+    // Performance tracking removed
     
     setEditingId(department.department_id)
     setValue('code', department.code)
@@ -237,7 +218,7 @@ export default function DepartmentForm() {
   }
 
   const handleDelete = async (id: string) => {
-    performanceTracker.trackInteraction('click', 'delete_button')
+    // Performance tracking removed
     
     const department = departments.find(d => d.department_id === id)
     if (!department) return
@@ -282,7 +263,7 @@ export default function DepartmentForm() {
   }
 
   const handleToggleActive = async (id: string) => {
-    performanceTracker.trackInteraction('click', 'toggle_active_button')
+    // Performance tracking removed
     
     const department = departments.find(d => d.department_id === id)
     if (!department) return
@@ -316,7 +297,7 @@ export default function DepartmentForm() {
   }
 
   const handleCancel = () => {
-    performanceTracker.trackInteraction('click', 'cancel_button')
+    // Performance tracking removed
     reset()
     setEditingId(null)
   }
@@ -378,11 +359,7 @@ export default function DepartmentForm() {
                     maxLength: { value: 50, message: 'Code must be 50 characters or less' }
                   })}
                   placeholder="e.g., production, quality, DEPT_A"
-                  onFocus={() => performanceTracker.trackInteraction('focus', 'code')}
-                  onChange={(e) => {
-                    performanceTracker.trackInteraction('change', 'code')
-                    // The register function handles the actual onChange
-                  }}
+                  // Performance tracking removed
                 />
                 {errors.code && <p className="text-sm text-red-600">{errors.code.message}</p>}
               </div>
@@ -397,10 +374,7 @@ export default function DepartmentForm() {
                     maxLength: { value: 255, message: 'Name must be 255 characters or less' }
                   })}
                   placeholder="e.g., Production Department"
-                  onFocus={() => performanceTracker.trackInteraction('focus', 'name')}
-                  onChange={(e) => {
-                    performanceTracker.trackInteraction('change', 'name')
-                  }}
+                  // Performance tracking removed
                 />
                 {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
               </div>
@@ -411,14 +385,10 @@ export default function DepartmentForm() {
                 <Select 
                   value={watch('parent_department_id') || undefined}
                   onValueChange={(value) => {
-                    performanceTracker.trackInteraction('change', 'parent_department_id')
                     setValue('parent_department_id', value)
                   }}
-                  onOpenChange={(open) => {
-                    if (open) performanceTracker.trackInteraction('focus', 'parent_department_id')
-                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="parent_department_id">
                     <SelectValue placeholder="Select parent department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -443,10 +413,7 @@ export default function DepartmentForm() {
                   id="cost_center"
                   {...register('cost_center')}
                   placeholder="e.g., CC-PROD-001"
-                  onFocus={() => performanceTracker.trackInteraction('focus', 'cost_center')}
-                  onChange={(e) => {
-                    performanceTracker.trackInteraction('change', 'cost_center')
-                  }}
+                  // Performance tracking removed
                 />
                 <p className="text-xs text-gray-500">
                   Optional: For financial tracking and cost allocation (not currently mapped to solver constraints)
@@ -458,7 +425,6 @@ export default function DepartmentForm() {
                 label="Default Shift Start Time"
                 value={watch('default_shift_start') || 32}
                 onChange={(index) => {
-                  performanceTracker.trackInteraction('change', 'default_shift_start')
                   setValue('default_shift_start', index)
                 }}
                 id="default_shift_start"
@@ -472,7 +438,6 @@ export default function DepartmentForm() {
                 label="Default Shift End Time"
                 value={watch('default_shift_end') || 64}
                 onChange={(index) => {
-                  performanceTracker.trackInteraction('change', 'default_shift_end')
                   setValue('default_shift_end', index)
                 }}
                 id="default_shift_end"
@@ -490,10 +455,7 @@ export default function DepartmentForm() {
                 {...register('description')}
                 placeholder="Department description and responsibilities"
                 rows={3}
-                onFocus={() => performanceTracker.trackInteraction('focus', 'description')}
-                onChange={(e) => {
-                  performanceTracker.trackInteraction('change', 'description')
-                }}
+                // Performance tracking removed
               />
             </div>
 
@@ -504,7 +466,6 @@ export default function DepartmentForm() {
                   id="overtime_allowed"
                   checked={watch('overtime_allowed')}
                   onCheckedChange={(checked) => {
-                    performanceTracker.trackInteraction('change', 'overtime_allowed')
                     setValue('overtime_allowed', checked as boolean)
                   }}
                 />
@@ -516,7 +477,6 @@ export default function DepartmentForm() {
                   id="is_active"
                   checked={watch('is_active')}
                   onCheckedChange={(checked) => {
-                    performanceTracker.trackInteraction('change', 'is_active')
                     setValue('is_active', checked as boolean)
                   }}
                 />
@@ -534,7 +494,7 @@ export default function DepartmentForm() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                onClick={() => performanceTracker.trackInteraction('click', 'submit_button')}
+                // Performance tracking removed
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingId ? 'Update' : 'Create'} Department

@@ -1,5 +1,5 @@
-headersOrigin = "config"
-redirects = []
+headersOrigin = "inline"
+redirectsOrigin = "inline"
 
 [functions]
 
@@ -16,8 +16,8 @@ pinned_version = "4"
 publish = "/Users/quanta/projects/fresh_solver/frontend/.next"
 publishOrigin = "config"
 commandOrigin = "config"
-command = "npm install && npm run build"
 base = "/Users/quanta/projects/fresh_solver/frontend"
+command = "npm install && npm run build"
 
 [build.environment]
 NODE_ENV = "production"
@@ -45,3 +45,39 @@ X-XSS-Protection = "1; mode=block"
 X-Content-Type-Options = "nosniff"
 Referrer-Policy = "strict-origin-when-cross-origin"
 Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+
+[[headers]]
+for = "/_next/static/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+from = "/_next/image"
+to = "/.netlify/images?url=:url&w=:width&q=:quality"
+status = 200.0
+force = false
+
+[redirects.query]
+url = ":url"
+w = ":width"
+q = ":quality"
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "/_ipx/*"
+to = "/.netlify/images?url=:url&w=:width&q=:quality"
+status = 200.0
+force = false
+
+[redirects.query]
+url = ":url"
+w = ":width"
+q = ":quality"
+
+[redirects.conditions]
+
+[redirects.headers]

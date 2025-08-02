@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { authAwareSupabase } from '@/lib/supabase-auth'
 import { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 
@@ -24,23 +23,8 @@ export interface ServiceOptions {
 
 export abstract class BaseService {
   protected async getClient(options: ServiceOptions = {}): Promise<SupabaseClient<Database>> {
-    const { requireAuth = false, fallbackToAnon = true } = options
-    
-    const isAuth = await authAwareSupabase.isAuthenticated()
-    
-    // Check auth requirements
-    if (requireAuth && !isAuth && !fallbackToAnon) {
-      throw new Error('Authentication required for this operation')
-    }
-    
-    // Return appropriate client
-    if (isAuth) {
-      return authAwareSupabase.getAuthenticatedClient()
-    } else if (fallbackToAnon) {
-      return authAwareSupabase.getAnonymousClient()
-    } else {
-      throw new Error('Access denied - authentication required')
-    }
+    // Auth removed - always return the standard client
+    return supabase
   }
 
   protected handleError(error: PostgrestError | Error | any): ServiceError {
@@ -88,14 +72,8 @@ export abstract class BaseService {
       success: error === null
     }
 
-    if (includeAuthStatus) {
-      try {
-        response.isAuthenticated = await authAwareSupabase.isAuthenticated()
-      } catch {
-        response.isAuthenticated = false
-      }
-    }
-
+    // Auth removed - never include auth status
+    
     return response
   }
 
@@ -111,10 +89,5 @@ export abstract class BaseService {
   // Legacy method for backward compatibility
   protected get supabase() {
     return supabase
-  }
-
-  // Auth-aware method for new implementations
-  protected async getAuthAwareClient(options?: ServiceOptions) {
-    return this.getClient(options)
   }
 }

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { performanceMonitor } from '@/lib/performance/monitoring'
+import { performanceMonitor } from '@/lib/performance/client-only-monitoring'
 
 interface FormPerformanceMetrics {
   formName: string
@@ -49,17 +49,19 @@ class FormPerformanceTracker {
       this.metrics = this.metrics.slice(-this.maxMetrics)
     }
 
-    // Log performance issues
-    if (metrics.loadTime > 2000) {
-      console.warn(`[FORM-PERF] Slow form load: ${metrics.formName} took ${metrics.loadTime}ms`)
-    }
+    // Log performance issues (only on client to avoid hydration issues)
+    if (typeof window !== 'undefined') {
+      if (metrics.loadTime > 2000) {
+        console.warn(`[FORM-PERF] Slow form load: ${metrics.formName} took ${metrics.loadTime}ms`)
+      }
 
-    if (metrics.submissionTime && metrics.submissionTime > 5000) {
-      console.warn(`[FORM-PERF] Slow form submission: ${metrics.formName} took ${metrics.submissionTime}ms`)
-    }
+      if (metrics.submissionTime && metrics.submissionTime > 5000) {
+        console.warn(`[FORM-PERF] Slow form submission: ${metrics.formName} took ${metrics.submissionTime}ms`)
+      }
 
-    if (metrics.errorCount > 5) {
-      console.warn(`[FORM-PERF] High error rate: ${metrics.formName} had ${metrics.errorCount} errors`)
+      if (metrics.errorCount > 5) {
+        console.warn(`[FORM-PERF] High error rate: ${metrics.formName} had ${metrics.errorCount} errors`)
+      }
     }
   }
 
@@ -71,8 +73,8 @@ class FormPerformanceTracker {
       this.validationMetrics = this.validationMetrics.slice(-this.maxMetrics * 10)
     }
 
-    // Log slow validations
-    if (metrics.duration > 100) {
+    // Log slow validations (only on client to avoid hydration issues)
+    if (typeof window !== 'undefined' && metrics.duration > 100) {
       console.warn(`[FORM-PERF] Slow validation: ${metrics.fieldName} took ${metrics.duration}ms`)
     }
   }
@@ -150,23 +152,36 @@ export function useFormPerformanceMonitoring(formName: string) {
   const [interactionCount, setInteractionCount] = useState(0)
   const [fieldFocusCount, setFieldFocusCount] = useState<{ [key: string]: number }>({})
   const [validationErrorCount, setValidationErrorCount] = useState<{ [key: string]: number }>({})
+  const [isClient, setIsClient] = useState(false)
   
-  const startTimeRef = useRef<number>(Date.now())
+  const startTimeRef = useRef<number>(0)
   const submissionStartRef = useRef<number | null>(null)
   const validationTimesRef = useRef<{ [key: string]: number }>({})
-
-  // Initialize load time tracking
+  
+  // Initialize client-side only values
   useEffect(() => {
-    const initTime = Date.now() - startTimeRef.current
-    setLoadTime(initTime)
+    setIsClient(true)
+    if (startTimeRef.current === 0) {
+      startTimeRef.current = Date.now()
+    }
   }, [])
+
+  // Initialize load time tracking (only on client)
+  useEffect(() => {
+    if (isClient && startTimeRef.current > 0) {
+      const initTime = Date.now() - startTimeRef.current
+      setLoadTime(initTime)
+    }
+  }, [isClient])
 
   // Track user interactions
   const trackInteraction = useCallback((type: UserInteractionMetrics['type'], target: string, duration?: number) => {
+    if (!isClient) return
+    
     const timestamp = Date.now()
     
     // Track first interaction
-    if (firstInteraction === null) {
+    if (firstInteraction === null && startTimeRef.current > 0) {
       setFirstInteraction(timestamp - startTimeRef.current)
     }
     
@@ -188,10 +203,12 @@ export function useFormPerformanceMonitoring(formName: string) {
       timestamp,
       duration
     })
-  }, [firstInteraction])
+  }, [firstInteraction, isClient])
 
   // Track field validation performance
   const trackValidation = useCallback((fieldName: string, hasError: boolean, errorMessage?: string) => {
+    if (!isClient) return
+    
     const now = Date.now()
     const startTime = validationTimesRef.current[fieldName] || now
     const duration = now - startTime
@@ -217,19 +234,22 @@ export function useFormPerformanceMonitoring(formName: string) {
     
     // Clear validation start time
     delete validationTimesRef.current[fieldName]
-  }, [])
+  }, [isClient])
 
   // Start validation timing
   const startValidation = useCallback((fieldName: string) => {
+    if (!isClient) return
     validationTimesRef.current[fieldName] = Date.now()
-  }, [])
+  }, [isClient])
 
   // Track form submission
   const trackSubmissionStart = useCallback(() => {
+    if (!isClient) return
     submissionStartRef.current = Date.now()
-  }, [])
+  }, [isClient])
 
   const trackSubmissionEnd = useCallback((success: boolean) => {
+    if (!isClient) return
     if (submissionStartRef.current) {
       const duration = Date.now() - submissionStartRef.current
       setSubmissionTime(duration)
@@ -240,7 +260,7 @@ export function useFormPerformanceMonitoring(formName: string) {
       
       submissionStartRef.current = null
     }
-  }, [])
+  }, [isClient])
 
   // Finalize metrics when component unmounts or form completes
   const finalizeMetrics = useCallback(() => {
@@ -294,8 +314,8 @@ export function useFormPerformanceMonitoring(formName: string) {
     recordValidationComplete: () => {}, // No-op for compatibility
     recordInteraction: trackInteraction,
     reportMetric: (metricName: string, value: number) => {
-      // Log custom metrics for debugging
-      if (process.env.NODE_ENV === 'development') {
+      // Log custom metrics for debugging (only on client)
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
         console.log(`[FORM-METRIC] ${formName}.${metricName}: ${value}`)
       }
     },
@@ -334,8 +354,8 @@ export function useValidationPerformanceMonitoring() {
       
       delete validationTimers.current[fieldName]
       
-      // Log slow validations
-      if (duration > 100) {
+      // Log slow validations (only on client to avoid hydration issues)
+      if (typeof window !== 'undefined' && duration > 100) {
         console.warn(`[VALIDATION-PERF] Slow validation for ${fieldName}: ${duration}ms`)
       }
     }

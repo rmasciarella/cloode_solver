@@ -8,7 +8,9 @@ type JobTemplateUpdate = Database['public']['Tables']['job_optimized_patterns'][
 export class JobTemplateService extends BaseService {
   async getAll(activeOnly: boolean = false): Promise<ServiceResponse<JobTemplate[]>> {
     try {
-      let query = this.supabase
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      let query = client
         .from('job_optimized_patterns')
         .select('*')
         .order('name', { ascending: true })
@@ -20,54 +22,60 @@ export class JobTemplateService extends BaseService {
       const { data, error } = await query
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data || [])
+      return this.createResponseSync(data || [])
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async getById(id: string): Promise<ServiceResponse<JobTemplate>> {
     try {
-      const { data, error } = await this.supabase
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('job_optimized_patterns')
         .select('*')
         .eq('pattern_id', id)
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async create(template: JobTemplateInsert): Promise<ServiceResponse<JobTemplate>> {
     try {
-      const { data, error } = await this.supabase
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('job_optimized_patterns')
         .insert([template])
         .select()
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async update(id: string, template: JobTemplateUpdate): Promise<ServiceResponse<JobTemplate>> {
     try {
-      const { data, error } = await this.supabase
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('job_optimized_patterns')
         .update(template)
         .eq('pattern_id', id)
@@ -75,29 +83,31 @@ export class JobTemplateService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async delete(id: string): Promise<ServiceResponse<void>> {
     try {
-      const { error } = await this.supabase
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { error } = await client
         .from('job_optimized_patterns')
         .delete()
         .eq('pattern_id', id)
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(null)
+      return this.createResponseSync(null)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
@@ -105,14 +115,14 @@ export class JobTemplateService extends BaseService {
     try {
       // Security validation: must be a plain object
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters)) {
-        return this.createResponse(null, { message: "Solver parameters must be a JSON object" })
+        return this.createResponseSync(null, { message: "Solver parameters must be a JSON object" })
       }
       
       // Security validation: check for dangerous properties
       const dangerousKeys = ['__proto__', 'constructor', 'prototype']
       for (const key of Object.keys(parameters)) {
         if (dangerousKeys.includes(key) || typeof key !== 'string') {
-          return this.createResponse(null, { message: "Invalid property names in solver parameters" })
+          return this.createResponseSync(null, { message: "Invalid property names in solver parameters" })
         }
       }
       
@@ -136,9 +146,9 @@ export class JobTemplateService extends BaseService {
         }
       }
 
-      return this.createResponse(true)
+      return this.createResponseSync(true)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 }

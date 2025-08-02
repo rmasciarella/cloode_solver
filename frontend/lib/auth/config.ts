@@ -27,7 +27,7 @@ export const getAuthConfig = (): AuthConfig => {
   return {
     ...defaultAuthConfig,
     enabled: authEnabled,
-    required: authRequired || isProduction,
+    required: authRequired, // Remove automatic production requirement
     fallbackToAnon: !authRequired,
     enableGuestAccess: !authRequired,
     sessionTimeout: parseInt(process.env.NEXT_PUBLIC_SESSION_TIMEOUT || '60')

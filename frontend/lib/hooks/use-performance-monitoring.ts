@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react'
-import { performanceMonitor } from '@/lib/performance/monitoring'
+import { performanceMonitor } from '@/lib/performance/client-only-monitoring'
 
 interface PageMetrics {
   pageLoads: number
@@ -23,8 +23,8 @@ interface UserAction {
 class PagePerformanceTracker {
   public pageMetrics: Map<string, PageMetrics> = new Map()
   private userActions: UserAction[] = []
-  public sessionStart = Date.now()
-  public isEnabled = true
+  public sessionStart = typeof window !== 'undefined' ? Date.now() : 0
+  public isEnabled = typeof window !== 'undefined'
 
   trackPageView(pageName: string) {
     if (!this.isEnabled) return
@@ -93,8 +93,17 @@ class PagePerformanceTracker {
   }
 }
 
-// Global tracker instance
-const pageTracker = new PagePerformanceTracker()
+// Global tracker instance - only create on client
+const pageTracker = typeof window !== 'undefined' ? new PagePerformanceTracker() : {
+  pageMetrics: new Map(),
+  sessionStart: 0,
+  isEnabled: false,
+  trackPageView: () => {},
+  trackUserAction: () => {},
+  getMetrics: () => ({ pages: {}, actions: [], sessionDuration: 0, isEnabled: false }),
+  setEnabled: () => {},
+  clear: () => {}
+} as any
 
 export function usePerformanceMonitoring() {
   const lastPageRef = useRef<string | null>(null)

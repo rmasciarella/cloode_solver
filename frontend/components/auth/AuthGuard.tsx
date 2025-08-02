@@ -53,7 +53,7 @@ function LoginForm() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Sign In</CardTitle>
           <CardDescription className="text-center">
-            Access the Fresh Solver constraint programming system
+            Access the Vulcan MES manufacturing execution system
           </CardDescription>
         </CardHeader>
         <CardContent>

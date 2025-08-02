@@ -1,0 +1,2 @@
+pattern_id,name,description,default_priority,estimated_duration_hours,is_active
+OB3,OB3 Pattern,Optical assembly pattern for OB3 series,medium,120,true

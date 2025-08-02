@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { AppProviders } from '@/lib/providers/app-providers';
+import { AppProviders } from '@/lib/providers/app-providers-simple';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ['latin'] });
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Fresh Solver OR-Tools Scheduling System',
-  description: 'Production scheduling data entry system with Supabase integration',
+  title: 'Vulcan MES - Manufacturing Execution System',
+  description: 'Production scheduling and manufacturing execution system with Supabase integration',
 };
 
 export default function RootLayout({

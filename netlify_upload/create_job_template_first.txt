@@ -1,0 +1,8 @@
+IMPORTANT: Before uploading job instances, you must:
+
+1. Create a Job Template in the app with:
+   - Template ID: bdbaaa7c-ca12-46b4-8708-852c99b88f80
+   - Name: OB3
+   - Description: OB3 Optical Assembly Pattern
+
+2. Then use this template_id in job_instances_final.csv

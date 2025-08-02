@@ -57,7 +57,7 @@ export function NavigationHeader({ className = '' }: NavigationHeaderProps) {
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-semibold text-gray-900">
-                Fresh Solver
+                Vulcan MES
               </span>
             </Link>
           </div>
