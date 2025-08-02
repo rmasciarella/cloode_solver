@@ -14,7 +14,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { RealtimeStatus } from '@/lib/realtime/manager'
 import { AuthProvider } from '@/lib/auth/context'
-import { AppLayout } from '@/components/layout/app-layout'
+// import { AppLayout } from '@/components/layout/app-layout'
 
 // Create query client with our configuration
 const queryClient = new QueryClient(queryClientConfig)
@@ -59,10 +59,8 @@ export function AppProviders({ children }: AppProvidersProps) {
         <QueryClientProvider client={queryClient}>
           <PerformanceInitializer />
           
-          {/* Main application content with layout */}
-          <AppLayout>
-            {children}
-          </AppLayout>
+          {/* Main application content */}
+          {children}
           
           {/* Global UI components */}
           <Toaster />
