@@ -1,0 +1,8 @@
+name,employee_id,department_id,base_hourly_rate,overtime_multiplier,max_hours_per_week,hire_date,employment_type,shift_preference,emergency_contact,phone,email,address,certification_expiry_date,performance_rating,is_active,skills
+PU001,PU001,FH,48.00,1.5,40,2020-01-15,full_time,day,John Doe,(555) 123-4567,pu001@company.com,"123 Main St, City, State 12345",,4.5,true,"FH FIBER:3,FH ASBML:3,FH ALIGN:3"
+SS002,SS002,FH,48.00,1.5,40,2019-06-20,full_time,day,Jane Smith,(555) 234-5678,ss002@company.com,"456 Oak Ave, City, State 12345",,4.2,true,"FH FIBER:3,FH ASBML:3,FH ALIGN:3"
+TN003,TN003,FH,48.00,1.5,40,2021-03-10,full_time,night,Bob Johnson,(555) 345-6789,tn003@company.com,"789 Pine Rd, City, State 12345",,3.8,true,"FH FIBER:2,FH ASBML:3,FH ALIGN:1"
+DR004,DR004,MS,44.00,1.5,40,2018-11-05,full_time,day,Sarah Davis,(555) 456-7890,dr004@company.com,"321 Elm St, City, State 12345",,4.0,true,"MS CNC:2"
+GG005,GG005,OB,70.00,1.5,40,2017-04-12,full_time,day,Mike Wilson,(555) 567-8901,gg005@company.com,"654 Maple Dr, City, State 12345",,4.7,true,"OB FIBER:1,OB ASMBL:2,OB ALIGN:2,OB GLASS:2"
+KR006,KR006,OB,44.00,1.5,40,2020-08-22,full_time,swing,Lisa Brown,(555) 678-9012,kr006@company.com,"987 Cedar Ln, City, State 12345",,3.9,true,"OB FIBER:1,OB ASMBL:1,OB ALIGN:2,OB GLASS:2"
+SR007,SR007,OB,44.00,1.5,40,2019-02-18,full_time,day,Tom Garcia,(555) 789-0123,sr007@company.com,"246 Birch Way, City, State 12345",,4.4,true,"OB FIBER:3,OB ASMBL:3,OB ALIGN:3,OB GLASS:3"

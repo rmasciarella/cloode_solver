@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Testing Supabase Connection for Operators</h1>
+    <div id="status">Testing...</div>
+    <pre id="results"></pre>
+
+    <script>
+        async function testSupabase() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            try {
+                // Initialize Supabase client with the production credentials
+                const supabaseUrl = 'https://hnrysjrydbhrnqqkrqir.supabase.co';
+                const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucnlzanJ5ZGJocm5xcWtycWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4Mjg4MjUsImV4cCI6MjA2OTQwNDgyNX0.5C1YFb1VgjNC-clfDY1U_ojDGJCZhO-ckCtlULk2IcI';
+                
+                const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+                
+                statusEl.textContent = 'Connected to Supabase. Fetching operators...';
+                
+                // Try to fetch operators
+                const { data, error } = await supabase
+                    .from('operators')
+                    .select('*')
+                    .order('name', { ascending: true });
+                
+                if (error) {
+                    statusEl.textContent = '❌ Error fetching operators';
+                    resultsEl.textContent = JSON.stringify(error, null, 2);
+                } else {
+                    statusEl.textContent = '✅ Successfully fetched operators';
+                    resultsEl.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                statusEl.textContent = '❌ Connection failed';
+                resultsEl.textContent = err.toString();
+            }
+        }
+        
+        // Run the test
+        testSupabase();
+    </script>
+</body>
+</html>

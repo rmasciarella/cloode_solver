@@ -1,0 +1,4 @@
+name,time_zone,description,working_days,working_hours_start,working_hours_end,break_start,break_end,is_default,is_active
+Main Production Calendar,America/New_York,Primary production calendar with US holidays,"monday,tuesday,wednesday,thursday,friday",07:00,17:00,12:00,13:00,true,true
+Weekend Shift Calendar,America/New_York,Weekend shift operations,"saturday,sunday",08:00,16:00,12:00,12:30,false,true
+24/7 Operations Calendar,America/New_York,Continuous operations calendar,"monday,tuesday,wednesday,thursday,friday,saturday,sunday",00:00,23:59,,,false,true

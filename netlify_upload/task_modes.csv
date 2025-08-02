@@ -1,0 +1,9 @@
+task_name,mode_name,work_cell_name,machine_name,duration_minutes,setup_time_minutes,operators_required,description
+setup upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,45,15,1,Setup on HAAS CNC
+setup upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,45,20,1,Setup on OKUMA CNC
+upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,30,0,1,Production on HAAS CNC
+upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,30,0,1,Production on OKUMA CNC
+setup lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,15,15,1,Setup on HAAS CNC
+setup lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,15,20,1,Setup on OKUMA CNC
+lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,60,0,1,Production on HAAS CNC
+lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,60,0,1,Production on OKUMA CNC

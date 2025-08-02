@@ -1,0 +1,7 @@
+name,description,frequency_hours,estimated_duration_hours,requires_shutdown,spare_parts_cost,labor_hours,priority,is_active
+Preventive Maintenance,Regular scheduled maintenance,168,2,true,100,2,medium,true
+Oil Change,Machine lubrication service,500,1,true,50,1,high,true
+Filter Replacement,Air and fluid filter replacement,1000,1.5,true,150,1.5,medium,true
+Calibration,Precision calibration service,2000,4,true,0,4,high,true
+Major Overhaul,Complete system overhaul,8760,16,true,5000,16,low,true
+Emergency Repair,Unscheduled breakdown repair,0,4,true,500,4,critical,true

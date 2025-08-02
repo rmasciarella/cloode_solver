@@ -72,14 +72,13 @@ const scarcityLevels = [
 const skillCategories = [
   'mechanical',
   'electrical',
-  'software',
   'quality',
-  'safety',
-  'maintenance',
-  'production',
   'assembly',
   'testing',
-  'packaging'
+  'machining',
+  'splicing',
+  'alignment',
+  'cleaning'
 ]
 
 // Form-specific performance metrics interface

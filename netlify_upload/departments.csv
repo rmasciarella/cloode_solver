@@ -1,0 +1,4 @@
+name,code,description,manager_name,manager_email,cost_center,location,phone,is_active
+Machine Shop,MS,CNC machining and fabrication department,John Smith,jsmith@company.com,CC-100,Building A,(555) 100-1000,true
+Fiber Handling,FH,Fiber optic assembly and testing,Sarah Johnson,sjohnson@company.com,CC-200,Building B,(555) 200-2000,true
+Optical Assembly,OB,Optical component assembly and alignment,Mike Chen,mchen@company.com,CC-300,Building C,(555) 300-3000,true

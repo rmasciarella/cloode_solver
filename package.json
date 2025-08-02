@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@playwright/mcp": "^0.0.32",
-    "playwright": "^1.54.1"
+    "playwright": "^1.54.2"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

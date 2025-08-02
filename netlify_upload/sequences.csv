@@ -1,0 +1,5 @@
+name,description,exclusive_access,no_gaps,max_parallel_jobs,priority,is_active
+Opto,Optical assembly sequence,true,false,1,high,true
+FH Test,Fiber handling test sequence,true,false,1,medium,true
+Cone,Cone assembly sequence,true,false,1,medium,true
+BAT,Battery and testing sequence,true,false,1,high,true

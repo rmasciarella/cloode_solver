@@ -1,0 +1,57 @@
+task_name,skill_name,minimum_skill_level,preferred_skill_level,is_required
+setup upper insert manifold,MS CNC,2,3,true
+upper insert manifold,MS CNC,2,3,true
+setup lower insert manifold,MS CNC,2,3,true
+lower insert manifold,MS CNC,2,3,true
+setup upper housing,MS CNC,2,3,true
+upper housing,MS CNC,2,3,true
+setup fitting manifold,MS CNC,2,3,true
+fitting manifold,MS CNC,2,3,true
+setup lower housing blank,MS CNC,2,3,true
+lower housing blank,MS CNC,2,3,true
+setup lower mid op,MS CNC,2,3,true
+lower mid op,MS CNC,2,3,true
+setup lower housing,MS CNC,2,3,true
+lower housing,MS CNC,2,3,true
+setup fh adapter,MS CNC,2,3,true
+fh adapter,MS CNC,2,3,true
+setup fh bracket,MS CNC,2,3,true
+fh bracket,MS CNC,2,3,true
+assemble lower 1,FH FIBER,2,3,true
+bake lower in oven,FH FIBER,3,3,true
+bake lower in oven two,FH FIBER,3,3,true
+bake lower in oven three,FH FIBER,2,3,true
+assemble lower 2,FH ASBML,2,3,true
+bake lower in oven four,FH FIBER,2,3,true
+vkx inspection of vgroove,FH ASBML,2,3,true
+vkx inspection of pogo,FH ALIGN,2,3,true
+upper sub mfg,FH ASBML,2,3,true
+vkx inspection pogo pins,FH FIBER,2,3,true
+setup bake upper,FH FIBER,2,3,true
+bake upper,FH FIBER,3,3,true
+assemble air filter,FH ALIGN,2,3,true
+bundle prep,FH ASBML,2,3,true
+lay align fiber and instal,FH ALIGN,3,3,true
+inspect clean initial test 1,FH ASBML,2,3,true
+inspect clean initial test 2,FH ASBML,2,3,true
+cure and cooldown,FH FIBER,2,3,true
+move bundles up and glue,FH ASBML,2,3,true
+cure and cooldown two,FH FIBER,2,3,true
+install cover and final test 1,FH ASBML,2,3,true
+install cover and final test 2,FH ASBML,2,3,true
+mount to cart subassembly,FH ALIGN,2,3,true
+cure cone,FH FIBER,2,3,true
+cure cone two,FH ALIGN,2,3,true
+move to transport cart sub,FH ALIGN,2,3,true
+lens cell mfg 1,FH ALIGN,3,3,true
+lens cell mfg 2,FH ALIGN,3,3,true
+bake,FH ALIGN,3,3,true
+lca inspect + epoxy + align,FH ALIGN,3,3,true
+spacer inspect + epoxy + align,FH ALIGN,3,3,true
+lcb inspect + epoxy + align,FH ALIGN,3,3,true
+lcc inspect + epoxy + align,FH ALIGN,3,3,true
+lcd inspect + epoxy + align,FH ALIGN,3,3,true
+cooling structure,FH ALIGN,2,3,true
+cables,FH ASBML,2,3,true
+dsw 1,FH ALIGN,2,3,true
+final assembly,OB GLASS,2,3,true
