@@ -1,19 +1,12 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { optimizedTaskService, jobTemplateService, departmentService, sequenceResourceService } from '@/lib/services'
-import { useToast } from '@/hooks/use-toast'
-import { useFormPerformance } from '@/lib/hooks/use-form-performance'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTemplateTaskData } from './template-tasks/useTemplateTaskData'
+import { useTemplateTaskForm } from './template-tasks/useTemplateTaskForm'
+import { TemplateTaskFormFields } from './template-tasks/TemplateTaskFormFields'
+import { TemplateTasksTable } from './template-tasks/TemplateTasksTable'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { Loader2, Edit, Trash2 } from 'lucide-react'
 
 type OptimizedTask = {
   optimized_task_id: string
@@ -67,32 +60,28 @@ const efficiencyCurves = [
 ]
 
 export default function OptimizedTaskForm() {
-  const [optimizedTasks, setOptimizedTasks] = useState<OptimizedTask[]>([])
-  const [jobOptimizedPatterns, setJobOptimizedPatterns] = useState<JobOptimizedPattern[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [sequenceResources, setSequenceResources] = useState<SequenceResource[]>([])
-  const [loading, setLoading] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
+  const {
+    optimizedTasks,
+    jobOptimizedPatterns,
+    departments,
+    sequenceResources,
+    loading,
+    fetchOptimizedTasks
+  } = useTemplateTaskData()
 
-  // Performance monitoring
-  const _performanceTracker = useFormPerformance('template-task-form')
-
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<OptimizedTaskFormData>({
-    defaultValues: {
-      pattern_id: '',
-      name: '',
-      position: 1,
-      department_id: '',
-      is_unattended: false,
-      is_setup: false,
-      sequence_id: '',
-      min_operators: 1,
-      max_operators: 1,
-      operator_efficiency_curve: 'linear'
-    }
-  })
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    errors,
+    editingId,
+    isSubmitting,
+    onSubmit,
+    handleEdit,
+    handleDelete,
+    handleCancel
+  } = useTemplateTaskForm(fetchOptimizedTasks)
 
   const fetchOptimizedTasks = async () => {
     setLoading(true)
