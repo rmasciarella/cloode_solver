@@ -45,6 +45,7 @@ export function ensurePerformanceSystemInitialized() {
 }
 
 // Auto-initialize in browser environment
-if (typeof window !== 'undefined') {
-  ensurePerformanceSystemInitialized()
-}
+// DISABLED: This was causing initialization before providers were ready
+// if (typeof window !== 'undefined') {
+//   ensurePerformanceSystemInitialized()
+// }

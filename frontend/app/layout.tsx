@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { AppProviders } from '@/lib/providers/app-providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,12 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div style={{ padding: '2rem' }}>
-          <h1>DEPLOYMENT TEST - NO PROVIDERS</h1>
-          <p>If you see this, the layout is working without providers.</p>
-          <hr />
+        <AppProviders>
           {children}
-        </div>
+        </AppProviders>
       </body>
     </html>
   );
