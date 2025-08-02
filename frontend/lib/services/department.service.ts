@@ -34,43 +34,52 @@ export class DepartmentService extends BaseService {
 
   async getById(id: string): Promise<ServiceResponse<Department>> {
     try {
-      const { data, error } = await this.supabase
+      // Use auth-aware client with fallback to anonymous access
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('departments')
         .select('*')
         .eq('department_id', id)
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async create(department: DepartmentInsert): Promise<ServiceResponse<Department>> {
     try {
-      const { data, error } = await this.supabase
+      // Use auth-aware client with fallback to anonymous access
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('departments')
         .insert([department])
         .select()
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async update(id: string, department: DepartmentUpdate): Promise<ServiceResponse<Department>> {
     try {
-      const { data, error } = await this.supabase
+      // Use auth-aware client with fallback to anonymous access
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { data, error } = await client
         .from('departments')
         .update(department)
         .eq('department_id', id)
@@ -78,47 +87,53 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async delete(id: string): Promise<ServiceResponse<void>> {
     try {
-      const { error } = await this.supabase
+      // Use auth-aware client with fallback to anonymous access
+      const client = await this.getClient({ fallbackToAnon: true })
+      
+      const { error } = await client
         .from('departments')
         .delete()
         .eq('department_id', id)
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(null)
+      return this.createResponseSync(null)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 
   async toggleActive(id: string): Promise<ServiceResponse<Department>> {
     try {
+      // Use auth-aware client with fallback to anonymous access
+      const client = await this.getClient({ fallbackToAnon: true })
+      
       // First get current status
-      const { data: current, error: fetchError } = await this.supabase
+      const { data: current, error: fetchError } = await client
         .from('departments')
         .select('is_active')
         .eq('department_id', id)
         .single()
 
       if (fetchError) {
-        return this.createResponse(null, this.handleError(fetchError))
+        return this.createResponseSync(null, this.handleError(fetchError))
       }
 
       // Toggle the status
-      const { data, error } = await this.supabase
+      const { data, error } = await client
         .from('departments')
         .update({ is_active: !current.is_active })
         .eq('department_id', id)
@@ -126,12 +141,12 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponse(null, this.handleError(error))
+        return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponse(data)
+      return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponse(null, this.handleError(error))
+      return this.createResponseSync(null, this.handleError(error))
     }
   }
 }
