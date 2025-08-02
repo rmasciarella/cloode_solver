@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Building2, Factory, Users, Calendar, BookTemplate as FileTemplate, Network, Cog, Settings, Clock, Wrench, BriefcaseIcon, ListTodo, Menu, X, Activity, LogOut, Shield } from 'lucide-react'
 import { usePerformanceMonitoring } from '@/lib/hooks/use-performance-monitoring'
-import { AuthGuard } from '@/components/auth/AuthGuard'
+// import { AuthGuard } from '@/components/auth/AuthGuard'
 import { useAuth } from '@/lib/auth/context'
 import { Button } from '@/components/ui/button'
 import DepartmentForm from '@/components/forms/DepartmentForm'
@@ -304,9 +304,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <AuthGuard>
-      <HomeContent />
-    </AuthGuard>
-  )
+  return <HomeContent />
 }
