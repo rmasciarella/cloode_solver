@@ -19,18 +19,69 @@ const jsonSchema = z.string()
     }
   })
 
-// Solver parameters schema
+// Solver parameters schema - Complete OR-Tools CP-SAT parameters
 const solverParametersSchema = z.object({
-  num_search_workers: z.number().int().min(1).max(16).optional(),
-  max_time_in_seconds: z.number().min(1).max(3600).optional(),
+  // Search Parameters
+  num_search_workers: z.number().int().min(0).max(16).optional(), // 0 = auto
+  search_branching: z.enum(['AUTOMATIC_SEARCH', 'FIXED_SEARCH', 'PORTFOLIO_SEARCH', 'LP_SEARCH']).optional(),
   linearization_level: z.number().int().min(0).max(2).optional(),
-  search_branching: z.enum(['FIXED_SEARCH', 'AUTOMATIC_SEARCH', 'PORTFOLIO_SEARCH']).optional(),
+  cp_model_probing_level: z.number().int().min(0).max(3).optional(),
   cp_model_presolve: z.boolean().optional(),
   repair_hint: z.boolean().optional(),
+  hint_conflict_limit: z.number().int().min(0).optional(),
+  log_search_progress: z.boolean().optional(),
+  use_lp_lns: z.boolean().optional(),
+  
+  // Time Limits
+  max_time_in_seconds: z.number().min(0).optional(),
+  max_deterministic_time: z.number().min(0).optional(),
   max_preprocessing_time: z.number().min(0).optional(),
-  search_strategy: z.string().optional(),
+  
+  // Solution Limits
+  max_number_of_conflicts: z.number().int().min(0).optional(),
+  stop_after_first_solution: z.boolean().optional(),
+  max_memory_in_mb: z.number().int().min(0).optional(),
+  
+  // Optimization Parameters
+  optimize_with_core: z.boolean().optional(),
+  optimize_with_max_hs: z.boolean().optional(),
+  mip_max_bound: z.number().optional(),
+  relative_gap_limit: z.number().min(0).max(1).optional(),
+  absolute_gap_limit: z.number().min(0).optional(),
+  
+  // Symmetry Breaking
+  symmetry_level: z.number().int().min(0).max(2).optional(),
+  max_symmetry_detection_time: z.number().min(0).optional(),
+  
+  // Restart Strategy
   use_fast_restart: z.boolean().optional(),
-  cp_model_probing_level: z.number().int().min(0).max(3).optional()
+  restart_period: z.number().int().min(1).optional(),
+  restart_running_window_size: z.number().int().min(1).optional(),
+  
+  // Variable/Value Selection
+  preferred_variable_order: z.enum(['IN_ORDER', 'IN_REVERSE_ORDER', 'IN_RANDOM_ORDER']).optional(),
+  initial_polarity: z.enum(['POLARITY_TRUE', 'POLARITY_FALSE', 'POLARITY_RANDOM']).optional(),
+  minimization_algorithm: z.enum(['NONE', 'SIMPLE', 'ROTATION']).optional(),
+  
+  // Advanced Parameters
+  use_probing_search: z.boolean().optional(),
+  enumerate_all_solutions: z.boolean().optional(),
+  keep_all_feasible_solutions_in_presolve: z.boolean().optional(),
+  fill_additional_solutions_in_response: z.boolean().optional(),
+  instantiate_all_variables: z.boolean().optional(),
+  auto_detect_greater_than_at_least_one_of: z.boolean().optional(),
+  
+  // Clause Parameters
+  clause_cleanup_period: z.number().int().min(1).optional(),
+  clause_cleanup_ratio: z.number().min(0).max(1).optional(),
+  max_clause_activity_value: z.number().min(0).optional(),
+  
+  // Random Seed
+  random_seed: z.number().int().min(0).optional(),
+  
+  // Custom Application Parameters (not OR-Tools parameters)
+  hash_pattern_id: z.number().optional(), // Application-specific parameter
+  search_strategy: z.string().optional() // Legacy parameter, kept for compatibility
 }).strict() // Prevent unknown properties
 
 export const jobTemplateFormSchema = z.object({
