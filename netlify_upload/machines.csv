@@ -1,10 +1,29 @@
-name,capacity,cost_per_hour,department_id,cell_id,setup_time_minutes,teardown_time_minutes,maintenance_window_start,maintenance_window_end,last_maintenance_date,next_maintenance_due,maintenance_interval_hours,machine_type,manufacturer,model,year_installed,efficiency_rating,average_utilization_percent,uptime_target_percent,calendar_id,is_active
-HAAS,1,2500,MS,71eaf0da-5564-4e44-b715-c3468c54e03d,15,10,,,,,80,CNC,HAAS,VF-3,2020,0.95,85,95,,true
-OKMA,1,3500,MS,71eaf0da-5564-4e44-b715-c3468c54e03d,20,15,,,,,120,CNC,OKUMA,LB3000,2019,0.98,90,98,,true
-ULTRA,1,1200,FH,de20da6e-ff97-4c79-b79f-a154f1b73271,10,5,,,,,40,ULTRASONIC,BRANSON,2000X,2021,0.92,80,95,,true
-BENCH,1,200,FH,e1c1aab5-05ec-4fbc-a6da-5c9352757641,5,5,,,,,20,WORKBENCH,CUSTOM,WB-4,2018,1.0,95,100,,true
-OVEN,1,1000,FH,bdae843e-b535-4c0c-9264-f34f61dca49d,30,20,,,,,200,OVEN,DESPATCH,LFD-1,2020,0.88,70,90,,true
-LEAK,1,700,FH,bdae843e-b535-4c0c-9264-f34f61dca49d,15,10,,,,,60,LEAK_TEST,ATEQ,F520,2019,0.94,75,95,,true
-VKX,1,3000,FH,e1c1aab5-05ec-4fbc-a6da-5c9352757641,25,20,,,,,100,INSPECTION,KEYENCE,VKX-1000,2021,0.96,85,98,,true
-POGO,1,400,FH,e1c1aab5-05ec-4fbc-a6da-5c9352757641,10,8,,,,,30,TESTING,CUSTOM,POGO-1,2020,0.90,80,95,,true
-VCURE,1,500,FH,e1c1aab5-05ec-4fbc-a6da-5c9352757641,20,15,,,,,80,CURING,UV_TECH,VC-300,2019,0.87,70,90,,true
+name,cell_id
+HAAS,71eaf0da-5564-4e44-b715-c3468c54e03d
+OKMA,71eaf0da-5564-4e44-b715-c3468c54e03d
+ULTRA,de20da6e-ff97-4c79-b79f-a154f1b73271
+BENCH,e1c1aab5-05ec-4fbc-a6da-5c9352757641
+OVEN,bdae843e-b535-4c0c-9264-f34f61dca49d
+LEAK,bdae843e-b535-4c0c-9264-f34f61dca49d
+VKX,e1c1aab5-05ec-4fbc-a6da-5c9352757641
+POGO,e1c1aab5-05ec-4fbc-a6da-5c9352757641
+VCURE,e1c1aab5-05ec-4fbc-a6da-5c9352757641
+BPREP,de20da6e-ff97-4c79-b79f-a154f1b73271
+LFS 1,91ba4bf0-6a0f-4d49-af2e-db966832374f
+LFS 2,7cc7000e-c432-4f64-ba05-2175dca04643
+SPOT 1,91ba4bf0-6a0f-4d49-af2e-db966832374f
+SPOT 2,7cc7000e-c432-4f64-ba05-2175dca04643
+FHTST 1,ff3c07db-9f4b-4986-8e4a-438701ab4cca
+FHTST 2,74bcbc71-8611-48de-b421-17b4d8f4ce32
+CONE,f4152f42-0184-495e-8551-113fe5634e32
+ULTRA,65b200fa-67f7-4b16-ba41-aa96bf038b77
+LENAS,d846700c-57d8-4161-a91e-0c8394133f21
+OVEN,d846700c-57d8-4161-a91e-0c8394133f21
+OPTO 1,63f736fd-6608-480d-b2a1-6a4ecdc26118
+OPTO 1,7ebfbe72-70de-4613-ae06-c9e1cfbc0a4e
+BENCH,68766f04-9494-4fe1-a774-18ae0cc6df40
+LEAK,9f440a74-385e-49bf-ba6f-f7a7d370aa42
+CBLAS,68766f04-9494-4fe1-a774-18ae0cc6df40
+TUBE,9f55118c-0078-4a78-a236-b469bd1b64bb
+BAT,1b9801f0-b5ed-4751-84d5-6d6b69ed65ba
+CRT,b8866cc9-5909-4eb8-8f1e-ddec1d1c1e61

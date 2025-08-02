@@ -31,26 +31,57 @@ setup bake upper,FH FIBER,2,3,true
 bake upper,FH FIBER,3,3,true
 assemble air filter,FH ALIGN,2,3,true
 bundle prep,FH ASBML,2,3,true
+lec bundle 1,FH ASBML,2,3,true
+lec bundle 2,FH ASBML,2,3,true
+lec bundle 3,FH ASBML,2,3,true
+lec bundle 4,FH ASBML,2,3,true
+lec bundle 5,FH ASBML,2,3,true
+lec bundle 6,FH ASBML,2,3,true
+lec bundle 7,FH ASBML,2,3,true
+lec bundle 8,FH ASBML,2,3,true
+measure spot bundle 1,FH ASBML,2,3,true
+measure spot bundle 2,FH ASBML,2,3,true
+measure spot bundle 3,FH ASBML,2,3,true
+measure spot bundle 4,FH ASBML,2,3,true
+measure spot bundle 5,FH ASBML,2,3,true
+measure spot bundle 6,FH ASBML,2,3,true
+measure spot bundle 7,FH ASBML,2,3,true
+measure spot bundle 8,FH ASBML,2,3,true
 lay align fiber and instal,FH ALIGN,3,3,true
 inspect clean initial test 1,FH ASBML,2,3,true
 inspect clean initial test 2,FH ASBML,2,3,true
+cure and cooldown setup,FH FIBER,2,3,true
 cure and cooldown,FH FIBER,2,3,true
 move bundles up and glue,FH ASBML,2,3,true
+cure and cooldown two setup,FH FIBER,2,3,true
 cure and cooldown two,FH FIBER,2,3,true
 install cover and final test 1,FH ASBML,2,3,true
 install cover and final test 2,FH ASBML,2,3,true
 mount to cart subassembly,FH ALIGN,2,3,true
+cure cone setup,FH FIBER,2,3,true
 cure cone,FH FIBER,2,3,true
+cure cone two setup,FH ALIGN,2,3,true
 cure cone two,FH ALIGN,2,3,true
 move to transport cart sub,FH ALIGN,2,3,true
 lens cell mfg 1,FH ALIGN,3,3,true
 lens cell mfg 2,FH ALIGN,3,3,true
+setup bake,FH ALIGN,3,3,true
 bake,FH ALIGN,3,3,true
 lca inspect + epoxy + align,FH ALIGN,3,3,true
+setup cure 1,FH ALIGN,3,3,true
+cure 1,FH ALIGN,3,3,true
 spacer inspect + epoxy + align,FH ALIGN,3,3,true
+setup cure 2,FH ALIGN,3,3,true
+cure 2,FH ALIGN,3,3,true
 lcb inspect + epoxy + align,FH ALIGN,3,3,true
+setup cure 3,FH ALIGN,3,3,true
+cure 3,FH ALIGN,3,3,true
 lcc inspect + epoxy + align,FH ALIGN,3,3,true
+setup cure 4,FH ALIGN,3,3,true
+cure 4,FH ALIGN,3,3,true
 lcd inspect + epoxy + align,FH ALIGN,3,3,true
+setup cure 5,FH ALIGN,3,3,true
+cure 5,FH ALIGN,3,3,true
 cooling structure,FH ALIGN,2,3,true
 cables,FH ASBML,2,3,true
 dsw 1,FH ALIGN,2,3,true

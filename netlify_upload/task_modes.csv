@@ -1,9 +1,157 @@
 task_name,mode_name,work_cell_name,machine_name,duration_minutes,setup_time_minutes,operators_required,description
-setup upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,45,15,1,Setup on HAAS CNC
-setup upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,45,20,1,Setup on OKUMA CNC
-upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,30,0,1,Production on HAAS CNC
-upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,30,0,1,Production on OKUMA CNC
-setup lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,15,15,1,Setup on HAAS CNC
-setup lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,15,20,1,Setup on OKUMA CNC
-lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,60,0,1,Production on HAAS CNC
-lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,60,0,1,Production on OKUMA CNC
+setup upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,45,0,1,setup upper insert manifold on HAAS
+setup upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,45,0,1,setup upper insert manifold on OKMA
+upper insert manifold,HAAS Mode,MACHINE SHOP,HAAS,30,0,1,upper insert manifold on HAAS
+upper insert manifold,OKMA Mode,MACHINE SHOP,OKMA,30,0,1,upper insert manifold on OKMA
+setup lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,15,0,1,setup lower insert manifold on HAAS
+setup lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,15,0,1,setup lower insert manifold on OKMA
+lower insert manifold,HAAS Mode,MACHINE SHOP,HAAS,60,0,1,lower insert manifold on HAAS
+lower insert manifold,OKMA Mode,MACHINE SHOP,OKMA,60,0,1,lower insert manifold on OKMA
+setup upper housing,HAAS Mode,MACHINE SHOP,HAAS,15,0,1,setup upper housing on HAAS
+setup upper housing,OKMA Mode,MACHINE SHOP,OKMA,15,0,1,setup upper housing on OKMA
+upper housing,HAAS Mode,MACHINE SHOP,HAAS,30,0,1,upper housing on HAAS
+upper housing,OKMA Mode,MACHINE SHOP,OKMA,30,0,1,upper housing on OKMA
+setup fitting manifold,HAAS Mode,MACHINE SHOP,HAAS,15,0,1,setup fitting manifold on HAAS
+setup fitting manifold,OKMA Mode,MACHINE SHOP,OKMA,15,0,1,setup fitting manifold on OKMA
+fitting manifold,HAAS Mode,MACHINE SHOP,HAAS,45,0,1,fitting manifold on HAAS
+fitting manifold,OKMA Mode,MACHINE SHOP,OKMA,45,0,1,fitting manifold on OKMA
+setup lower housing blank,HAAS Mode,MACHINE SHOP,HAAS,15,0,1,setup lower housing blank on HAAS
+setup lower housing blank,OKMA Mode,MACHINE SHOP,OKMA,15,0,1,setup lower housing blank on OKMA
+lower housing blank,HAAS Mode,MACHINE SHOP,HAAS,60,0,1,lower housing blank on HAAS
+lower housing blank,OKMA Mode,MACHINE SHOP,OKMA,60,0,1,lower housing blank on OKMA
+setup lower mid op,BENCH Mode,MACHINE SHOP,BENCH,15,0,1,setup lower mid op on BENCH
+lower mid op,OVEN Mode,MACHINE SHOP,OVEN,60,0,1,lower mid op on OVEN
+setup lower housing,OVEN Mode,MACHINE SHOP,OVEN,15,0,1,setup lower housing on OVEN
+lower housing,OVEN Mode,MACHINE SHOP,OVEN,15,0,1,lower housing on OVEN
+setup fh adapter,OVEN Mode,MACHINE SHOP,OVEN,15,0,1,setup fh adapter on OVEN
+fh adapter,OVEN Mode,MACHINE SHOP,OVEN,30,0,1,fh adapter on OVEN
+setup fh bracket,OVEN Mode,MACHINE SHOP,OVEN,15,0,1,setup fh bracket on OVEN
+fh bracket,BENCH Mode,MACHINE SHOP,BENCH,30,0,1,fh bracket on BENCH
+assemble lower 1,OVEN Mode,FHCR WORKSPACE,OVEN,90,0,1,assemble lower 1 on OVEN
+setup bake lower in oven,OVEN Mode,FH EGRESS,OVEN,15,0,1,setup bake lower in oven on OVEN
+bake lower in oven,VKX Mode,FH EGRESS,VKX,105,0,1,bake lower in oven on VKX
+setup bake lower in oven two,VKX Mode,FH EGRESS,VKX,15,0,1,setup bake lower in oven two on VKX
+bake lower in oven two,BENCH Mode,FH EGRESS,BENCH,105,0,1,bake lower in oven two on BENCH
+setup bake lower in oven three,POGO Mode,FH EGRESS,POGO,15,0,1,setup bake lower in oven three on POGO
+bake lower in oven three,BENCH Mode,FH EGRESS,BENCH,225,0,1,bake lower in oven three on BENCH
+assemble lower 2,OVEN Mode,FHCR WORKSPACE,OVEN,105,0,1,assemble lower 2 on OVEN
+setup bake lower in oven four,OVEN Mode,FH EGRESS,OVEN,15,0,1,setup bake lower in oven four on OVEN
+bake lower in oven four,BENCH Mode,FH EGRESS,BENCH,105,0,1,bake lower in oven four on BENCH
+vkx inspection of vgroove,BPREP Mode,FHCR WORKSPACE,BPREP,825,0,1,vkx inspection of vgroove on BPREP
+vkx inspection of pogo,LFS 1 Mode,FHCR WORKSPACE,LFS 1,195,0,1,vkx inspection of pogo on LFS 1
+upper sub mfg,LFS 2 Mode,FHCR WORKSPACE,LFS 2,90,0,1,upper sub mfg on LFS 2
+vkx inspection pogo pins,LFS 1 Mode,FHCR WORKSPACE,LFS 1,1365,0,1,vkx inspection pogo pins on LFS 1
+upper mfg,LFS 2 Mode,FHCR WORKSPACE,LFS 2,135,0,1,upper mfg on LFS 2
+setup bake upper,LFS 1 Mode,FH EGRESS,LFS 1,15,0,1,setup bake upper on LFS 1
+bake upper,LFS 2 Mode,FH EGRESS,LFS 2,135,0,1,bake upper on LFS 2
+assemble air filter,LFS 1 Mode,FHCR WORKSPACE,LFS 1,135,0,1,assemble air filter on LFS 1
+bundle prep,LFS 2 Mode,FHCR FOYER,LFS 2,135,0,1,bundle prep on LFS 2
+lec bundle 1,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 1 on SPOT 1
+lec bundle 1,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 1 on SPOT 2
+lec bundle 2,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 2 on SPOT 1
+lec bundle 2,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 2 on SPOT 2
+lec bundle 3,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 3 on SPOT 1
+lec bundle 3,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 3 on SPOT 2
+lec bundle 4,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 4 on SPOT 1
+lec bundle 4,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 4 on SPOT 2
+lec bundle 5,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 5 on SPOT 1
+lec bundle 5,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 5 on SPOT 2
+lec bundle 6,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 6 on SPOT 1
+lec bundle 6,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 6 on SPOT 2
+lec bundle 7,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 7 on SPOT 1
+lec bundle 7,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 7 on SPOT 2
+lec bundle 8,SPOT 1 Mode,FHCR LFS 1,SPOT 1,105,0,1,lec bundle 8 on SPOT 1
+lec bundle 8,SPOT 2 Mode,FHCR LFS 2,SPOT 2,105,0,1,lec bundle 8 on SPOT 2
+measure spot bundle 1,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 1 on SPOT 1
+measure spot bundle 1,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 1 on SPOT 2
+measure spot bundle 2,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 2 on SPOT 1
+measure spot bundle 2,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 2 on SPOT 2
+measure spot bundle 3,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 3 on SPOT 1
+measure spot bundle 3,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 3 on SPOT 2
+measure spot bundle 4,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 4 on SPOT 1
+measure spot bundle 4,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 4 on SPOT 2
+measure spot bundle 5,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 5 on SPOT 1
+measure spot bundle 5,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 5 on SPOT 2
+measure spot bundle 6,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 6 on SPOT 1
+measure spot bundle 6,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 6 on SPOT 2
+measure spot bundle 7,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 7 on SPOT 1
+measure spot bundle 7,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 7 on SPOT 2
+measure spot bundle 8,SPOT 1 Mode,FHCR LFS 1,SPOT 1,135,0,1,measure spot bundle 8 on SPOT 1
+measure spot bundle 8,SPOT 2 Mode,FHCR LFS 2,SPOT 2,135,0,1,measure spot bundle 8 on SPOT 2
+lay align fiber and instal,FHTST 1 Mode,FHCR TEST 1,FHTST 1,180,0,1,lay align fiber and instal on FHTST 1
+lay align fiber and instal,FHTST 2 Mode,FHCR TEST 2,FHTST 2,180,0,1,lay align fiber and instal on FHTST 2
+inspect clean initial test 1,FHTST 1 Mode,FHCR TEST 1,FHTST 1,225,0,1,inspect clean initial test 1 on FHTST 1
+inspect clean initial test 1,FHTST 2 Mode,FHCR TEST 2,FHTST 2,225,0,1,inspect clean initial test 1 on FHTST 2
+inspect clean initial test 2,FHTST 1 Mode,FHCR TEST 1,FHTST 1,225,0,1,inspect clean initial test 2 on FHTST 1
+inspect clean initial test 2,FHTST 2 Mode,FHCR TEST 2,FHTST 2,225,0,1,inspect clean initial test 2 on FHTST 2
+cure and cooldown setup,FHTST 1 Mode,FHCR TEST 1,FHTST 1,15,0,1,cure and cooldown setup on FHTST 1
+cure and cooldown setup,FHTST 2 Mode,FHCR TEST 2,FHTST 2,15,0,1,cure and cooldown setup on FHTST 2
+cure and cooldown,FHTST 1 Mode,FHCR TEST 1,FHTST 1,1455,0,1,cure and cooldown on FHTST 1
+cure and cooldown,FHTST 2 Mode,FHCR TEST 2,FHTST 2,1455,0,1,cure and cooldown on FHTST 2
+move bundles up and glue,FHTST 1 Mode,FHCR TEST 1,FHTST 1,75,0,1,move bundles up and glue on FHTST 1
+move bundles up and glue,FHTST 2 Mode,FHCR TEST 2,FHTST 2,75,0,1,move bundles up and glue on FHTST 2
+cure and cooldown two setup,FHTST 1 Mode,FHCR TEST 1,FHTST 1,15,0,1,cure and cooldown two setup on FHTST 1
+cure and cooldown two setup,FHTST 2 Mode,FHCR TEST 2,FHTST 2,15,0,1,cure and cooldown two setup on FHTST 2
+cure and cooldown two,FHTST 1 Mode,FHCR TEST 1,FHTST 1,735,0,1,cure and cooldown two on FHTST 1
+cure and cooldown two,FHTST 2 Mode,FHCR TEST 2,FHTST 2,735,0,1,cure and cooldown two on FHTST 2
+install cover and final test 1,FHTST 1 Mode,FHCR TEST 1,FHTST 1,210,0,1,install cover and final test 1 on FHTST 1
+install cover and final test 1,FHTST 2 Mode,FHCR TEST 2,FHTST 2,210,0,1,install cover and final test 1 on FHTST 2
+install cover and final test 2,FHTST 1 Mode,FHCR TEST 1,FHTST 1,210,0,1,install cover and final test 2 on FHTST 1
+install cover and final test 2,FHTST 2 Mode,FHCR TEST 2,FHTST 2,210,0,1,install cover and final test 2 on FHTST 2
+mount to cart subassembly,CONE Mode,FHCR CONE,CONE,165,0,1,mount to cart subassembly on CONE
+cure cone setup,CONE Mode,FHCR CONE,CONE,15,0,1,cure cone setup on CONE
+cure cone,CONE Mode,FHCR CONE,CONE,4305,0,1,cure cone on CONE
+cure cone two setup,CONE Mode,FHCR CONE,CONE,15,0,1,cure cone two setup on CONE
+cure cone two,CONE Mode,FHCR CONE,CONE,1425,0,1,cure cone two on CONE
+move to transport cart sub,CONE Mode,FHCR CONE,CONE,60,0,1,move to transport cart sub on CONE
+lens cell mfg 1,LENAS Mode,OB GCR,LENAS,135,0,1,lens cell mfg 1 on LENAS
+lens cell mfg 2,LENAS Mode,OB GCR,LENAS,120,0,1,lens cell mfg 2 on LENAS
+setup bake,LENAS Mode,OB GCR,LENAS,120,0,1,setup bake on LENAS
+bake,LENAS Mode,OB GCR,LENAS,240,0,1,bake on LENAS
+lca inspect + epoxy + align,OPTO 1 Mode,OB OPTO 1,OPTO 1,180,0,1,lca inspect + epoxy + align on OPTO 1
+lca inspect + epoxy + align,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,180,0,1,lca inspect + epoxy + align on OB_OPTO_2
+setup cure 1,OPTO 1 Mode,OB OPTO 1,OPTO 1,15,0,1,setup cure 1 on OPTO 1
+setup cure 1,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,15,0,1,setup cure 1 on OB_OPTO_2
+cure 1,OPTO 1 Mode,OB OPTO 1,OPTO 1,1455,0,1,cure 1 on OPTO 1
+cure 1,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,1455,0,1,cure 1 on OB_OPTO_2
+spacer inspect + epoxy + align,OPTO 1 Mode,OB OPTO 1,OPTO 1,60,0,1,spacer inspect + epoxy + align on OPTO 1
+spacer inspect + epoxy + align,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,60,0,1,spacer inspect + epoxy + align on OB_OPTO_2
+setup cure 2,OPTO 1 Mode,OB OPTO 1,OPTO 1,15,0,1,setup cure 2 on OPTO 1
+setup cure 2,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,15,0,1,setup cure 2 on OB_OPTO_2
+cure 2,OPTO 1 Mode,OB OPTO 1,OPTO 1,1455,0,1,cure 2 on OPTO 1
+cure 2,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,1455,0,1,cure 2 on OB_OPTO_2
+lcb inspect + epoxy + align,OPTO 1 Mode,OB OPTO 1,OPTO 1,60,0,1,lcb inspect + epoxy + align on OPTO 1
+lcb inspect + epoxy + align,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,60,0,1,lcb inspect + epoxy + align on OB_OPTO_2
+setup cure 3,OPTO 1 Mode,OB OPTO 1,OPTO 1,15,0,1,setup cure 3 on OPTO 1
+cure 3,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,15,0,1,cure 3 on OB_OPTO_2
+cure 3,OPTO 1 Mode,OB OPTO 1,OPTO 1,1455,0,1,cure 3 on OPTO 1
+cure 3,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,1455,0,1,cure 3 on OB_OPTO_2
+lcc inspect + epoxy + align,OPTO 1 Mode,OB OPTO 1,OPTO 1,60,0,1,lcc inspect + epoxy + align on OPTO 1
+lcc inspect + epoxy + align,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,60,0,1,lcc inspect + epoxy + align on OB_OPTO_2
+setup cure 4,OPTO 1 Mode,OB OPTO 1,OPTO 1,15,0,1,setup cure 4 on OPTO 1
+setup cure 4,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,15,0,1,setup cure 4 on OB_OPTO_2
+cure 4,OPTO 1 Mode,OB OPTO 1,OPTO 1,1455,0,1,cure 4 on OPTO 1
+cure 4,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,1455,0,1,cure 4 on OB_OPTO_2
+lcd inspect + epoxy + align,OPTO 1 Mode,OB OPTO 1,OPTO 1,60,0,1,lcd inspect + epoxy + align on OPTO 1
+lcd inspect + epoxy + align,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,60,0,1,lcd inspect + epoxy + align on OB_OPTO_2
+setup cure 5,OPTO 1 Mode,OB OPTO 1,OPTO 1,15,0,1,setup cure 5 on OPTO 1
+setup cure 5,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,15,0,1,setup cure 5 on OB_OPTO_2
+cure 5,OPTO 1 Mode,OB OPTO 1,OPTO 1,4350,0,1,cure 5 on OPTO 1
+cure 5,OB_OPTO_2 Mode,OB OPTO 2,OB_OPTO_2,4350,0,1,cure 5 on OB_OPTO_2
+cooling structure,BENCH Mode,OB WORKSPACE,BENCH,195,0,1,cooling structure on BENCH
+cables,BENCH Mode,OB WORKSPACE,BENCH,105,0,1,cables on BENCH
+dsw 1,LENAS Mode,OB GCR,LENAS,150,0,1,dsw 1 on LENAS
+dsw 2,LENAS Mode,OB GCR,LENAS,135,0,1,dsw 2 on LENAS
+fhmads,TUBE Mode,OB CCR,TUBE,75,0,1,fhmads on TUBE
+mounting,BAT Mode,OB BAT,BAT,165,0,1,mounting on BAT
+splicing 1,BAT Mode,OB BAT,BAT,120,0,1,splicing 1 on BAT
+splicing 2,BAT Mode,OB BAT,BAT,120,0,1,splicing 2 on BAT
+leak check,BAT Mode,OB BAT,BAT,120,0,1,leak check on BAT
+intial alignment,BAT Mode,OB BAT,BAT,120,0,1,intial alignment on BAT
+pixel test (7 planes),BAT Mode,OB BAT,BAT,120,0,1,pixel test (7 planes) on BAT
+alignment optimization,BAT Mode,OB BAT,BAT,120,0,1,alignment optimization on BAT
+final pixel test (5 planes),BAT Mode,OB BAT,BAT,75,0,1,final pixel test (5 planes) on BAT
+setup epoxy cure,BAT Mode,OB BAT,BAT,15,0,1,setup epoxy cure on BAT
+epoxy cure,BAT Mode,OB BAT,BAT,360,0,1,epoxy cure on BAT
+burn in,BAT Mode,OB BAT,BAT,120,0,1,burn in on BAT
+final assembly,CRT Mode,OB CART,CRT,120,0,1,final assembly on CRT
