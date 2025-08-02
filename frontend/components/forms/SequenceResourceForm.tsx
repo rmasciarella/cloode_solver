@@ -146,7 +146,7 @@ export default function SequenceResourceForm() {
   useEffect(() => {
     fetchSequenceResources()
     fetchDepartments()
-  }, [fetchSequenceResources, fetchDepartments])
+  }, [])
 
   const onSubmit = async (data: SequenceResourceFormData) => {
     setIsSubmitting(true)

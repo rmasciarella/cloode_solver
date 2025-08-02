@@ -182,7 +182,7 @@ export default function JobInstanceForm() {
     fetchJobInstances()
     fetchJobTemplates()  // FIXED: Changed from fetchJobOptimizedPatterns
     fetchDepartments()
-  }, [fetchJobInstances, fetchJobTemplates, fetchDepartments])
+  }, [])
 
   const onSubmit = async (data: JobInstanceFormData) => {
     performanceTracker.trackSubmissionStart()

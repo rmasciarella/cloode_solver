@@ -16,6 +16,7 @@ interface MassUploaderProps {
   onUploadComplete?: () => void
   requiredFields?: string[]
   fieldDescriptions?: Record<string, string>
+  excludeFromExport?: string[]  // Allow customization of excluded fields
 }
 
 type UploadResult = {
@@ -30,51 +31,188 @@ export function MassUploader({
   sampleData, 
   onUploadComplete,
   requiredFields = [],
-  fieldDescriptions = {}
+  fieldDescriptions = {},
+  excludeFromExport = []
 }: MassUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
   const { toast } = useToast()
 
-  const downloadTemplate = () => {
-    const headers = Object.keys(sampleData)
-    const sampleRow = Object.values(sampleData)
-    
-    // Create CSV content with headers and sample row
-    const csvContent = [
-      headers.join(','),
-      sampleRow.map(value => {
-        if (value === null || value === undefined) return ''
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-          return `"${value.replace(/"/g, '""')}"`
-        }
-        return String(value)
-      }).join(',')
-    ].join('\n')
+  const downloadTemplate = async () => {
+    setIsDownloading(true)
+    try {
+      // First, try to fetch existing data from the database
+      const { data: existingData, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .limit(1000) // Reasonable limit to prevent huge downloads
+      
+      let dataToExport: Record<string, any>[] = []
+      
+      if (error) {
+        console.error(`Error fetching ${tableName} data:`, error)
+        // Fall back to sample data
+        dataToExport = [sampleData]
+      } else if (!existingData || existingData.length === 0) {
+        // No data in database, use sample data
+        dataToExport = [sampleData]
+        toast({
+          title: "Using Sample Data",
+          description: "No existing data found, template includes sample data",
+          duration: 3000
+        })
+      } else {
+        // Use actual data from database
+        dataToExport = existingData
+        toast({
+          title: "Exporting Current Data",
+          description: `Exporting ${existingData.length} existing ${entityName.toLowerCase()}${existingData.length !== 1 ? 's' : ''}`,
+          duration: 3000
+        })
+      }
+      
+      // Default fields to exclude from export (system-generated fields)
+      const defaultExcludeFields = [
+        'created_at', 'updated_at', 'deleted_at',
+        'created_by', 'updated_by', 'deleted_by',
+        'id', '_id' // Generic ID fields
+      ]
+      
+      // Automatically detect and exclude ID fields
+      const autoExcludeFields: string[] = []
+      if (dataToExport.length > 0) {
+        const firstRow = dataToExport[0]
+        Object.keys(firstRow).forEach(field => {
+          // Exclude fields that end with _id and have UUID values (primary keys)
+          if (field.endsWith('_id') || field === 'id') {
+            const value = firstRow[field]
+            // Check if it's a UUID (36 chars with dashes in specific positions)
+            if (typeof value === 'string' && 
+                value.length === 36 && 
+                value[8] === '-' && 
+                value[13] === '-' && 
+                value[18] === '-' && 
+                value[23] === '-') {
+              autoExcludeFields.push(field)
+            }
+          }
+        })
+      }
+      
+      // Table-specific primary keys (for cases where ID might not be UUID)
+      const tableSpecificPrimaryKeys: Record<string, string> = {
+        'departments': 'department_id',
+        'machines': 'machine_id', 
+        'operators': 'operator_id',
+        'skills': 'skill_id',
+        'work_cells': 'cell_id',
+        'business_calendars': 'calendar_id',
+        'job_optimized_patterns': 'pattern_id',
+        'optimized_tasks': 'task_id',
+        'optimized_precedences': 'precedence_id',
+        'instance_task_assignments': 'assignment_id',
+        'job_instances': 'instance_id',
+        'sequence_resources': 'resource_id',
+        'maintenance_types': 'maintenance_id',
+        'optimized_task_setup_times': 'setup_id',
+        'optimized_task_modes': 'mode_id'
+      }
+      
+      // Add table-specific primary key if defined
+      const tablePrimaryKey = tableSpecificPrimaryKeys[tableName]
+      if (tablePrimaryKey) {
+        autoExcludeFields.push(tablePrimaryKey)
+      }
+      
+      // Combine all exclude fields (using Set to avoid duplicates)
+      const excludeFields = [...new Set([
+        ...defaultExcludeFields,
+        ...autoExcludeFields,
+        ...excludeFromExport
+      ])]
+      
+      // Get headers from the first row of data, filtering out system fields
+      const allHeaders = Object.keys(dataToExport[0])
+      const headers = allHeaders.filter(header => !excludeFields.includes(header))
+      
+      // Create CSV content with headers and data rows
+      const csvRows = [headers.join(',')]
+      
+      dataToExport.forEach(row => {
+        const values = headers.map(header => {
+          const value = row[header]
+          if (value === null || value === undefined) return ''
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+            return `"${value.replace(/"/g, '""')}"`
+          }
+          return String(value)
+        })
+        csvRows.push(values.join(','))
+      })
+      
+      const csvContent = csvRows.join('\n')
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.setAttribute('hidden', '')
-    a.setAttribute('href', url)
-    a.setAttribute('download', `${tableName}_template.csv`)
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-    
-    toast({
-      title: "Template Downloaded",
-      description: `CSV template for ${entityName} downloaded successfully`
-    })
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.setAttribute('hidden', '')
+      a.setAttribute('href', url)
+      a.setAttribute('download', `${tableName}_${dataToExport === existingData ? 'export' : 'template'}.csv`)
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      toast({
+        title: "Download Complete",
+        description: `CSV ${dataToExport === existingData ? 'export' : 'template'} for ${entityName} downloaded successfully`
+      })
+    } catch (error) {
+      console.error('Error downloading template:', error)
+      
+      // Fall back to original sample data approach
+      const headers = Object.keys(sampleData)
+      const sampleRow = Object.values(sampleData)
+      
+      const csvContent = [
+        headers.join(','),
+        sampleRow.map(value => {
+          if (value === null || value === undefined) return ''
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+            return `"${value.replace(/"/g, '""')}"`
+          }
+          return String(value)
+        }).join(',')
+      ].join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.setAttribute('hidden', '')
+      a.setAttribute('href', url)
+      a.setAttribute('download', `${tableName}_template.csv`)
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      toast({
+        title: "Template Downloaded",
+        description: `CSV template with sample data downloaded`,
+        variant: "destructive"
+      })
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   const parseCSV = (text: string): Record<string, any>[] => {
     const result = Papa.parse<Record<string, any>>(text, {
       header: true,
       skipEmptyLines: true,
-      transform: (value: string) => {
+      transform: (value: string, field: string) => {
         // Convert empty strings to null
         if (value === '') return null
         
@@ -88,7 +226,8 @@ export function MassUploader({
         }
         
         return value
-      }
+      },
+      transformHeader: (header: string) => header.trim()
     })
 
     if (result.errors && result.errors.length > 0) {
@@ -138,18 +277,67 @@ export function MassUploader({
         warnings: []
       }
 
+      // Table-specific primary keys (same as in downloadTemplate)
+      const tableSpecificPrimaryKeys: Record<string, string> = {
+        'departments': 'department_id',
+        'machines': 'machine_id', 
+        'operators': 'operator_id',
+        'skills': 'skill_id',
+        'work_cells': 'cell_id',
+        'business_calendars': 'calendar_id',
+        'job_optimized_patterns': 'pattern_id',
+        'optimized_tasks': 'task_id',
+        'optimized_precedences': 'precedence_id',
+        'instance_task_assignments': 'assignment_id',
+        'job_instances': 'instance_id',
+        'sequence_resources': 'resource_id',
+        'maintenance_types': 'maintenance_id',
+        'optimized_task_setup_times': 'setup_id',
+        'optimized_task_modes': 'mode_id'
+      }
+
+      // Get primary key field for this table
+      const primaryKeyField = tableSpecificPrimaryKeys[tableName]
+      
       // Process each row
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i]
         const rowNumber = i + 2 // +2 because CSV is 1-indexed and has header row
         
-        // Validate row
-        const validationErrors = validateRow(row, i)
+        // Remove any ID fields that might have been included
+        const cleanedRow = { ...row }
+        
+        // Remove primary key field
+        if (primaryKeyField && primaryKeyField in cleanedRow) {
+          delete cleanedRow[primaryKeyField]
+        }
+        
+        // Remove common ID fields
+        delete cleanedRow.id
+        delete cleanedRow._id
+        delete cleanedRow.created_at
+        delete cleanedRow.updated_at
+        delete cleanedRow.deleted_at
+        
+        // Remove any field ending with _id that contains a UUID
+        Object.keys(cleanedRow).forEach(key => {
+          if (key.endsWith('_id') || key === 'id') {
+            const value = cleanedRow[key]
+            if (typeof value === 'string' && 
+                value.length === 36 && 
+                value.includes('-')) {
+              delete cleanedRow[key]
+            }
+          }
+        })
+        
+        // Validate cleaned row
+        const validationErrors = validateRow(cleanedRow, i)
         if (validationErrors.length > 0) {
           result.errors.push({
             row: rowNumber,
             error: validationErrors.join(', '),
-            data: row
+            data: cleanedRow
           })
           continue
         }
@@ -158,7 +346,7 @@ export function MassUploader({
           // Insert into database
           const { error } = await supabase
             .from(tableName)
-            .insert([row])
+            .insert([cleanedRow])
 
           if (error) {
             result.errors.push({
@@ -227,12 +415,16 @@ export function MassUploader({
             <Download className="h-5 w-5 text-blue-600" />
             <div>
               <p className="font-medium text-blue-900">Download CSV Template</p>
-              <p className="text-sm text-blue-700">Get the correct format with sample data</p>
+              <p className="text-sm text-blue-700">Downloads current data or sample format if empty</p>
             </div>
           </div>
-          <Button onClick={downloadTemplate} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Download Template
+          <Button onClick={downloadTemplate} variant="outline" size="sm" disabled={isDownloading}>
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            {isDownloading ? 'Downloading...' : 'Download Template'}
           </Button>
         </div>
 

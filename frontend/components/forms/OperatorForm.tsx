@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { operatorService, departmentService } from '@/lib/services'
 import { useToast } from '@/hooks/use-toast'
 import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
 import { Button } from '@/components/ui/button'
@@ -129,13 +129,11 @@ export default function OperatorForm() {
   const fetchOperators = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('operators')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setOperators(data || [])
+      const response = await operatorService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch operators')
+      }
+      setOperators(response.data || [])
     } catch (error) {
       console.error('Error fetching operators:', error)
       toast({
@@ -150,14 +148,11 @@ export default function OperatorForm() {
 
   const fetchDepartments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('department_id, name, code, is_active')
-        // Fetch all departments to show in operator list, even inactive ones
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDepartments(data || [])
+      const response = await departmentService.getAll() // Get all departments, not just active
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch departments')
+      }
+      setDepartments(response.data || [])
     } catch (error) {
       console.error('Error fetching departments:', error)
     }

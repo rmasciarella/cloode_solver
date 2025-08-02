@@ -194,7 +194,7 @@ export default function MachineForm() {
     fetchMachines()
     fetchDepartments()
     fetchWorkCells()
-  }, [fetchMachines, fetchDepartments, fetchWorkCells])
+  }, [])
 
   // Filter work cells based on selected department
   useEffect(() => {

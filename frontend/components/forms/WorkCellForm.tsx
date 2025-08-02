@@ -7,7 +7,7 @@ import { workCellService, departmentService } from '@/lib/services'
 import { workCellFormSchema, type WorkCellFormData, cellTypes } from '@/lib/schemas'
 import { Database } from '@/lib/database.types'
 import { useToast } from '@/hooks/use-toast'
-import { usePerformanceMonitor, performanceUtils } from '@/lib/performance'
+// Performance monitoring removed to fix console errors
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { PerformanceDashboard } from '@/components/ui/performance-dashboard'
 import { Loader2, Edit, Trash2, Upload, Search, Filter } from 'lucide-react'
 import { AdvancedFilter, BulkOperations, useAdvancedTable } from '@/components/ui/advanced-patterns'
 
@@ -31,7 +30,7 @@ export default function WorkCellForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false)
   const { toast } = useToast()
-  const monitor = usePerformanceMonitor('WorkCellForm')
+  // Performance monitoring removed
 
   // Advanced table functionality
   const advancedTable = useAdvancedTable(
@@ -95,11 +94,8 @@ export default function WorkCellForm() {
       error = String(err)
     }
 
-    const duration = performance.now() - startTime
-    monitor.recordValidation(fieldName, duration, isValid, error)
-    
     return { isValid, error }
-  }, [monitor])
+  }, [])
 
   // Bulk operations handlers
   const handleBulkDelete = async (ids: string[]) => {
@@ -164,23 +160,15 @@ export default function WorkCellForm() {
 
   const fetchWorkCells = async () => {
     setLoading(true)
-    monitor.startTimer('fetch_work_cells')
     
     try {
-      const { result: response } = await performanceUtils.measureAsync(
-        async () => await workCellService.getAll(),
-        'WorkCellForm',
-        'service_fetch_work_cells'
-      )
+      const response = await workCellService.getAll()
       
       if (response.success && response.data) {
         setWorkCells(response.data)
-        monitor.endTimer('fetch_work_cells', 'fetch_work_cells_complete', true)
       } else {
         const errorMsg = response.error || "Failed to fetch work cells"
         console.error('Error fetching work cells:', response.error)
-        monitor.endTimer('fetch_work_cells', 'fetch_work_cells_error', false, errorMsg)
-        monitor.recordError(errorMsg, 'fetch_work_cells')
         
         toast({
           title: "Error",
@@ -190,8 +178,6 @@ export default function WorkCellForm() {
       }
     } catch (error) {
       const errorMsg = String(error)
-      monitor.endTimer('fetch_work_cells', 'fetch_work_cells_exception', false, errorMsg)
-      monitor.recordError(errorMsg, 'fetch_work_cells')
       
       toast({
         title: "Error",
@@ -205,28 +191,21 @@ export default function WorkCellForm() {
 
   const fetchDepartments = async () => {
     try {
-      const { result: response } = await performanceUtils.measureAsync(
-        async () => await departmentService.getAll(true), // activeOnly = true
-        'WorkCellForm',
-        'service_fetch_departments'
-      )
+      const response = await departmentService.getAll(true) // activeOnly = true
       
       if (response.success && response.data) {
         setDepartments(response.data)
       } else {
         const errorMsg = response.error || "Failed to fetch departments"
         console.error('Error fetching departments:', response.error)
-        monitor.recordError(errorMsg, 'fetch_departments')
       }
     } catch (error) {
       const errorMsg = String(error)
-      monitor.recordError(errorMsg, 'fetch_departments')
+      console.error('Error fetching departments:', errorMsg)
     }
   }
 
   useEffect(() => {
-    const loadStartTime = performance.now()
-    monitor.startTimer('form_initial_load')
     
     const loadData = async () => {
       try {
@@ -234,92 +213,32 @@ export default function WorkCellForm() {
           fetchWorkCells(),
           fetchDepartments()
         ])
-        
-        const loadDuration = performance.now() - loadStartTime
-        monitor.recordFormLoad(loadDuration)
-        monitor.endTimer('form_initial_load', 'form_load_complete', true)
-        
-        // Development mode logging
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[FORM-PERF] WorkCellForm loaded in ${loadDuration.toFixed(2)}ms`)
-        }
       } catch (error) {
-        const errorMsg = String(error)
-        monitor.endTimer('form_initial_load', 'form_load_error', false, errorMsg)
-        monitor.recordError(errorMsg, 'form_initial_load')
+        console.error('Error loading form data:', error)
       }
     }
     
     loadData()
-  }, [monitor]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Development mode performance summary on unmount
-  useEffect(() => {
-    return () => {
-      if (process.env.NODE_ENV === 'development') {
-        const metrics = monitor.getFormMetrics()
-        const summary = {
-          formName: 'WorkCellForm',
-          loadTime: metrics.loadTime,
-          submissionTimes: metrics.submissionTimes,
-          validationTimes: metrics.validationTimes,
-          interactionCount: metrics.interactionCount,
-          errorCount: metrics.errorCount,
-          errorRate: metrics.interactionCount > 0 ? (metrics.errorCount / metrics.interactionCount) * 100 : 0,
-          mostFocusedField: Object.keys(metrics.fieldFocusCount).reduce(
-            (max, field) => metrics.fieldFocusCount[field] > (metrics.fieldFocusCount[max] || 0) ? field : max,
-            ''
-          ),
-          timestamp: Date.now()
-        }
-        
-        console.log('[FORM-PERF] WorkCellForm Performance Summary:', summary)
-        
-        // Expose to global scope for debugging
-        if (typeof window !== 'undefined') {
-          (window as any).workCellFormPerformance = {
-            getMetrics: () => monitor.getMetrics(),
-            getSummary: () => summary,
-            export: () => monitor.exportMetrics()
-          }
-        }
-      }
-    }
-  }, [monitor])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: WorkCellFormData) => {
     setIsSubmitting(true)
-    const submissionStartTime = performance.now()
-    monitor.startTimer('form_submission')
     
     try {
       // Data is already transformed by Zod schema (percentage to decimal)
-      const { result: response } = await performanceUtils.measureAsync(
-        async () => {
-          if (editingId) {
-            return await workCellService.update(editingId, data)
-          } else {
-            // Ensure name is present for create operations
-            if (!data.name) {
-              throw new Error('Name is required for creating work cells')
-            }
-            return await workCellService.create(data as WorkCellFormData & { name: string })
+      const response = await (async () => {
+        if (editingId) {
+          return await workCellService.update(editingId, data)
+        } else {
+          // Ensure name is present for create operations
+          if (!data.name) {
+            throw new Error('Name is required for creating work cells')
           }
-        },
-        'WorkCellForm',
-        editingId ? 'service_update_work_cell' : 'service_create_work_cell',
-        { editingId, operation: editingId ? 'update' : 'create' }
-      )
-
-      const submissionDuration = performance.now() - submissionStartTime
+          return await workCellService.create(data as WorkCellFormData & { name: string })
+        }
+      })()
 
       if (response.success) {
-        monitor.recordSubmission(submissionDuration, true, undefined, { 
-          operation: editingId ? 'update' : 'create',
-          workCellId: editingId 
-        })
-        monitor.endTimer('form_submission', 'form_submission_success', true)
-        
         toast({
           title: "Success",
           description: `Work cell ${editingId ? 'updated' : 'created'} successfully`
@@ -329,12 +248,6 @@ export default function WorkCellForm() {
         fetchWorkCells()
       } else {
         const errorMsg = response.error || "Failed to save work cell"
-        monitor.recordSubmission(submissionDuration, false, errorMsg, { 
-          operation: editingId ? 'update' : 'create',
-          workCellId: editingId 
-        })
-        monitor.endTimer('form_submission', 'form_submission_error', false, errorMsg)
-        monitor.recordError(errorMsg, 'form_submission')
         
         console.error('Error saving work cell:', response.error)
         toast({
@@ -345,11 +258,6 @@ export default function WorkCellForm() {
       }
     } catch (error) {
       const errorMsg = String(error)
-      const submissionDuration = performance.now() - submissionStartTime
-      
-      monitor.recordSubmission(submissionDuration, false, errorMsg)
-      monitor.endTimer('form_submission', 'form_submission_exception', false, errorMsg)
-      monitor.recordError(errorMsg, 'form_submission')
       
       toast({
         title: "Error",
@@ -402,13 +310,15 @@ export default function WorkCellForm() {
 
   const sampleWorkCellData = {
     name: 'Assembly Line A',
-    type: 'ASSEMBLY',
+    capacity: 5,
     department_id: null,
-    max_capacity: 5,
-    efficiency_rating: 0.95,
-    hourly_rate: 35.0,
-    setup_time_minutes: 30,
-    teardown_time_minutes: 15,
+    wip_limit: 5,
+    target_utilization: 0.85,
+    flow_priority: 1,
+    floor_location: 'Building A, Floor 2',
+    cell_type: 'production',
+    calendar_id: null,
+    average_throughput_per_hour: 50,
     is_active: true
   }
 
@@ -422,7 +332,7 @@ export default function WorkCellForm() {
             <TabsTrigger 
               value="performance"
               onClick={() => {
-                monitor.recordInteraction('tab_click', 'performance_tab')
+                // Performance monitoring removed
                 setShowPerformanceDashboard(true)
               }}
             >
@@ -450,13 +360,8 @@ export default function WorkCellForm() {
                   id="name"
                   {...register('name')}
                   placeholder="e.g., Production Cell A"
-                  onFocus={() => monitor.recordInteraction('focus', 'name')}
                   onBlur={(e) => {
-                    monitor.recordInteraction('blur', 'name')
                     validateField('name', e.target.value)
-                  }}
-                  onChange={(e) => {
-                    monitor.recordInteraction('change', 'name')
                   }}
                 />
                 {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
@@ -467,10 +372,10 @@ export default function WorkCellForm() {
                 <Label htmlFor="cell_type">Cell Type</Label>
                 <Select onValueChange={(value) => {
                   setValue('cell_type', value as typeof cellTypes[number])
-                  monitor.recordInteraction('select', 'cell_type', { value })
+                  /* Performance monitoring removed */
                   validateField('cell_type', value)
                 }}>
-                  <SelectTrigger onFocus={() => monitor.recordInteraction('focus', 'cell_type')}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Select cell type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -519,12 +424,10 @@ export default function WorkCellForm() {
                   type="number"
                   min="1"
                   {...register('capacity', { valueAsNumber: true })}
-                  onFocus={() => monitor.recordInteraction('focus', 'capacity')}
                   onBlur={(e) => {
-                    monitor.recordInteraction('blur', 'capacity')
+                    /* Performance monitoring removed */
                     validateField('capacity', parseInt(e.target.value))
                   }}
-                  onChange={() => monitor.recordInteraction('change', 'capacity')}
                 />
                 {errors.capacity && <p className="text-sm text-red-600">{errors.capacity.message}</p>}
               </div>
@@ -592,7 +495,7 @@ export default function WorkCellForm() {
                   type="button" 
                   variant="outline" 
                   onClick={() => {
-                    monitor.recordInteraction('click', 'cancel_button')
+                    /* Performance monitoring removed */
                     handleCancel()
                   }}
                 >
@@ -602,9 +505,6 @@ export default function WorkCellForm() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                onClick={() => monitor.recordInteraction('click', 'submit_button', { 
-                  isEdit: !!editingId 
-                })}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingId ? 'Update' : 'Create'} Work Cell
@@ -621,13 +521,14 @@ export default function WorkCellForm() {
             entityName="Work Cell"
             sampleData={sampleWorkCellData}
             onUploadComplete={fetchWorkCells}
-            requiredFields={['name', 'type']}
+            requiredFields={['name', 'capacity', 'cell_type']}
             fieldDescriptions={{
               name: 'Work cell display name',
-              type: 'Cell type (e.g., ASSEMBLY, MACHINING, QUALITY)',
-              max_capacity: 'Maximum concurrent jobs',
-              efficiency_rating: 'Efficiency rating (0.0 to 1.0)',
-              hourly_rate: 'Operating cost per hour'
+              capacity: 'Maximum concurrent capacity',
+              cell_type: 'Cell type (production, assembly, quality, etc.)',
+              wip_limit: 'Work-in-progress limit',
+              target_utilization: 'Target utilization (0.0 to 1.0)',
+              flow_priority: 'Flow priority (higher = more important)'
             }}
           />
         </TabsContent>
@@ -643,7 +544,7 @@ export default function WorkCellForm() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <PerformanceDashboard monitor={monitor} />
+                {/* Performance dashboard removed */}
               </CardContent>
             </Card>
           </TabsContent>
@@ -709,7 +610,7 @@ export default function WorkCellForm() {
                       </th>
                     )}
                     <th className="text-left p-2 font-medium cursor-pointer hover:bg-gray-50" onClick={() => advancedTable.setSortBy('name')}>Name ↕</th>
-                    <th className="text-left p-2 font-medium">Type</th>
+                    <th className="text-left p-2 font-medium">Cell Type</th>
                     <th className="text-left p-2 font-medium">Department</th>
                     <th className="text-left p-2 font-medium">Capacity</th>
                     <th className="text-left p-2 font-medium">WIP Limit</th>
@@ -763,7 +664,7 @@ export default function WorkCellForm() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                monitor.recordInteraction('click', 'edit_button', { workCellId: cell.cell_id })
+                                /* Performance monitoring removed */
                                 handleEdit(cell)
                               }}
                               disabled={loading}
@@ -774,10 +675,7 @@ export default function WorkCellForm() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                monitor.recordInteraction('click', 'toggle_active_button', { 
-                                  workCellId: cell.cell_id,
-                                  action: cell.is_active ? 'deactivate' : 'reactivate'
-                                })
+                                /* Performance monitoring removed */
                                 handleBulkToggleActive([cell.cell_id])
                               }}
                               className={cell.is_active ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}
@@ -789,7 +687,7 @@ export default function WorkCellForm() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                monitor.recordInteraction('click', 'delete_button', { workCellId: cell.cell_id })
+                                /* Performance monitoring removed */
                                 handleDelete(cell.cell_id)
                               }}
                               className="text-red-600 hover:bg-red-50"

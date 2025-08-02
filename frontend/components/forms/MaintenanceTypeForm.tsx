@@ -241,7 +241,7 @@ export default function MaintenanceTypeForm() {
     }
     
     fetchMaintenanceTypes()
-  }, [fetchMaintenanceTypes])
+  }, [])
 
   // Track render performance
   useEffect(() => {

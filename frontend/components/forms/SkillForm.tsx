@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { skillService, departmentService } from '@/lib/services'
 import { useToast } from '@/hooks/use-toast'
 import { performanceMonitor } from '@/lib/performance/monitoring'
 import { Button } from '@/components/ui/button'
@@ -269,13 +269,11 @@ export default function SkillForm() {
   const fetchSkills = useCallback(async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('skills')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setSkills(data || [])
+      const response = await skillService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch skills')
+      }
+      setSkills(response.data || [])
       
       // Record load complete if this is the initial load
       if (!hasRecordedLoad.current) {
@@ -297,14 +295,11 @@ export default function SkillForm() {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('department_id, name, code')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDepartments(data || [])
+      const response = await departmentService.getAll(true) // activeOnly = true
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch departments')
+      }
+      setDepartments(response.data || [])
     } catch (error) {
       console.error('Error fetching departments:', error)
     }
@@ -313,7 +308,7 @@ export default function SkillForm() {
   useEffect(() => {
     fetchSkills()
     fetchDepartments()
-  }, [fetchSkills, fetchDepartments])
+  }, [])
 
   // Cleanup and performance summary on unmount
   useEffect(() => {
@@ -360,23 +355,20 @@ export default function SkillForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('skills')
-          .update(formData)
-          .eq('skill_id', editingId)
-
-        if (error) throw error
+        const response = await skillService.update(editingId, formData)
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to update skill')
+        }
 
         toast({
           title: "Success",
           description: "Skill updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('skills')
-          .insert([formData])
-
-        if (error) throw error
+        const response = await skillService.create(formData)
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create skill')
+        }
 
         toast({
           title: "Success",
@@ -424,12 +416,10 @@ export default function SkillForm() {
     if (!confirm('Are you sure you want to delete this skill?')) return
 
     try {
-      const { error } = await supabase
-        .from('skills')
-        .delete()
-        .eq('skill_id', id)
-
-      if (error) throw error
+      const response = await skillService.delete(id)
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to delete skill')
+      }
 
       toast({
         title: "Success",
@@ -458,12 +448,10 @@ export default function SkillForm() {
       let completed = 0
 
       for (const id of ids) {
-        const { error } = await supabase
-          .from('skills')
-          .delete()
-          .eq('skill_id', id)
-
-        if (error) throw error
+        const response = await skillService.delete(id)
+        if (!response.success) {
+          throw new Error(response.error || `Failed to delete skill ${id}`)
+        }
         
         completed++
         setBulkProgress(Math.round((completed / total) * 100))
@@ -501,12 +489,10 @@ export default function SkillForm() {
         const skill = skills.find(s => s.skill_id === id)
         if (!skill) continue
 
-        const { error } = await supabase
-          .from('skills')
-          .update({ is_active: !skill.is_active })
-          .eq('skill_id', id)
-
-        if (error) throw error
+        const response = await skillService.toggleActive(id)
+        if (!response.success) {
+          throw new Error(response.error || `Failed to toggle skill ${id}`)
+        }
         
         completed++
         setBulkProgress(Math.round((completed / total) * 100))
@@ -541,12 +527,10 @@ export default function SkillForm() {
       let completed = 0
 
       for (const id of ids) {
-        const { error } = await supabase
-          .from('skills')
-          .update({ complexity_level: newComplexity })
-          .eq('skill_id', id)
-
-        if (error) throw error
+        const response = await skillService.updateComplexity(id, newComplexity)
+        if (!response.success) {
+          throw new Error(response.error || `Failed to update complexity for skill ${id}`)
+        }
         
         completed++
         setBulkProgress(Math.round((completed / total) * 100))
@@ -581,15 +565,13 @@ export default function SkillForm() {
       let completed = 0
 
       for (const id of ids) {
-        const { error } = await supabase
-          .from('skills')
-          .update({ 
-            certification_required: requiresCert,
-            certification_expires_after_months: requiresCert ? 12 : null
-          })
-          .eq('skill_id', id)
-
-        if (error) throw error
+        const response = await skillService.update(id, { 
+          certification_required: requiresCert,
+          certification_expires_after_months: requiresCert ? 12 : null
+        })
+        if (!response.success) {
+          throw new Error(response.error || `Failed to update certification for skill ${id}`)
+        }
         
         completed++
         setBulkProgress(Math.round((completed / total) * 100))

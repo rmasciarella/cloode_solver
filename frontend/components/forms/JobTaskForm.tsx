@@ -17,9 +17,9 @@ import { MassUploader } from '@/components/ui/mass-uploader'
 import { Loader2, Edit, Trash2, Upload } from 'lucide-react'
 
 type JobTask = {
-  assignment_id: string
+  task_id: string
   instance_id: string
-  optimized_task_id: string
+  template_task_id: string
   selected_mode_id: string | null
   assigned_machine_id: string | null
   start_time_minutes: number | null
@@ -32,17 +32,17 @@ type JobTask = {
 type JobInstance = {
   instance_id: string
   name: string
-  pattern_id: string
+  template_id: string
 }
 
-type OptimizedTask = {
-  optimized_task_id: string
+type TemplateTask = {
+  template_task_id: string
   name: string
-  pattern_id: string
+  template_id: string
 }
 
-type OptimizedTaskMode = {
-  optimized_task_mode_id: string
+type TemplateTaskMode = {
+  template_task_mode_id: string
   mode_name: string
   duration_minutes: number
 }
@@ -54,7 +54,7 @@ type Machine = {
 
 type JobTaskFormData = {
   instance_id: string
-  optimized_task_id: string
+  template_task_id: string
   selected_mode_id: string
   assigned_machine_id: string
   start_time_minutes: number
@@ -66,7 +66,7 @@ type JobTaskFormData = {
 
 const sampleJobTaskData = {
   instance_id: "JOB_001",
-  optimized_task_id: "TASK_001", 
+  template_task_id: "TASK_001", 
   selected_mode_id: "MODE_001",
   assigned_machine_id: "MACHINE_001",
   start_time_minutes: 0,
@@ -78,8 +78,8 @@ const sampleJobTaskData = {
 export default function JobTaskForm() {
   const [jobTasks, setJobTasks] = useState<JobTask[]>([])
   const [jobInstances, setJobInstances] = useState<JobInstance[]>([])
-  const [optimizedTasks, setOptimizedTasks] = useState<OptimizedTask[]>([])
-  const [taskModes, setTaskModes] = useState<OptimizedTaskMode[]>([])
+  const [templateTasks, setTemplateTasks] = useState<TemplateTask[]>([])
+  const [taskModes, setTaskModes] = useState<TemplateTaskMode[]>([])
   const [machines, setMachines] = useState<Machine[]>([])
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -92,7 +92,7 @@ export default function JobTaskForm() {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<JobTaskFormData>({
     defaultValues: {
       instance_id: '',
-      optimized_task_id: '',
+      template_task_id: '',
       selected_mode_id: '',
       assigned_machine_id: '',
       start_time_minutes: 0,
@@ -132,7 +132,7 @@ export default function JobTaskForm() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('instance_task_assignments')
+        .from('job_tasks')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10)
@@ -153,7 +153,7 @@ export default function JobTaskForm() {
     try {
       const { data, error } = await supabase
         .from('job_instances')
-        .select('instance_id, name, pattern_id')
+        .select('instance_id, name, template_id')
         .order('name', { ascending: true })
 
       if (error) throw error
@@ -163,25 +163,25 @@ export default function JobTaskForm() {
     }
   }
 
-  const fetchOptimizedTasks = async () => {
+  const fetchTemplateTasks = async () => {
     try {
       const { data, error } = await supabase
-        .from('optimized_tasks')
-        .select('optimized_task_id, name, pattern_id')
+        .from('template_tasks')
+        .select('template_task_id, name, template_id')
         .order('name', { ascending: true })
 
       if (error) throw error
-      setOptimizedTasks(data || [])
+      setTemplateTasks(data || [])
     } catch (error) {
-      console.error('Error fetching optimized tasks:', error)
+      console.error('Error fetching template tasks:', error)
     }
   }
 
   const fetchTaskModes = async () => {
     try {
       const { data, error } = await supabase
-        .from('optimized_task_modes')
-        .select('optimized_task_mode_id, mode_name, duration_minutes, optimized_task_id')
+        .from('template_task_modes')
+        .select('template_task_mode_id, mode_name, duration_minutes, template_task_id')
         .order('mode_name', { ascending: true })
 
       if (error) throw error
@@ -209,7 +209,7 @@ export default function JobTaskForm() {
   useEffect(() => {
     fetchJobTasks()
     fetchJobInstances()
-    fetchOptimizedTasks()
+    fetchTemplateTasks()
     fetchTaskModes()
     fetchMachines()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -236,7 +236,7 @@ export default function JobTaskForm() {
 
       const formData = {
         instance_id: data.instance_id,
-        optimized_task_id: data.optimized_task_id,
+        template_task_id: data.template_task_id,
         selected_mode_id: data.selected_mode_id || null,
         assigned_machine_id: data.assigned_machine_id || null,
         start_time_minutes: data.start_time_minutes || null,
@@ -247,9 +247,9 @@ export default function JobTaskForm() {
 
       if (editingId) {
         const { error } = await supabase
-          .from('instance_task_assignments')
+          .from('job_tasks')
           .update(formData)
-          .eq('assignment_id', editingId)
+          .eq('task_id', editingId)
 
         if (error) throw error
 
@@ -259,7 +259,7 @@ export default function JobTaskForm() {
         })
       } else {
         const { error } = await supabase
-          .from('instance_task_assignments')
+          .from('job_tasks')
           .insert([formData])
 
         if (error) throw error
@@ -286,9 +286,9 @@ export default function JobTaskForm() {
   }
 
   const handleEdit = (task: JobTask) => {
-    setEditingId(task.assignment_id)
+    setEditingId(task.task_id)
     setValue('instance_id', task.instance_id)
-    setValue('optimized_task_id', task.optimized_task_id)
+    setValue('template_task_id', task.template_task_id)
     setValue('selected_mode_id', task.selected_mode_id || '')
     setValue('assigned_machine_id', task.assigned_machine_id || '')
     setValue('start_time_minutes', task.start_time_minutes || 0)
@@ -302,9 +302,9 @@ export default function JobTaskForm() {
 
     try {
       const { error } = await supabase
-        .from('instance_task_assignments')
+        .from('job_tasks')
         .delete()
-        .eq('assignment_id', id)
+        .eq('task_id', id)
 
       if (error) throw error
 
@@ -330,15 +330,15 @@ export default function JobTaskForm() {
     const instance = jobInstances.find(inst => inst.instance_id === instanceId)
     if (!instance) return []
     
-    return optimizedTasks.filter(task => task.pattern_id === instance.pattern_id)
+    return templateTasks.filter(task => task.template_id === instance.template_id)
   }
 
   const getFilteredModes = (taskId: string) => {
-    return taskModes.filter(mode => (mode as any).optimized_task_id === taskId)
+    return taskModes.filter(mode => (mode as any).template_task_id === taskId)
   }
 
   const selectedInstanceId = watch('instance_id')
-  const selectedTaskId = watch('optimized_task_id')
+  const selectedTaskId = watch('template_task_id')
 
   return (
     <div className="space-y-6">
@@ -354,7 +354,7 @@ export default function JobTaskForm() {
         <CardHeader>
           <CardTitle>{editingId ? 'Edit Job Task Assignment' : 'Create New Job Task Assignment'}</CardTitle>
           <CardDescription>
-            {editingId ? 'Update job task assignment details' : 'Assign optimized tasks to job instances with timing and resource allocation'}
+            {editingId ? 'Update job task assignment details' : 'Assign template tasks to job instances with timing and resource allocation'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -366,7 +366,7 @@ export default function JobTaskForm() {
                 <Select onValueChange={(value) => {
                   performanceTracker.startValidation('instance_id')
                   setValue('instance_id', value)
-                  setValue('optimized_task_id', '')
+                  setValue('template_task_id', '')
                   setValue('selected_mode_id', '')
                   performanceTracker.trackInteraction('click', 'instance_id')
                   performanceTracker.trackValidation('instance_id', !value)
@@ -388,35 +388,35 @@ export default function JobTaskForm() {
                 {!watch('instance_id') && <p className="text-sm text-red-600">Job instance is required</p>}
               </div>
 
-              {/* Optimized Task - Required */}
+              {/* Template Task - Required */}
               <div className="space-y-2">
-                <Label htmlFor="optimized_task_id">Optimized Task *</Label>
+                <Label htmlFor="template_task_id">Template Task *</Label>
                 <Select 
                   onValueChange={(value) => {
-                    performanceTracker.startValidation('optimized_task_id')
-                    setValue('optimized_task_id', value)
+                    performanceTracker.startValidation('template_task_id')
+                    setValue('template_task_id', value)
                     setValue('selected_mode_id', '')
-                    performanceTracker.trackInteraction('click', 'optimized_task_id')
-                    performanceTracker.trackValidation('optimized_task_id', !value)
+                    performanceTracker.trackInteraction('click', 'template_task_id')
+                    performanceTracker.trackValidation('template_task_id', !value)
                   }}
                   disabled={!selectedInstanceId}
                 >
                   <SelectTrigger
-                    onFocus={() => performanceTracker.trackInteraction('focus', 'optimized_task_id')}
-                    onClick={() => performanceTracker.trackInteraction('click', 'optimized_task_id')}
+                    onFocus={() => performanceTracker.trackInteraction('focus', 'template_task_id')}
+                    onClick={() => performanceTracker.trackInteraction('click', 'template_task_id')}
                   >
-                    <SelectValue placeholder="Select optimized task" />
+                    <SelectValue placeholder="Select template task" />
                   </SelectTrigger>
                   <SelectContent>
                     {getFilteredTasks(selectedInstanceId).map((task) => (
-                      <SelectItem key={task.optimized_task_id} value={task.optimized_task_id}>
+                      <SelectItem key={task.template_task_id} value={task.template_task_id}>
                         {task.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {!watch('optimized_task_id') && selectedInstanceId && 
-                  <p className="text-sm text-red-600">Optimized task is required</p>}
+                {!watch('template_task_id') && selectedInstanceId && 
+                  <p className="text-sm text-red-600">Template task is required</p>}
               </div>
 
               {/* Task Mode */}
@@ -432,7 +432,7 @@ export default function JobTaskForm() {
                   <SelectContent>
                     <SelectItem value="none">No Specific Mode</SelectItem>
                     {getFilteredModes(selectedTaskId).map((mode) => (
-                      <SelectItem key={mode.optimized_task_mode_id} value={mode.optimized_task_mode_id}>
+                      <SelectItem key={mode.template_task_mode_id} value={mode.template_task_mode_id}>
                         {mode.mode_name} ({mode.duration_minutes}m)
                       </SelectItem>
                     ))}
@@ -539,7 +539,7 @@ export default function JobTaskForm() {
               )}
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !watch('instance_id') || !watch('optimized_task_id')}
+                disabled={isSubmitting || !watch('instance_id') || !watch('template_task_id')}
                 onClick={() => performanceTracker.trackInteraction('click', 'submit_button')}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -581,14 +581,14 @@ export default function JobTaskForm() {
                 <tbody>
                   {jobTasks.map((task: any) => {
                     const instance = jobInstances.find(i => i.instance_id === task.instance_id)
-                    const optimizedTask = optimizedTasks.find(t => t.optimized_task_id === task.optimized_task_id)
-                    const taskMode = taskModes.find(m => m.optimized_task_mode_id === task.selected_mode_id)
+                    const templateTask = templateTasks.find(t => t.template_task_id === task.template_task_id)
+                    const taskMode = taskModes.find(m => m.template_task_mode_id === task.selected_mode_id)
                     const machine = machines.find(m => m.machine_resource_id === task.assigned_machine_id)
                     
                     return (
-                      <tr key={task.assignment_id} className="border-b hover:bg-gray-50">
+                      <tr key={task.task_id} className="border-b hover:bg-gray-50">
                         <td className="p-2 font-medium">{instance?.name || 'Unknown'}</td>
-                        <td className="p-2">{optimizedTask?.name || 'Unknown'}</td>
+                        <td className="p-2">{templateTask?.name || 'Unknown'}</td>
                         <td className="p-2">
                           {taskMode?.mode_name || 'No mode'}
                           {taskMode?.duration_minutes && (
@@ -623,7 +623,7 @@ export default function JobTaskForm() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDelete(task.assignment_id)}
+                              onClick={() => handleDelete(task.task_id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -642,14 +642,14 @@ export default function JobTaskForm() {
 
         <TabsContent value="bulk" className="space-y-6">
           <MassUploader
-            tableName="instance_task_assignments"
+            tableName="job_tasks"
             entityName="Job Task"
             sampleData={sampleJobTaskData}
             onUploadComplete={fetchJobTasks}
-            requiredFields={['instance_id', 'optimized_task_id']}
+            requiredFields={['instance_id', 'template_task_id']}
             fieldDescriptions={{
               instance_id: 'Job instance ID (required)',
-              optimized_task_id: 'Optimized task ID (required)',
+              template_task_id: 'Template task ID (required)',
               selected_mode_id: 'Task execution mode ID',
               assigned_machine_id: 'Machine resource ID for task execution',
               start_time_minutes: 'Task start time in minutes from schedule start',

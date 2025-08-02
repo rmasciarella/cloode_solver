@@ -149,7 +149,7 @@ export default function DepartmentForm() {
 
   useEffect(() => {
     fetchDepartments()
-  }, [fetchDepartments])
+  }, [])
 
   const onSubmit = async (data: DepartmentFormData) => {
     setIsSubmitting(true)
@@ -188,9 +188,19 @@ export default function DepartmentForm() {
         // Performance tracking removed
         
         console.error('Error saving department:', response.error)
+        
+        // Handle specific database errors
+        let errorMessage = response.error || "Failed to save department"
+        if (response.error?.includes('duplicate key value violates unique constraint') && 
+            response.error?.includes('departments_code_key')) {
+          errorMessage = `Department code "${data.code}" already exists. Please use a different code.`
+        } else if (response.error?.includes('duplicate key') && response.error?.includes('code')) {
+          errorMessage = `This department code is already in use. Please choose a unique code.`
+        }
+        
         toast({
           title: "Error",
-          description: response.error || "Failed to save department",
+          description: errorMessage,
           variant: "destructive"
         })
       }
@@ -362,6 +372,7 @@ export default function DepartmentForm() {
                   // Performance tracking removed
                 />
                 {errors.code && <p className="text-sm text-red-600">{errors.code.message}</p>}
+                <p className="text-xs text-gray-500">Must be unique across all departments</p>
               </div>
 
               {/* Name - Required */}

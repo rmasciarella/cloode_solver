@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { businessCalendarService } from '@/lib/services'
 import { useToast } from '@/hooks/use-toast'
 import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
 import { Button } from '@/components/ui/button'
@@ -115,13 +115,11 @@ export default function BusinessCalendarForm() {
     setLoading(true)
     
     try {
-      const { data, error } = await supabase
-        .from('business_calendars')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setBusinessCalendars(data || [])
+      const response = await businessCalendarService.getAll()
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch business calendars')
+      }
+      setBusinessCalendars(response.data || [])
       
       // Track data fetch performance
       const fetchDuration = Date.now() - fetchStart
@@ -146,7 +144,7 @@ export default function BusinessCalendarForm() {
     fetchBusinessCalendars()
     
     // Form load time is automatically tracked by the hook
-  }, [fetchBusinessCalendars])
+  }, [])
 
 
   const workingDaysMaskToArray = (mask: number): boolean[] => {
@@ -176,23 +174,20 @@ export default function BusinessCalendarForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('business_calendars')
-          .update(formData)
-          .eq('calendar_id', editingId)
-
-        if (error) throw error
+        const response = await businessCalendarService.update(editingId, formData)
+        if (!response.success) {
+          throw new Error(response.error?.message || 'Failed to update business calendar')
+        }
 
         toast({
           title: "Success",
           description: "Business calendar updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('business_calendars')
-          .insert([formData])
-
-        if (error) throw error
+        const response = await businessCalendarService.create(formData)
+        if (!response.success) {
+          throw new Error(response.error?.message || 'Failed to create business calendar')
+        }
 
         toast({
           title: "Success",
@@ -235,12 +230,10 @@ export default function BusinessCalendarForm() {
     if (!confirm('Are you sure you want to delete this business calendar?')) return
 
     try {
-      const { error } = await supabase
-        .from('business_calendars')
-        .delete()
-        .eq('calendar_id', id)
-
-      if (error) throw error
+      const response = await businessCalendarService.delete(id)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to delete business calendar')
+      }
 
       toast({
         title: "Success",
