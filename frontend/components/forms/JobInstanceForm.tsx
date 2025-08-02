@@ -146,13 +146,18 @@ export default function JobInstanceForm() {
   const fetchJobTemplates = useCallback(async () => {  // FIXED: Changed from fetchJobOptimizedPatterns
     try {
       const { data, error } = await supabase
-        .from('job_templates')  // FIXED: Changed from job_optimized_patterns
-        .select('template_id, name')  // FIXED: Changed from pattern_id
+        .from('job_optimized_patterns')  // FIXED: Use the correct table that has OB3 MFG
+        .select('pattern_id, name')
         .eq('is_active', true)  // FIXED: Added active filter
         .order('name', { ascending: true })
 
       if (error) throw error
-      setJobTemplates(data || [])  // FIXED: Changed from setJobOptimizedPatterns
+      // Map pattern_id to template_id for compatibility
+      const mappedData = data?.map(item => ({
+        template_id: item.pattern_id,
+        name: item.name
+      })) || []
+      setJobTemplates(mappedData)  // FIXED: Changed from setJobOptimizedPatterns
     } catch (error) {
       console.error('Error fetching job templates:', error)
     }
