@@ -36,6 +36,7 @@ type Department = {
   department_id: string
   name: string
   code: string
+  is_active?: boolean
 }
 
 type OperatorFormData = {
@@ -151,8 +152,8 @@ export default function OperatorForm() {
     try {
       const { data, error } = await supabase
         .from('departments')
-        .select('department_id, name, code')
-        .eq('is_active', true)
+        .select('department_id, name, code, is_active')
+        // Fetch all departments to show in operator list, even inactive ones
         .order('name', { ascending: true })
 
       if (error) throw error
@@ -372,11 +373,13 @@ export default function OperatorForm() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No Department</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.department_id} value={dept.department_id}>
-                        {dept.name} ({dept.code})
-                      </SelectItem>
-                    ))}
+                    {departments
+                      .filter(dept => dept.is_active !== false) // Only show active departments in dropdown
+                      .map((dept) => (
+                        <SelectItem key={dept.department_id} value={dept.department_id}>
+                          {dept.name} ({dept.code})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
