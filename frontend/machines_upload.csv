@@ -1,0 +1,22 @@
+name,capacity,cost_per_hour,department_id,cell_id,setup_time_minutes,teardown_time_minutes,maintenance_window_start,maintenance_window_end,last_maintenance_date,next_maintenance_due,maintenance_interval_hours,machine_type,manufacturer,model,year_installed,efficiency_rating,average_utilization_percent,uptime_target_percent,calendar_id,is_active
+ULTRA,1,1200,,de20da6e-ff97-4c79-b79f-a154f1b73271,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+BENCH,1,200,,e1c1aab5-05ec-4fbc-a6da-5c9352757641,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+OVEN,1,1000,,bdae843e-b535-4c0c-9264-f34f61dca49d,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+LEAK,1,700,,bdae843e-b535-4c0c-9264-f34f61dca49d,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+VKX,1,3000,,e1c1aab5-05ec-4fbc-a6da-5c9352757641,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+POGO,1,400,,e1c1aab5-05ec-4fbc-a6da-5c9352757641,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+VCURE,1,500,,e1c1aab5-05ec-4fbc-a6da-5c9352757641,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+BPREP,1,2000,,de20da6e-ff97-4c79-b79f-a154f1b73271,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+LFS 1,1,2200,,91ba4bf0-6a0f-4d49-af2e-db966832374f,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+LFS 2,1,2200,,7cc7000e-c432-4f64-ba05-2175dca04643,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+SPOT 1,1,1800,,91ba4bf0-6a0f-4d49-af2e-db966832374f,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+SPOT 2,1,1800,,7cc7000e-c432-4f64-ba05-2175dca04643,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+FHTST 1,1,200,,ff3c07db-9f4b-4986-8e4a-438701ab4cca,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+FHTST 2,1,200,,74bcbc71-8611-48de-b421-17b4d8f4ce32,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+CONE,4,1500,,f4152f42-0184-495e-8551-113fe5634e32,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+LENAS,1,1000,,d846700c-57d8-4161-a91e-0c8394133f21,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+OPTO 1,1,3000,,63f736fd-6608-480d-b2a1-6a4ecdc26118,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+CBLAS,1,200,,68766f04-9494-4fe1-a774-18ae0cc6df40,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+TUBE,1,3500,,9f55118c-0078-4a78-a236-b469bd1b64bb,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+BAT,1,5000,,1b9801f0-b5ed-4751-84d5-6d6b69ed65ba,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true
+CRT,1,200,,b8866cc9-5909-4eb8-8f1e-ddec1d1c1e61,0,0,,,,,0,MACHINE,,,,1.0,85,95,,true

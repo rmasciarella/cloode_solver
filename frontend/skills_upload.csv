@@ -1,0 +1,9 @@
+name,description,category,department_id,complexity_level,training_hours_required,certification_required,certification_expires_after_months,market_hourly_rate,skill_scarcity_level,is_active
+MS CNC,Operating CNCs,mechanical,,intermediate,40,true,24,35.50,uncommon,true
+FH FIBER,FH handling & Splicing,electrical,,advanced,60,true,36,42.00,rare,true
+FH ASBML,Mechanical Building,mechanical,,intermediate,30,false,,28.00,common,true
+FH ALIGN,Precise FH Alignment,quality,,expert,80,true,12,55.00,critical,true
+OB ALIGN,Opto + BAT,quality,,advanced,50,true,24,45.00,rare,true
+OB ASMBL,Macro Mechanical Building,mechanical,,intermediate,35,false,,30.00,uncommon,true
+OB FIBER,Splicing,electrical,,advanced,55,true,36,40.00,rare,true
+OB GLASS,Cells and DSW,production,,expert,70,true,12,50.00,critical,true

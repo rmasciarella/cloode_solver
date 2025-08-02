@@ -1,0 +1,9 @@
+skill_id,name,description,created_at,updated_at
+7af41b3d-857c-44d6-90c3-8256c7872530,MS CNC,Operating CNCs,,
+a5ea5d33-9805-4317-af33-a8b9430b1ead,FH FIBER,FH handling & Splicing,,
+62475c34-e801-4502-a3f0-5f1655bbcb0e,FH ASBML,Mechanical Building,,
+48a3f5ef-fcd6-4c61-9ed0-b5cc1c311bdf,FH ALIGN,Precise FH Alignment,,
+0c7669fe-69c5-4c83-b2e9-f8c32dc2cb21,OB ALIGN,Opto + BAT,,
+273f712f-d293-4690-821b-594568ee4a53,OB ASMBL,Macro Mechanical Building,,
+74b9b220-d33a-4cfb-a5dd-a104d731400b,OB FIBER,Splicing,,
+aa1a4309-167a-4621-950f-198624e077dc,OB GLASS,Cells and DSW,,

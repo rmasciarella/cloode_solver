@@ -1,0 +1,6 @@
+pattern_id,name,position,department_id,is_unattended,is_setup,sequence_id,min_operators,max_operators,operator_efficiency_curve
+TEST_PATTERN,setup upper insert manifold,1,MS,false,true,,1,1,linear
+TEST_PATTERN,upper insert manifold,2,MS,true,false,,1,1,linear
+TEST_PATTERN,setup lower insert manifold,3,MS,false,true,,1,1,linear
+TEST_PATTERN,lower insert manifold,4,MS,true,false,,1,1,linear
+TEST_PATTERN,setup upper housing,5,MS,false,true,,1,1,linear

@@ -29,5 +29,22 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
-  }
+  },
+  "main": "debug_gui.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rmasciarella/cloode_solver.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rmasciarella/cloode_solver/issues"
+  },
+  "homepage": "https://github.com/rmasciarella/cloode_solver#readme"
 }

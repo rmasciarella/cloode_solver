@@ -165,7 +165,7 @@ export default function OperatorForm() {
   useEffect(() => {
     fetchOperators()
     fetchDepartments()
-  }, [fetchOperators, fetchDepartments])
+  }, [])
 
   const onSubmit = async (data: OperatorFormData) => {
     setIsSubmitting(true)

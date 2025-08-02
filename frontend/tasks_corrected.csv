@@ -1,0 +1,6 @@
+pattern_id,name,position,department_id,is_unattended,is_setup,sequence_id,min_operators,max_operators,operator_efficiency_curve
+2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,setup upper insert manifold,1,2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,false,true,,1,1,linear
+2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,upper insert manifold,2,2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,true,false,,1,1,linear
+2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,setup lower insert manifold,3,2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,false,true,,1,1,linear
+2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,lower insert manifold,4,2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,true,false,,1,1,linear
+2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,setup upper housing,5,2ac7b644-7749-4f26-89d1-5fe5d5a70fdd,false,true,,1,1,linear
