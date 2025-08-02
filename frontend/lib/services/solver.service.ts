@@ -200,8 +200,8 @@ export class SolverService extends BaseService {
    */
   transformFormDataToSolverRequest(
     departments: Database['public']['Tables']['departments']['Row'][],
-    machines: Database['public']['Tables']['machines']['Row'][],
-    workCells: Database['public']['Tables']['work_cells']['Row'][],
+    _machines: Database['public']['Tables']['machines']['Row'][],
+    _workCells: Database['public']['Tables']['work_cells']['Row'][],
     jobInstances: any[]
   ): SolverJobRequest {
     // Build constraint settings from form data

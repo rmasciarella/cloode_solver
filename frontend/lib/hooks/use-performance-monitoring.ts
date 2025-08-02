@@ -17,7 +17,7 @@ interface UserAction {
   type: string
   target: string
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string | undefined | undefined | undefined, any>
 }
 
 class PagePerformanceTracker {

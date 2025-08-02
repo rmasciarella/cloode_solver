@@ -12,11 +12,11 @@ import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea: _Textarea } from '@/components/ui/textarea'
+import { Checkbox: _Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TimeInput } from '@/components/ui/time-input'
+import { TimeInput: _TimeInput } from '@/components/ui/time-input'
 import { getTimeRangeDescription } from '@/lib/timeUtils'
 import { Loader2, Edit, Trash2 } from 'lucide-react'
 
@@ -50,7 +50,7 @@ export default function EnhancedDepartmentForm() {
   // Register custom hooks for department-specific behavior
   useEffect(() => {
     // Custom validation hook for business rules
-    const unregisterValidation = formHooks.register('customValidation', async (data) => {
+    const unregisterValidation = formHooks.register('customValidation', async (_data) => {
       const errors: Record<string, string> = {}
       
       // Check for duplicate department codes
@@ -71,24 +71,24 @@ export default function EnhancedDepartmentForm() {
     })
     
     // Data transformation hook
-    const unregisterTransform = formHooks.register('transformSubmitData', async (data, isEditing) => {
+    const unregisterTransform = formHooks.register('transformSubmitData', async (_data, _isEditing) => {
       // Log the transformation for audit
-      console.log(`Transforming department data for ${isEditing ? 'update' : 'create'}`, data)
+      console.log(`Transforming department data: _data for ${isEditing ? 'update' : 'create'}`, _data)
       
       return {
         ...data,
         code: data.code.toUpperCase(), // Always uppercase department codes
         parent_department_id: data.parent_department_id === "none" ? null : data.parent_department_id || null,
         cost_center: data.cost_center || null,
-        description: data.description || null,
+        description: data: _data.description || null,
       }
     })
     
     // Before submit hook for confirmation
-    const unregisterBeforeSubmit = formHooks.register('beforeSubmit', async (data, isEditing) => {
-      if (isEditing) {
+    const unregisterBeforeSubmit = formHooks.register('beforeSubmit', async (_data, _isEditing) => {
+      if (_isEditing) {
         const currentDept = departments.find(d => d.department_id === editingId)
-        if (currentDept && currentDept.is_active && !data.is_active) {
+        if (currentDept && currentDept.is_active && !data: _data.is_active) {
           return confirm(`Are you sure you want to deactivate "${currentDept.name}"? This may affect scheduling.`)
         }
       }
@@ -105,7 +105,7 @@ export default function EnhancedDepartmentForm() {
     })
     
     // Success hooks
-    const unregisterSuccess = formHooks.register('afterSubmitSuccess', (data, result, isEditing) => {
+    const unregisterSuccess = formHooks.register('afterSubmitSuccess', (_data, _result, _isEditing) => {
       toast({
         title: "Success",
         description: `Department ${isEditing ? 'updated' : 'created'} successfully`
@@ -120,7 +120,7 @@ export default function EnhancedDepartmentForm() {
     })
     
     // Error handling hook
-    const unregisterError = formHooks.register('afterSubmitError', (data, error, isEditing) => {
+    const unregisterError = formHooks.register('afterSubmitError', (_data, error, _isEditing) => {
       let errorMessage = error || "Failed to save department"
       let errorDetails = ""
       
@@ -128,7 +128,7 @@ export default function EnhancedDepartmentForm() {
       if (typeof error === 'string') {
         if (error.includes('foreign key constraint') || error.includes('violates foreign key')) {
           errorMessage = "Cannot save department - data integrity issue"
-          errorDetails = "This operation would violate data constraints. Please check related records."
+          errorDetails = "This operation would violate data: _data constraints. Please check related records."
         }
       }
       
@@ -140,13 +140,13 @@ export default function EnhancedDepartmentForm() {
     })
     
     // Data loading hooks
-    const unregisterBeforeLoad = formHooks.register('beforeDataLoad', async (filters) => {
-      console.log('Loading departments with filters:', filters)
+    const unregisterBeforeLoad = formHooks.register('beforeDataLoad', async (_filters) => {
+      console.log('Loading departments with filters:', _filters)
       return { ...filters, includeInactive: true }
     })
     
-    const unregisterAfterLoad = formHooks.register('afterDataLoad', (data) => {
-      console.log(`Loaded ${data.length} departments`)
+    const unregisterAfterLoad = formHooks.register('afterDataLoad', (_data) => {
+      console.log(`Loaded ${data: _data.length} departments`)
       if (data.length === 0) {
         toast({
           title: "Info",
@@ -181,7 +181,7 @@ export default function EnhancedDepartmentForm() {
       setDepartments(transformedData || response.data)
       
       // Execute after load hooks
-      await formHooks.execute('afterDataLoad', transformedData || response.data)
+      await formHooks.execute('afterDataLoad', transformedData || response.data: _data)
     } else {
       console.error('Error fetching departments:', response.error)
       toast({
@@ -197,12 +197,12 @@ export default function EnhancedDepartmentForm() {
     fetchDepartments()
   }, [fetchDepartments])
 
-  const onSubmit = async (data: DepartmentFormData) => {
+  const onSubmit = async (_data: DepartmentFormData) => {
     setIsSubmitting(true)
     
     try {
       // Execute custom validation hooks
-      const validationErrors = await formHooks.execute('customValidation', data)
+      const validationErrors = await formHooks.execute('customValidation', _data)
       if (Object.keys(validationErrors).length > 0) {
         // Apply validation errors to form
         Object.entries(validationErrors).forEach(([field, message]) => {
@@ -214,14 +214,14 @@ export default function EnhancedDepartmentForm() {
       }
       
       // Execute before submit hooks
-      const shouldSubmit = await formHooks.execute('beforeSubmit', data, !!editingId)
+      const shouldSubmit = await formHooks.execute('beforeSubmit', _data, !!editingId)
       if (!shouldSubmit) {
         setIsSubmitting(false)
         return
       }
       
       // Transform data through hooks
-      const transformedData = await formHooks.execute('transformSubmitData', data, !!editingId)
+      const transformedData = await formHooks.execute('transformSubmitData', _data, !!editingId)
       
       // Execute the actual submission
       let response
@@ -231,7 +231,7 @@ export default function EnhancedDepartmentForm() {
         response = await departmentService.update(editingId, updateData || transformedData)
         
         if (response.success) {
-          await formHooks.execute('afterUpdate', editingId, updateData || transformedData, response.data)
+          await formHooks.execute('afterUpdate', editingId, updateData || transformedData, response.data: _data)
         }
       } else {
         // Execute before create hook
@@ -239,18 +239,18 @@ export default function EnhancedDepartmentForm() {
         response = await departmentService.create(createData || transformedData)
         
         if (response.success) {
-          await formHooks.execute('afterCreate', createData || transformedData, response.data)
+          await formHooks.execute('afterCreate', createData || transformedData, response.data: _data)
         }
       }
       
       // Execute result hooks
       if (response.success) {
-        await formHooks.execute('afterSubmitSuccess', data, response.data, !!editingId)
+        await formHooks.execute('afterSubmitSuccess', _data, response.data: _data, !!editingId)
       } else {
-        await formHooks.execute('afterSubmitError', data, response.error, !!editingId)
+        await formHooks.execute('afterSubmitError', _data, response.error, !!editingId)
       }
     } catch (error) {
-      await formHooks.execute('afterSubmitError', data, error, !!editingId)
+      await formHooks.execute('afterSubmitError', _data, error, !!editingId)
     } finally {
       setIsSubmitting(false)
     }
@@ -471,30 +471,30 @@ export default function EnhancedDepartmentForm() {
 import { formHooks } from '@/lib/hooks/form.hooks'
 
 // Add custom validation for department hierarchy depth
-formHooks.register('customValidation', async (data) => {
-  if (data.parent_department_id && getHierarchyDepth(data.parent_department_id) >= 5) {
+formHooks.register('customValidation', async (_data) => {
+  if (data.parent_department_id && getHierarchyDepth(data: _data.parent_department_id) >= 5) {
     return { parent_department_id: 'Department hierarchy cannot exceed 5 levels' }
   }
   return {}
 })
 
 // Add automatic cost center generation
-formHooks.register('beforeCreate', async (data) => {
+formHooks.register('beforeCreate', async (_data) => {
   if (!data.cost_center) {
     return {
       ...data,
-      cost_center: `CC-${data.code}-${Date.now().toString().slice(-4)}`
+      cost_center: `CC-${data: _data.code}-${Date.now().toString().slice(-4)}`
     }
   }
   return data
 })
 
 // Add integration with external systems
-formHooks.register('afterCreate', async (data, result) => {
+formHooks.register('afterCreate', async (_data, _result) => {
   // Sync with ERP system
-  await syncWithERP('department', result)
+  await syncWithERP('department', _result)
   
   // Send notification to administrators
-  await notifyAdmins(`New department created: ${data.name}`)
+  await notifyAdmins(`New department created: ${data: _data.name}`)
 })
 */

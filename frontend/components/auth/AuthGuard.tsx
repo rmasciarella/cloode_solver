@@ -32,7 +32,7 @@ function LoginForm() {
       if (error) {
         toast({
           title: "Sign In Failed",
-          description: error.message || "Please check your credentials",
+          description: error || "Please check your credentials",
           variant: "destructive"
         })
       }
@@ -106,7 +106,8 @@ function LoginForm() {
 }
 
 export function AuthGuard({ children, fallback }: AuthGuardProps) {
-  const { user, loading, isAuthenticated } = useAuth()
+  // AGENT-1: Removed unused 'user' variable
+  const { loading, isAuthenticated } = useAuth()
 
   if (loading) {
     return (

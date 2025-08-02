@@ -1,161 +1,183 @@
-# Fresh OR-Tools Solver
+# Supabase CLI
 
-A **template-first** constraint programming scheduling solver using Google OR-Tools CP-SAT framework, optimized for parallel identical job scheduling with **5-8x performance improvements** over traditional approaches.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## 🚀 Template-Based Architecture
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-This solver is designed exclusively for **parallel identical jobs** using a template-first methodology:
+This repository contains all the functionality for Supabase CLI.
 
-- **Template Reuse**: N jobs share 1 template structure for massive efficiency gains
-- **Memory Optimization**: O(template_tasks × instances) vs O(total_tasks³) complexity
-- **Performance**: 5-8x faster solving with identical job patterns
-- **Scalability**: Sub-linear scaling with job instance count
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-## Project Structure
+## Getting started
 
-```
-fresh_solver/
-├── src/                    # Main source code
-│   ├── solver/            # Core solver package
-│   │   ├── core/          # Solver implementation
-│   │   ├── constraints/   # Modular constraint functions
-│   │   │   └── phase1/    # Template-optimized constraints
-│   │   ├── models/        # Data models & template generator
-│   │   ├── strategies/    # Search strategies
-│   │   └── utils/         # Utility functions
-│   └── data/              # Data layer
-│       ├── loaders/       # Template & legacy data loaders
-│       └── schemas/       # Database schemas
-├── tests/                 # Comprehensive test suite
-│   ├── unit/              # Unit tests (180 tests, 91% coverage)
-│   ├── integration/       # Template integration tests
-│   └── performance/       # Performance regression tests
-├── scripts/               # Template optimization scripts
-├── examples/              # Template workflow examples
-├── migrations/            # Database migrations
-├── .claude/               # Modular Claude configuration
-│   ├── STANDARDS.md       # Coding standards & type safety
-│   ├── COMMANDS.md        # Custom OR-Tools commands
-│   ├── TEMPLATES.md       # Code generation templates
-│   ├── WORKFLOWS.md       # Development workflows
-│   ├── DEVELOPMENT.md     # Architecture & patterns
-│   └── TROUBLESHOOTING.md # Debug workflows
-└── CLAUDE.md              # Main Claude configuration (126 lines)
-```
+### Install the CLI
 
-## Quick Start
-
-**Important**: This project uses UV for Python package management. All commands must be prefixed with `uv run`.
-
-1. Install UV and dependencies:
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
 ```bash
-# Install UV (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install project dependencies
-uv install
+npm i supabase --save-dev
 ```
 
-2. Set up environment variables:
+To install the beta release channel:
 
 ```bash
-cp .env.example .env
-# Edit .env with your Supabase credentials
+npm i supabase@beta --save-dev
 ```
 
-3. Load template test data:
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
+
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
 
 ```bash
-uv run python scripts/populate_template_test_data.py
+supabase bootstrap
 ```
 
-4. Run template solver:
+Or using npx:
 
 ```bash
-uv run python test_template_solver.py
+npx supabase bootstrap
 ```
 
-## Template Performance Targets
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
-Performance benchmarks for template-based scheduling:
+## Docs
 
-- **Simple Templates** (5-10 tasks): < 1s for 10+ instances
-- **Medium Templates** (20-50 tasks): < 10s for 5+ instances  
-- **Complex Templates** (100+ tasks): < 60s for 3+ instances
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
 
-## Development Commands
+## Breaking changes
 
-**Complete Type Safety Pipeline**:
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
 
-```bash
-make lint                      # Complete quality check: ruff + black + mypy (REQUIRED)
-uv run ruff check . --fix      # Auto-fix linting issues
-uv run ruff format .           # Format files (handles 88-char line length)
-uv run mypy src/               # Type check (must pass with 0 errors)
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
 ```
-
-**Testing**:
-
-```bash
-uv run python run_tests.py              # Run all tests with coverage
-uv run python -m pytest tests/unit/ -v  # Run unit tests
-uv run python -m pytest tests/integration/test_template_integration.py -v
-```
-
-**Template Development**:
-
-```bash
-uv run python examples/template_scheduling_example.py     # Template example
-uv run python scripts/validate_template_performance.py    # Performance validation
-```
-
-## Architecture Highlights
-
-### Template-First Design
-
-- **JobTemplate**: Reusable job structure with template tasks and precedences
-- **JobInstance**: Lightweight instance referencing template with due dates
-- **Template Constraints**: Optimized constraint functions for identical jobs
-- **Legacy Compatibility**: Backward compatibility with traditional job-shop scheduling
-
-### Type Safety (100% mypy compliance)
-
-- **34 source files** with complete type annotations
-- **Centralized type aliases** for OR-Tools structures
-- **ortools-stubs** integration for proper CP-SAT typing
-- **88-character line length** compliance with automatic formatting
-
-### Modular Claude Configuration
-
-- **CLAUDE.md** (126 lines): Clean navigation hub
-- **Subordinate files**: Detailed information in organized structure
-- **Custom commands**: Template-specific OR-Tools development commands
-- **Cross-session context**: Template optimization tracking
-
-## Development Phases
-
-Current implementation focuses on template-based optimization:
-
-- **Phase 1** (Complete): Template-based job-shop scheduling with 5-8x performance improvements
-- **Phase 2** (Planned): Template resource capacity and skills matching
-- **Phase 3** (Future): Template shift constraints and advanced features
-
-## AI Development Assistant
-
-This project includes a comprehensive Claude Code configuration for OR-Tools development:
-
-- **CLAUDE.md**: Main configuration file with template-first workflow
-- **Custom Commands**: `/template-benchmark`, `/add-constraint`, `/debug-slow`
-- **Type Safety Integration**: Complete mypy compliance workflows
-- **Template Optimization**: Cross-session performance tracking
-
-See `CLAUDE.md` for the complete AI assistant setup and `.claude/` directory for detailed configuration modules.
-
-## Performance & Type Safety
-
-- **Template Efficiency**: 5-8x performance improvements validated
-- **Type Safety**: 100% mypy compliance across 34 source files
-- **Test Coverage**: 180 tests with 91% coverage
-- **Line Length**: 88-character limit with automatic formatting
-- **Package Management**: UV for consistent Python environment

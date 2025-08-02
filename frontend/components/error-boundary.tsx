@@ -11,12 +11,13 @@ import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
+// AGENT-3: Fixed Props interface for exactOptionalPropertyTypes
 interface Props {
   children: ReactNode
   fallback?: ReactNode
   onError?: (error: Error, errorInfo: ErrorInfo) => void
   showErrorDetails?: boolean
-  context?: string
+  context?: string | undefined
 }
 
 interface State {
@@ -198,8 +199,8 @@ export function withErrorBoundary<T extends object>(
 ) {
   const WrappedComponent = (props: T) => (
     <ErrorBoundary 
-      context={context} 
-      showErrorDetails={showErrorDetails}
+      context={context || undefined} 
+      showErrorDetails={showErrorDetails ?? false}
     >
       <Component {...props} />
     </ErrorBoundary>

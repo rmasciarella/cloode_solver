@@ -40,14 +40,14 @@ export function getSupabaseServiceRole(): SupabaseClient<Database> {
 
 // For backward compatibility - create proxies that lazily initialize
 export const supabase = new Proxy({} as SupabaseClient<Database>, {
-  get(target, prop) {
+  get(_target, prop) {
     const client = getSupabaseAuth()
     return client[prop as keyof SupabaseClient<Database>]
   }
 })
 
 export const supabaseServiceRole = new Proxy({} as SupabaseClient<Database>, {
-  get(target, prop) {
+  get(_target, prop) {
     const client = getSupabaseServiceRole()
     return client[prop as keyof SupabaseClient<Database>]
   }

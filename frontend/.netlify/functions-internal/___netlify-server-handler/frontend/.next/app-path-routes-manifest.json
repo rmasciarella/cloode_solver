@@ -1,0 +1,6 @@
+{
+  "/page": "/",
+  "/test-auth/page": "/test-auth",
+  "/_not-found/page": "/_not-found",
+  "/minimal/page": "/minimal"
+}

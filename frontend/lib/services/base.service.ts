@@ -2,11 +2,12 @@ import { supabase } from '@/lib/supabase'
 import { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 
+// AGENT-3: Fixed ServiceResponse interface to handle exactOptionalPropertyTypes
 export interface ServiceResponse<T = any> {
   data: T | null
   error: string | null
   success: boolean
-  isAuthenticated?: boolean
+  isAuthenticated?: boolean | undefined
 }
 
 export interface ServiceError {
@@ -22,7 +23,7 @@ export interface ServiceOptions {
 }
 
 export abstract class BaseService {
-  protected async getClient(options: ServiceOptions = {}): Promise<SupabaseClient<Database>> {
+  protected async getClient(_options: ServiceOptions = {}): Promise<SupabaseClient<Database>> {
     // Auth removed - always return the standard client
     return supabase
   }
@@ -64,7 +65,7 @@ export abstract class BaseService {
   protected async createResponse<T>(
     data: T | null, 
     error: ServiceError | null = null,
-    includeAuthStatus: boolean = false // Default to false for backward compatibility
+    _includeAuthStatus: boolean = false // Default to false for backward compatibility
   ): Promise<ServiceResponse<T>> {
     const response: ServiceResponse<T> = {
       data,
@@ -83,6 +84,15 @@ export abstract class BaseService {
       data,
       error: error?.message || null,
       success: error === null
+    }
+  }
+
+  // AGENT-1: Error response helper for typed error returns
+  protected createErrorResponse<T>(error: ServiceError): ServiceResponse<T> {
+    return {
+      data: null,
+      error: error.message,
+      success: false
     }
   }
 

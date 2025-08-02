@@ -54,7 +54,7 @@ export function verifyAuthConfig(): ConfigVerificationResult {
   const securityLevels = Object.values(featureSecurity)
   const hasRequiredFeatures = securityLevels.some(level => level === SecurityLevel.REQUIRED)
   const hasPublicFeatures = false // No public features defined in featureSecurity
-  const hasOptionalFeatures = securityLevels.some(level => level === SecurityLevel.OPTIONAL)
+  const _hasOptionalFeatures = securityLevels.some(level => level === SecurityLevel.OPTIONAL)
 
   if (!config.enabled && hasRequiredFeatures) {
     result.warnings.push(

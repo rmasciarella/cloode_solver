@@ -41,7 +41,7 @@ export function initializeErrorHandlers(config: Partial<ErrorConfig> = {}) {
   })
 
   // Handle unhandled promise rejections
-  process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  process.on('unhandledRejection', (reason: any, _promise: Promise<any>) => {
     const error = reason instanceof Error ? reason : new Error(String(reason))
     handleError('unhandledRejection', error, finalConfig)
   })

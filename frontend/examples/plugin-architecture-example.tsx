@@ -6,7 +6,7 @@ import { navigationRegistry } from '@/lib/hooks/navigation.hooks'
 import { serviceRegistry } from '@/lib/hooks/service.hooks'
 import { uiRegistry } from '@/lib/hooks/ui.hooks'
 import { useFormHooks } from '@/lib/hooks/form.hooks'
-import { Settings, BarChart3, FileText, Bell, Shield } from 'lucide-react'
+import { Settings: _Settings, BarChart3, FileText, Bell, Shield: _Shield } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -49,10 +49,10 @@ export class ReportingPlugin {
     }, 5)
 
     // Add data transformation for reporting
-    serviceRegistry.register('transformOutput', (table, operation, data) => {
-      if (Array.isArray(data)) {
+    serviceRegistry.register('transformOutput', (_table, _operation, _data) => {
+      if (Array.isArray(_data)) {
         // Add computed fields for reporting
-        return data.map(item => ({
+        return data: _data.map(item => ({
           ...item,
           _reportingMetadata: {
             lastModified: new Date().toISOString(),
@@ -65,12 +65,12 @@ export class ReportingPlugin {
     }, 5)
 
     // Add caching for report data
-    serviceRegistry.register('shouldCache', (table, operation) => {
-      return ['getAll', 'getById'].includes(operation)
+    serviceRegistry.register('shouldCache', (_table, _operation) => {
+      return ['getAll', 'getById'].includes(_operation)
     }, 5)
 
     // Add audit logging for report access
-    serviceRegistry.register('onAuditLog', (table, operation, data) => {
+    serviceRegistry.register('onAuditLog', (_table, _operation, _data) => {
       if (operation === 'getAll') {
         console.log(`[REPORTING] Data accessed for table: ${table}`)
       }
@@ -139,7 +139,7 @@ const DataExportsComponent = () => (
 export class NotificationPlugin {
   static initialize() {
     // Add notification bell to UI components
-    uiRegistry.register('renderAdditionalContent', (componentName, position, props) => {
+    uiRegistry.register('renderAdditionalContent', (componentName, position, _props) => {
       if (componentName === 'Header' && position === 'after') {
         return <NotificationBell />
       }
@@ -147,7 +147,7 @@ export class NotificationPlugin {
     }, { priority: 10 })
 
     // Add notification hooks to form submissions
-    serviceRegistry.register('afterMutation', async (table, operation, result) => {
+    serviceRegistry.register('afterMutation', async (_table, _operation, result) => {
       if (result.success) {
         await NotificationService.notify({
           type: 'success',
@@ -160,12 +160,12 @@ export class NotificationPlugin {
     }, 15)
 
     // Add real-time notifications for critical operations
-    serviceRegistry.register('beforeMutation', async (table, operation, data) => {
+    serviceRegistry.register('beforeMutation', async (_table, _operation, _data) => {
       if (table === 'departments' && operation === 'delete') {
         await NotificationService.notify({
           type: 'warning',
           title: 'Department Deletion',
-          message: `Attempting to delete department: ${data.name}`,
+          message: `Attempting to delete department: ${data: _data.name}`,
           category: 'critical_operation',
           requiresAcknowledgment: true
         })
@@ -176,7 +176,7 @@ export class NotificationPlugin {
 }
 
 const NotificationBell = () => {
-  const [notifications, setNotifications] = React.useState(3)
+  const [notifications, setNotifications: _setNotifications] = React.useState(3)
   
   return (
     <div className="relative">
@@ -211,24 +211,24 @@ class NotificationService {
 export class SecurityPlugin {
   static initialize() {
     // Add permission checking to navigation
-    navigationRegistry.register('beforeNavigationChange', async (from, to) => {
+    navigationRegistry.register('beforeNavigationChange', async (_from, to) => {
       return await SecurityService.checkPermission(to)
     }, 1) // High priority - runs first
 
     // Add permission checking to data access
-    serviceRegistry.register('canRead', async (table, query, user) => {
-      return await SecurityService.checkTableAccess(table, 'read', user)
+    serviceRegistry.register('canRead', async (_table, _query, user) => {
+      return await SecurityService.checkTableAccess(_table, 'read', user)
     }, 1)
 
-    serviceRegistry.register('canWrite', async (table, operation, data, user) => {
-      return await SecurityService.checkTableAccess(table, 'write', user)
+    serviceRegistry.register('canWrite', async (_table, _operation, _data, user) => {
+      return await SecurityService.checkTableAccess(_table, 'write', user)
     }, 1)
 
     // Add security headers to UI components
-    uiRegistry.register('enhanceA11y', (componentName, props) => {
-      if (componentName === 'Input' && props.type === 'password') {
+    uiRegistry.register('enhanceA11y', (componentName, _props) => {
+      if (componentName === 'Input' && props: _props: _props: _props.type === 'password') {
         return {
-          'data-security-level': 'high',
+          'data: _data-security-level': 'high',
           autoComplete: 'new-password',
           'aria-describedby': 'password-requirements'
         }
@@ -237,14 +237,14 @@ export class SecurityPlugin {
     }, { priority: 5 })
 
     // Add audit logging for security events
-    serviceRegistry.register('onAuditLog', (table, operation, data, user) => {
+    serviceRegistry.register('onAuditLog', (_table, _operation, _data, user) => {
       SecurityService.auditLog({
         table,
-        operation,
+        _operation,
         user: user?.id || 'anonymous',
         timestamp: new Date().toISOString(),
         ipAddress: 'unknown', // Would be retrieved from request context
-        data: operation === 'delete' ? data.id : 'sanitized'
+        data: operation === 'delete' ? data: _data.id : 'sanitized'
       })
     }, 1)
   }
@@ -257,7 +257,7 @@ class SecurityService {
     return userPermissions.includes(`${resource}.read`)
   }
 
-  static async checkTableAccess(table: string, operation: 'read' | 'write', user?: any): Promise<boolean> {
+  static async checkTableAccess(_table: string, _operation: 'read' | 'write', user?: any): Promise<boolean> {
     // Mock table-level permission checking
     console.log(`[SECURITY] Checking ${operation} access to ${table} for user:`, user?.id || 'anonymous')
     return true // Would implement real logic
@@ -275,7 +275,7 @@ class SecurityService {
 export class ThemePlugin {
   static initialize() {
     // Add dark mode support
-    uiRegistry.register('getThemeVariables', (componentName, variant) => {
+    uiRegistry.register('getThemeVariables', (componentName, _variant) => {
       const isDark = document.documentElement.classList.contains('dark')
       
       if (componentName === 'Card') {
@@ -294,8 +294,8 @@ export class ThemePlugin {
     }, { priority: 5 })
 
     // Add custom styling based on component state
-    uiRegistry.register('transformClassNames', (componentName, classNames, props) => {
-      if (componentName === 'Button' && props.variant === 'primary') {
+    uiRegistry.register('transformClassNames', (componentName, classNames, _props) => {
+      if (componentName === 'Button' && props: _props: _props: _props.variant === 'primary') {
         return `${classNames} shadow-lg hover:shadow-xl transition-shadow`
       }
       
@@ -307,7 +307,7 @@ export class ThemePlugin {
     }, { priority: 10 })
 
     // Add custom animations
-    uiRegistry.register('injectStyles', (componentName, props) => {
+    uiRegistry.register('injectStyles', (componentName, _props) => {
       if (componentName === 'Card') {
         return {
           animation: 'fadeIn 0.3s ease-in-out',
@@ -329,11 +329,11 @@ export class PerformancePlugin {
     const performanceMetrics = new Map<string, number>()
 
     // Monitor service call performance
-    serviceRegistry.register('onQueryStart', (table, operation) => {
+    serviceRegistry.register('onQueryStart', (_table, _operation) => {
       performanceMetrics.set(`${table}.${operation}`, Date.now())
     }, 5)
 
-    serviceRegistry.register('onQueryEnd', (table, operation, duration) => {
+    serviceRegistry.register('onQueryEnd', (_table, _operation, _duration) => {
       const key = `${table}.${operation}`
       const startTime = performanceMetrics.get(key)
       
@@ -352,12 +352,12 @@ export class PerformancePlugin {
     }, 5)
 
     // Monitor component render performance
-    uiRegistry.register('onComponentMount', (componentName, ref, props) => {
+    uiRegistry.register('onComponentMount', (componentName, _ref, _props) => {
       console.log(`[PERFORMANCE] ${componentName} mounted`)
     }, { priority: 1000 }) // Low priority to run after other hooks
 
     // Add performance warning for heavy operations
-    serviceRegistry.register('beforeQuery', async (table, query) => {
+    serviceRegistry.register('beforeQuery', async (_table, _query) => {
       if (table === 'job_optimized_patterns' && !query.limit) {
         console.warn('[PERFORMANCE] Querying all job patterns without limit - consider pagination')
       }
@@ -463,9 +463,9 @@ export class CustomCustomerPlugin {
     // Add customer-specific validation
     const formHooks = useFormHooks('departments')
     
-    formHooks.register('customValidation', async (data) => {
+    formHooks.register('customValidation', async (_data) => {
       // Customer requires all departments to have cost centers
-      if (!data.cost_center) {
+      if (!data: _data.cost_center) {
         return { cost_center: 'Cost center is required for this customer' }
       }
       return {}
@@ -486,7 +486,7 @@ export class CustomCustomerPlugin {
     })
 
     // Add customer branding
-    uiRegistry.register('wrapComponent', (componentName, element, props) => {
+    uiRegistry.register('wrapComponent', (componentName, element, _props) => {
       if (componentName === 'Layout') {
         return (
           <div className="customer-branded">

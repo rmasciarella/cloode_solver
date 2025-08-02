@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, _useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { departmentService, jobTemplateService, workCellService } from '@/lib/services'
 import { queryKeys } from '@/lib/cache/manager'

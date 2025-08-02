@@ -1,18 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
-import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
-import { useToast } from '@/hooks/use-toast'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useJobInstanceData } from './job-instances/useJobInstanceData'
+import { useJobInstanceForm } from './job-instances/useJobInstanceForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { Loader2, Edit, Trash2, Upload } from 'lucide-react'
-import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
+import { JobInstanceFormFields } from './job-instances/JobInstanceFormFields'
+import { JobInstancesTable } from './job-instances/JobInstancesTable'
 
 type JobInstance = {
   instance_id: string
@@ -105,8 +99,8 @@ export default function JobInstanceForm() {
   // Track validation errors
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
-      Object.keys(errors).forEach(field => {
-        performanceTracker.trackValidation(field, true, errors[field]?.message)
+      Object.entries(errors).forEach(([field, error]) => {
+        performanceTracker.trackValidation(field, true, error?.message)
       })
     }
   }, [errors, performanceTracker])
@@ -121,16 +115,11 @@ export default function JobInstanceForm() {
   const fetchJobInstances = useCallback(async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('job_instances')
-        .select(`
-          *,
-          job_templates!inner(name)
-        `)  // FIXED: Changed from job_optimized_patterns!inner(name)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setJobInstances(data || [])
+      const response = await jobInstanceService.getAllWithPatterns()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch job instances')
+      }
+      setJobInstances(response.data || [])
     } catch (error) {
       console.error('Error fetching job instances:', error)
       toast({
@@ -145,15 +134,12 @@ export default function JobInstanceForm() {
 
   const fetchJobTemplates = useCallback(async () => {  // FIXED: Changed from fetchJobOptimizedPatterns
     try {
-      const { data, error } = await supabase
-        .from('job_optimized_patterns')  // FIXED: Use the correct table that has OB3 MFG
-        .select('pattern_id, name')
-        .eq('is_active', true)  // FIXED: Added active filter
-        .order('name', { ascending: true })
-
-      if (error) throw error
+      const response = await jobTemplateService.getAll(true)  // Get only active templates
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch job templates')
+      }
       // Map pattern_id to template_id for compatibility
-      const mappedData = data?.map(item => ({
+      const mappedData = response.data?.map(item => ({
         template_id: item.pattern_id,
         name: item.name
       })) || []
@@ -165,14 +151,11 @@ export default function JobInstanceForm() {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('department_id, name, code')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDepartments(data || [])
+      const response = await departmentService.getAll(true)  // Get only active departments
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch departments')
+      }
+      setDepartments(response.data || [])
     } catch (error) {
       console.error('Error fetching departments:', error)
     }
@@ -207,23 +190,22 @@ export default function JobInstanceForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('job_instances')
-          .update(formData)
-          .eq('instance_id', editingId)
+        const response = await jobInstanceService.update(editingId, formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to update job instance')
+        }
 
         toast({
           title: "Success",
           description: "Job instance updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('job_instances')
-          .insert([formData])
+        const response = await jobInstanceService.create(formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create job instance')
+        }
 
         toast({
           title: "Success",
@@ -256,7 +238,7 @@ export default function JobInstanceForm() {
     setValue('department_id', instance.department_id || '')
     setValue('priority', instance.priority)
     setValue('due_date', instance.due_date ? instance.due_date.split('T')[0] : '')
-    setValue('earliest_start_date', instance.earliest_start_date.split('T')[0])
+    setValue('earliest_start_date', instance.earliest_start_date ? instance.earliest_start_date.split('T')[0] : '')
     setValue('customer_order_id', instance.customer_order_id || '')
     setValue('batch_id', instance.batch_id || '')
     setValue('quantity', instance.quantity)
@@ -270,12 +252,11 @@ export default function JobInstanceForm() {
     if (!confirm('Are you sure you want to delete this job instance?')) return
 
     try {
-      const { error } = await supabase
-        .from('job_instances')
-        .delete()
-        .eq('instance_id', id)
+      const response = await jobInstanceService.delete(id)
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to delete job instance')
+      }
 
       toast({
         title: "Success",
@@ -390,7 +371,7 @@ export default function JobInstanceForm() {
                     maxLength: { value: 255, message: 'Name must be 255 characters or less' }
                   })}
                   onFocus={() => performanceTracker.trackInteraction('focus', 'name')}
-                  onChange={(e) => performanceTracker.trackInteraction('change', 'name')}
+                  onChange={(_e) => performanceTracker.trackInteraction('change', 'name')}
                   placeholder="e.g., Production Run #001"
                 />
                 {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
@@ -454,7 +435,7 @@ export default function JobInstanceForm() {
                     min: { value: 1, message: 'Priority must be at least 1' }
                   })}
                   onFocus={() => performanceTracker.trackInteraction('focus', 'priority')}
-                  onChange={(e) => performanceTracker.trackInteraction('change', 'priority')}
+                  onChange={(_e) => performanceTracker.trackInteraction('change', 'priority')}
                 />
                 <p className="text-xs text-gray-500">Higher numbers = higher priority</p>
                 {errors.priority && <p className="text-sm text-red-600">{errors.priority.message}</p>}

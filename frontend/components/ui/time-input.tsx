@@ -3,18 +3,18 @@
 import React, { useState, useEffect } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { generateTimeSlots, indexToTime12, time12ToIndex, isValidTimeIndex } from '@/lib/timeUtils'
+import { generateTimeSlots, indexToTime12, isValidTimeIndex } from '@/lib/timeUtils'
 
 interface TimeInputProps {
   label: string
   value: number
   onChange: (index: number) => void
-  id?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  helperText?: string
-  className?: string
+  id?: string | undefined
+  placeholder?: string | undefined
+  disabled?: boolean | undefined
+  required?: boolean | undefined
+  helperText?: string | undefined
+  className?: string | undefined
 }
 
 export function TimeInput({

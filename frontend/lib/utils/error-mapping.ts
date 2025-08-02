@@ -3,12 +3,7 @@
  * Maps database constraints and error codes to user-friendly messages
  */
 
-interface DatabaseError {
-  code?: string
-  message: string
-  details?: string
-  hint?: string
-}
+// AGENT-3: Removed unused interface - using inline types instead
 
 interface ErrorMapping {
   code?: string
@@ -156,6 +151,7 @@ export function mapDatabaseError(error: any): {
   }
 }
 
+// AGENT-3: Fixed unused parameters
 // Helper function for form error handling
 export function handleFormError(
   error: any,

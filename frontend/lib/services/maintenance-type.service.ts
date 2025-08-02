@@ -38,7 +38,7 @@ export class MaintenanceTypeService extends BaseService {
       const { data, error } = await client
         .from('maintenance_types')
         .select('*')
-        .eq('maintenance_id', id)
+        .eq('maintenance_type_id', id)
         .single()
 
       if (error) {
@@ -78,7 +78,7 @@ export class MaintenanceTypeService extends BaseService {
       const { data, error } = await client
         .from('maintenance_types')
         .update(maintenanceType)
-        .eq('maintenance_id', id)
+        .eq('maintenance_type_id', id)
         .select()
         .single()
 
@@ -92,20 +92,20 @@ export class MaintenanceTypeService extends BaseService {
     }
   }
 
-  async delete(id: string): Promise<ServiceResponse<void>> {
+  async delete(id: string): Promise<ServiceResponse<boolean>> {
     try {
       const client = await this.getClient({ fallbackToAnon: true })
       
       const { error } = await client
         .from('maintenance_types')
         .delete()
-        .eq('maintenance_id', id)
+        .eq('maintenance_type_id', id)
 
       if (error) {
         return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponseSync(null)
+      return this.createResponseSync(true)
     } catch (error) {
       return this.createResponseSync(null, this.handleError(error))
     }
@@ -119,7 +119,7 @@ export class MaintenanceTypeService extends BaseService {
       const { data: current, error: fetchError } = await client
         .from('maintenance_types')
         .select('is_active')
-        .eq('maintenance_id', id)
+        .eq('maintenance_type_id', id)
         .single()
 
       if (fetchError) {
@@ -130,7 +130,7 @@ export class MaintenanceTypeService extends BaseService {
       const { data, error } = await client
         .from('maintenance_types')
         .update({ is_active: !current.is_active })
-        .eq('maintenance_id', id)
+        .eq('maintenance_type_id', id)
         .select()
         .single()
 

@@ -8,8 +8,8 @@ interface PerformanceMetric {
   operation: string
   duration_ms: number
   success: boolean
-  error_msg?: string
-  metadata?: Record<string, any>
+  error_msg?: string | undefined
+  metadata?: Record<string | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined | undefined, any>
 }
 
 interface FormPerformanceData {
@@ -31,7 +31,7 @@ class PerformanceTracker {
     this.timers.set(key, performance.now())
   }
 
-  endTimer(key: string, component: string, operation: string, success: boolean = true, error?: string, metadata?: Record<string, any>): number {
+  endTimer(key: string, component: string, operation: string, success: boolean = true, error?: string | undefined | undefined | undefined | undefined | undefined | undefined, metadata?: Record<string, any>): number {
     const startTime = this.timers.get(key)
     if (!startTime) {
       console.warn(`Timer ${key} not found`)
@@ -118,10 +118,10 @@ const globalTracker = new PerformanceTracker()
 
 export interface UsePerformanceMonitorReturn {
   startTimer: (key: string) => void
-  endTimer: (key: string, operation: string, success?: boolean, error?: string, metadata?: Record<string, any>) => number
-  recordInteraction: (type: string, fieldId?: string, metadata?: Record<string, any>) => void
+  endTimer: (key: string, operation: string, success?: boolean | undefined, error?: string, metadata?: Record<string, any>) => number
+  recordInteraction: (type: string, fieldId?: string | undefined | undefined, metadata?: Record<string, any>) => void
   recordError: (error: string, operation: string, metadata?: Record<string, any>) => void
-  recordValidation: (fieldId: string, duration: number, success: boolean, error?: string) => void
+  recordValidation: (fieldId: string, duration: number, success: boolean, error?: string) => void | undefined
   recordSubmission: (duration: number, success: boolean, error?: string, metadata?: Record<string, any>) => void
   recordFormLoad: (duration: number) => void
   getMetrics: () => PerformanceMetric[]
@@ -130,8 +130,8 @@ export interface UsePerformanceMonitorReturn {
 }
 
 export function usePerformanceMonitor(componentName: string): UsePerformanceMonitorReturn {
-  const componentRef = useRef(componentName)
-  const formDataRef = useRef(globalTracker.getFormData(componentName))
+  const componentRef: _componentRef = useRef(componentName)
+  const formDataRef: _formDataRef = useRef(globalTracker.getFormData(componentName))
 
   useEffect(() => {
     // Record component mount

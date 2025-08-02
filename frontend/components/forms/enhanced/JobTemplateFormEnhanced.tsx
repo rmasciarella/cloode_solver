@@ -10,7 +10,7 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, _useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { jobTemplateFormSchema } from '@/lib/schemas'
@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Edit, Trash2, Copy, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, Edit, Trash2, _Copy, AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // New enhanced hooks and components
@@ -58,7 +58,7 @@ export default function JobTemplateFormEnhanced() {
     isLoading, 
     isError, 
     error,
-    refetch 
+    refetch: _refetch 
   } = useJobTemplates()
   
   const { data: departments = [] } = useDepartments()
@@ -74,10 +74,10 @@ export default function JobTemplateFormEnhanced() {
     onInsert: (record) => {
       console.log('New job template added:', record.name)
     },
-    onUpdate: (record, oldRecord) => {
+    onUpdate: (record, _oldRecord) => {
       console.log('Job template updated:', record.name)
     },
-    onDelete: (oldRecord) => {
+    onDelete: (_oldRecord) => {
       console.log('Job template deleted:', oldRecord.name)
     }
   })

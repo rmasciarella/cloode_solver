@@ -20,7 +20,7 @@ export const defaultAuthConfig: AuthConfig = {
 
 // Environment-based configuration
 export const getAuthConfig = (): AuthConfig => {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction: _isProduction = process.env.NODE_ENV === 'production'
   const authRequired = process.env.NEXT_PUBLIC_AUTH_REQUIRED === 'true'
   const authEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED !== 'false'
   

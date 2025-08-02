@@ -49,7 +49,7 @@ MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName;
 const MenubarSubTrigger = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubTrigger> & {
-    inset?: boolean;
+    inset?: boolean | undefined | undefined | undefined;
   }
 >(({ className, inset, children, ...props }, ref) => (
   <MenubarPrimitive.SubTrigger

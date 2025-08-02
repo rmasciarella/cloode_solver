@@ -14,6 +14,7 @@ export { OptimizedTaskSetupTimeService, optimizedTaskSetupTimeService } from './
 export { SequenceResourceService, sequenceResourceService } from './sequence-resource.service'
 export { SkillService, skillService } from './skill.service'
 export { SolverService, solverService } from './solver.service'
+export { templateTaskService } from './template-task.service'
 export { WorkCellService, workCellService } from './work-cell.service'
 
 // Export types

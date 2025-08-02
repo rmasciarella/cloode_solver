@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { optimizedTaskService, jobTemplateService, departmentService, sequenceResourceService } from '@/lib/services'
 import { useToast } from '@/hooks/use-toast'
 import { useFormPerformance } from '@/lib/hooks/use-form-performance'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { Loader2, Edit, Trash2, Upload } from 'lucide-react'
+import { Loader2, Edit, Trash2 } from 'lucide-react'
 
 type OptimizedTask = {
   optimized_task_id: string
@@ -77,7 +77,7 @@ export default function OptimizedTaskForm() {
   const { toast } = useToast()
 
   // Performance monitoring
-  const performanceTracker = useFormPerformance('template-task-form')
+  const _performanceTracker = useFormPerformance('template-task-form')
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<OptimizedTaskFormData>({
     defaultValues: {
@@ -97,16 +97,11 @@ export default function OptimizedTaskForm() {
   const fetchOptimizedTasks = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('optimized_tasks')
-        .select(`
-          *,
-          job_optimized_patterns!inner(name)
-        `)
-        .order('position', { ascending: true })
-
-      if (error) throw error
-      setOptimizedTasks(data || [])
+      const response = await optimizedTaskService.getAllWithPatterns()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch optimized tasks')
+      }
+      setOptimizedTasks(response.data || [])
     } catch (error) {
       console.error('Error fetching optimized tasks:', error)
       toast({
@@ -121,13 +116,11 @@ export default function OptimizedTaskForm() {
 
   const fetchJobOptimizedPatterns = async () => {
     try {
-      const { data, error } = await supabase
-        .from('job_optimized_patterns')
-        .select('pattern_id, name')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setJobOptimizedPatterns(data || [])
+      const response = await jobTemplateService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch job optimized patterns')
+      }
+      setJobOptimizedPatterns(response.data || [])
     } catch (error) {
       console.error('Error fetching job optimized patterns:', error)
     }
@@ -135,13 +128,11 @@ export default function OptimizedTaskForm() {
 
   const fetchDepartments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('department_id, name, code')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDepartments(data || [])
+      const response = await departmentService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch departments')
+      }
+      setDepartments(response.data || [])
     } catch (error) {
       console.error('Error fetching departments:', error)
     }
@@ -149,13 +140,11 @@ export default function OptimizedTaskForm() {
 
   const fetchSequenceResources = async () => {
     try {
-      const { data, error } = await supabase
-        .from('sequence_resources')
-        .select('sequence_id, name')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setSequenceResources(data || [])
+      const response = await sequenceResourceService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch sequence resources')
+      }
+      setSequenceResources(response.data || [])
     } catch (error) {
       console.error('Error fetching sequence resources:', error)
     }
@@ -185,23 +174,22 @@ export default function OptimizedTaskForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('optimized_tasks')
-          .update(formData)
-          .eq('optimized_task_id', editingId)
+        const response = await optimizedTaskService.update(editingId, formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to update optimized task')
+        }
 
         toast({
           title: "Success",
           description: "Optimized task updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('optimized_tasks')
-          .insert([formData])
+        const response = await optimizedTaskService.create(formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create optimized task')
+        }
 
         toast({
           title: "Success",
@@ -242,12 +230,11 @@ export default function OptimizedTaskForm() {
     if (!confirm('Are you sure you want to delete this optimized task?')) return
 
     try {
-      const { error } = await supabase
-        .from('optimized_tasks')
-        .delete()
-        .eq('optimized_task_id', id)
+      const response = await optimizedTaskService.delete(id)
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to delete optimized task')
+      }
 
       toast({
         title: "Success",

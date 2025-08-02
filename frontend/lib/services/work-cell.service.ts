@@ -92,7 +92,8 @@ export class WorkCellService extends BaseService {
     }
   }
 
-  async delete(id: string): Promise<ServiceResponse<void>> {
+  // AGENT-3: Fixed delete method return type
+  async delete(id: string): Promise<ServiceResponse<boolean>> {
     try {
       const client = await this.getClient({ fallbackToAnon: true })
       
@@ -105,7 +106,7 @@ export class WorkCellService extends BaseService {
         return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponseSync(null)
+      return this.createResponseSync(true)
     } catch (error) {
       return this.createResponseSync(null, this.handleError(error))
     }

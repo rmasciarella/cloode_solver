@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Building2, Factory, Users, Calendar, BookTemplate as FileTemplate, Network, Cog, Settings, Clock, Wrench, BriefcaseIcon, ListTodo, Menu, X } from 'lucide-react'
 // Performance monitoring removed to fix hydration errors
@@ -79,8 +79,7 @@ export default function HomeContent() {
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
-  // Auth removed
-  const loading = false
+  // Auth removed - loading state not needed in legacy SPA mode
   
   // Performance monitoring removed to fix hydration errors
 

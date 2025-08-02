@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { sequenceResourceService, departmentService } from '@/lib/services'
 import { useToast } from '@/hooks/use-toast'
 import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { Loader2, Edit, Trash2, Upload } from 'lucide-react'
+import { Loader2, Edit, Trash2 } from 'lucide-react'
 
 type SequenceResource = {
   sequence_id: string
@@ -49,7 +49,7 @@ type SequenceResourceFormData = {
   is_active: boolean
 }
 
-const resourceTypes = [
+const _resourceTypes = [
   { value: 'exclusive', label: 'Exclusive' },
   { value: 'shared', label: 'Shared' },
   { value: 'pooled', label: 'Pooled' }
@@ -109,13 +109,11 @@ export default function SequenceResourceForm() {
   const fetchSequenceResources = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('sequence_resources')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setSequenceResources(data || [])
+      const response = await sequenceResourceService.getAll()
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch sequence resources')
+      }
+      setSequenceResources(response.data || [])
     } catch (error) {
       console.error('Error fetching sequence resources:', error)
       toast({
@@ -130,14 +128,11 @@ export default function SequenceResourceForm() {
 
   const fetchDepartments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('department_id, name, code')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDepartments(data || [])
+      const response = await departmentService.getAll(true)  // Get only active departments
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch departments')
+      }
+      setDepartments(response.data || [])
     } catch (error) {
       console.error('Error fetching departments:', error)
     }
@@ -166,23 +161,22 @@ export default function SequenceResourceForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('sequence_resources')
-          .update(formData)
-          .eq('sequence_id', editingId)
+        const response = await sequenceResourceService.update(editingId, formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to update sequence resource')
+        }
 
         toast({
           title: "Success",
           description: "Sequence resource updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('sequence_resources')
-          .insert([formData])
+        const response = await sequenceResourceService.create(formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create sequence resource')
+        }
 
         toast({
           title: "Success",
@@ -225,12 +219,11 @@ export default function SequenceResourceForm() {
     if (!confirm('Are you sure you want to delete this sequence resource?')) return
 
     try {
-      const { error } = await supabase
-        .from('sequence_resources')
-        .delete()
-        .eq('sequence_id', id)
+      const response = await sequenceResourceService.delete(id)
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to delete sequence resource')
+      }
 
       toast({
         title: "Success",
@@ -254,7 +247,7 @@ export default function SequenceResourceForm() {
 
   return (
     <div className="space-y-6">
-      {/* Tabs for Single Entry and Mass Upload */}
+      {/* Tabs for Single Entry and Mass Upload: _Upload */}
       <Tabs defaultValue="form" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="form">Single Entry</TabsTrigger>

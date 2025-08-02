@@ -21,7 +21,7 @@ const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
-    inset?: boolean;
+    inset?: boolean | undefined | undefined | undefined;
   }
 >(({ className, inset, children, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger

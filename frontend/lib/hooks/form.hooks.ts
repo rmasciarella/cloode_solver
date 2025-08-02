@@ -5,28 +5,28 @@ import { z } from 'zod'
 
 export interface FormHooks<T = any> {
   // Validation hooks
-  beforeValidation: (data: T) => T | Promise<T>
-  afterValidation: (data: T, errors: any) => void
-  customValidation: (data: T) => Record<string, string> | Promise<Record<string, string>>
+  beforeValidation: (_data: T) => T | Promise<T>
+  afterValidation: (_data: T, errors: any) => void
+  customValidation: (_data: T) => Record<string, string> | Promise<Record<string, string>>
   
   // Submission lifecycle hooks
-  beforeSubmit: (data: T, isEditing: boolean) => boolean | Promise<boolean>
-  transformSubmitData: (data: T, isEditing: boolean) => T | Promise<T>
-  afterSubmitSuccess: (data: T, result: any, isEditing: boolean) => void
-  afterSubmitError: (data: T, error: any, isEditing: boolean) => void
+  beforeSubmit: (_data: T, _isEditing: boolean) => boolean | Promise<boolean>
+  transformSubmitData: (_data: T, _isEditing: boolean) => T | Promise<T>
+  afterSubmitSuccess: (_data: T, result: any, _isEditing: boolean) => void
+  afterSubmitError: (_data: T, error: any, _isEditing: boolean) => void
   
   // CRUD operation hooks
-  beforeCreate: (data: T) => T | Promise<T>
-  afterCreate: (data: T, result: any) => void
-  beforeUpdate: (id: string, data: T) => T | Promise<T>
-  afterUpdate: (id: string, data: T, result: any) => void
+  beforeCreate: (_data: T) => T | Promise<T>
+  afterCreate: (_data: T, result: any) => void
+  beforeUpdate: (id: string, _data: T) => T | Promise<T>
+  afterUpdate: (id: string, _data: T, result: any) => void
   beforeDelete: (id: string, record: any) => boolean | Promise<boolean>
   afterDelete: (id: string, record: any) => void
   
   // Data loading hooks
   beforeDataLoad: (filters?: any) => any | Promise<any>
-  transformLoadedData: (data: any[]) => any[] | Promise<any[]>
-  afterDataLoad: (data: any[]) => void
+  transformLoadedData: (_data: any[]) => any[] | Promise<any[]>
+  afterDataLoad: (_data: any[]) => void
   
   // UI interaction hooks
   beforeEdit: (record: any) => boolean | Promise<boolean>
@@ -69,7 +69,7 @@ export class FormHookRegistry<T = any> {
     if (['beforeValidation', 'transformSubmitData', 'beforeCreate', 'beforeUpdate', 'transformLoadedData'].includes(hookName as string)) {
       return handlers.reduce(async (result, { handler }) => {
         const data = await result
-        return handler(data, ...args.slice(1))
+        return handler(_data, ...args.slice(1))
       }, Promise.resolve(args[0]))
     }
     
@@ -106,12 +106,12 @@ export function useFormHooks<T>(entityName: string, schema?: z.ZodSchema<T>) {
   const registry = new FormHookRegistry<T>()
   
   // Built-in audit logging hook
-  registry.register('afterCreate', (data, result) => {
+  registry.register('afterCreate', (_data, result) => {
     console.log(`${entityName} created:`, { data, result })
   }, 1)
   
-  registry.register('afterUpdate', (id, data, result) => {
-    console.log(`${entityName} updated:`, { id, data, result })
+  registry.register('afterUpdate', (id, _data, result) => {
+    console.log(`${entityName} updated:`, { id, _data, result })
   }, 1)
   
   registry.register('afterDelete', (id, record) => {
@@ -120,9 +120,9 @@ export function useFormHooks<T>(entityName: string, schema?: z.ZodSchema<T>) {
   
   // Built-in schema validation hook if provided
   if (schema) {
-    registry.register('customValidation', async (data) => {
+    registry.register('customValidation', async (_data) => {
       try {
-        schema.parse(data)
+        schema.parse(_data)
         return {}
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -156,9 +156,9 @@ export function createFormHooks<T>(config: {
   
   // Set up schema validation if provided
   if (config.schema) {
-    registry.register('customValidation', async (data) => {
+    registry.register('customValidation', async (_data) => {
       try {
-        config.schema!.parse(data)
+        config.schema!.parse(_data)
         return {}
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -179,7 +179,7 @@ export function createFormHooks<T>(config: {
   }
   
   if (config.optimisticUpdates) {
-    hooks.register('beforeSubmit', async (data, isEditing) => {
+    hooks.register('beforeSubmit', async (_data, _isEditing) => {
       // Apply optimistic update to UI
       console.log('Applying optimistic update for', config.entityName)
       return true
@@ -188,11 +188,11 @@ export function createFormHooks<T>(config: {
   
   if (config.autoSave) {
     let autoSaveTimeout: NodeJS.Timeout
-    hooks.register('afterValidation', (data, errors) => {
+    hooks.register('afterValidation', (_data, errors) => {
       if (Object.keys(errors).length === 0) {
         clearTimeout(autoSaveTimeout)
         autoSaveTimeout = setTimeout(() => {
-          console.log('Auto-saving', config.entityName, data)
+          console.log('Auto-saving', config.entityName, _data)
         }, 2000)
       }
     })

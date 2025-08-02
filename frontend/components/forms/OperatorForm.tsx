@@ -1,19 +1,12 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { operatorService, departmentService } from '@/lib/services'
-import { useToast } from '@/hooks/use-toast'
-import { useFormPerformanceMonitoring } from '@/lib/hooks/use-form-performance'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useOperatorData } from './operators/useOperatorData'
+import { useOperatorForm } from './operators/useOperatorForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MassUploader } from '@/components/ui/mass-uploader'
-import { Loader2, Edit, Trash2, Upload } from 'lucide-react'
+import { OperatorFormFields } from './operators/OperatorFormFields'
+import { OperatorsTable } from './operators/OperatorsTable'
 
 type Operator = {
   operator_id: string
@@ -63,12 +56,25 @@ const employmentStatuses = [
 ]
 
 export default function OperatorForm() {
-  const [operators, setOperators] = useState<Operator[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [loading, setLoading] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
+  const {
+    operators,
+    departments,
+    loading,
+    fetchOperators
+  } = useOperatorData()
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    errors,
+    editingId,
+    isSubmitting,
+    handleEdit,
+    handleDelete,
+    handleCancel
+  } = useOperatorForm()
 
   // Performance monitoring
   const {
@@ -107,21 +113,21 @@ export default function OperatorForm() {
     
     return {
       ...fieldRegistration,
-      onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+      onFocus: (_e: React.FocusEvent<HTMLInputElement>) => {
         trackInteraction('focus', name)
         startValidation(name)
         // fieldRegistration.onFocus is not available on UseFormRegisterReturn
       },
-      onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+      // AGENT-2: Fixed event handler type - parameter unused, removed to fix TS error
+      onBlur: () => {
         trackInteraction('blur', name)
         const hasError = !!errors[name]
         const errorMessage = errors[name]?.message
         trackValidation(name, hasError, errorMessage)
-        fieldRegistration.onBlur?.(e)
       },
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange: (_e: React.ChangeEvent<HTMLInputElement>) => {
         trackInteraction('change', name)
-        fieldRegistration.onChange(e)
+        fieldRegistration.onChange(_e)
       }
     }
   }
@@ -185,23 +191,22 @@ export default function OperatorForm() {
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('operators')
-          .update(formData)
-          .eq('operator_id', editingId)
+        const response = await operatorService.update(editingId, formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to update operator')
+        }
 
         toast({
           title: "Success",
           description: "Operator updated successfully"
         })
       } else {
-        const { error } = await supabase
-          .from('operators')
-          .insert([formData])
+        const response = await operatorService.create(formData)
 
-        if (error) throw error
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create operator')
+        }
 
         toast({
           title: "Success",
@@ -246,12 +251,11 @@ export default function OperatorForm() {
     if (!confirm('Are you sure you want to delete this operator?')) return
 
     try {
-      const { error } = await supabase
-        .from('operators')
-        .delete()
-        .eq('operator_id', id)
+      const response = await operatorService.delete(id)
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to delete operator')
+      }
 
       toast({
         title: "Success",

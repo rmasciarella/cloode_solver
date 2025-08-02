@@ -4,36 +4,36 @@ import { ServiceResponse } from '@/lib/services/base.service'
 
 export interface ServiceHooks<T = any> {
   // Data access middleware hooks
-  beforeQuery: (table: string, query: any) => any | Promise<any>
-  afterQuery: (table: string, result: ServiceResponse<T>) => ServiceResponse<T> | Promise<ServiceResponse<T>>
-  beforeMutation: (table: string, operation: 'create' | 'update' | 'delete', data: any) => any | Promise<any>
-  afterMutation: (table: string, operation: 'create' | 'update' | 'delete', result: ServiceResponse<T>) => ServiceResponse<T> | Promise<ServiceResponse<T>>
+  beforeQuery: (_table: string, query: any) => any | Promise<any>
+  afterQuery: (_table: string, result: ServiceResponse<T>) => ServiceResponse<T> | Promise<ServiceResponse<T>>
+  beforeMutation: (_table: string, _operation: 'create' | 'update' | 'delete', data: any) => any | Promise<any>
+  afterMutation: (_table: string, _operation: 'create' | 'update' | 'delete', result: ServiceResponse<T>) => ServiceResponse<T> | Promise<ServiceResponse<T>>
   
   // Caching hooks
-  getCacheKey: (table: string, query: any) => string
-  shouldCache: (table: string, operation: string) => boolean
+  getCacheKey: (_table: string, query: any) => string
+  shouldCache: (_table: string, _operation: string) => boolean
   onCacheHit: (key: string, data: T) => void
   onCacheMiss: (key: string) => void
-  onCacheInvalidate: (table: string, operation: string, data: any) => string[]
+  onCacheInvalidate: (_table: string, _operation: string, data: any) => string[]
   
   // Error handling hooks
-  onError: (error: any, context: { table: string, operation: string, data?: any }) => ServiceResponse<T> | null
+  onError: (error: any, context: { table: string, _operation: string, data?: any }) => ServiceResponse<T> | null
   shouldRetry: (error: any, attempt: number) => boolean
   
   // Performance monitoring hooks
-  onQueryStart: (table: string, operation: string) => void
-  onQueryEnd: (table: string, operation: string, duration: number) => void
+  onQueryStart: (_table: string, _operation: string) => void
+  onQueryEnd: (_table: string, _operation: string, duration: number) => void
   
   // Data transformation hooks
-  transformInput: (table: string, operation: string, data: any) => any | Promise<any>
-  transformOutput: (table: string, operation: string, data: T) => T | Promise<T>
+  transformInput: (_table: string, _operation: string, data: any) => any | Promise<any>
+  transformOutput: (_table: string, _operation: string, data: T) => T | Promise<T>
   
   // Audit and logging hooks
-  onAuditLog: (table: string, operation: string, data: any, user?: any) => void
+  onAuditLog: (_table: string, _operation: string, data: any, user?: any) => void
   
   // Permission hooks
-  canRead: (table: string, query: any, user?: any) => boolean | Promise<boolean>
-  canWrite: (table: string, operation: 'create' | 'update' | 'delete', data: any, user?: any) => boolean | Promise<boolean>
+  canRead: (_table: string, query: any, user?: any) => boolean | Promise<boolean>
+  canWrite: (_table: string, _operation: 'create' | 'update' | 'delete', data: any, user?: any) => boolean | Promise<boolean>
 }
 
 type ServiceHookHandler<T, K extends keyof ServiceHooks<T>> = ServiceHooks<T>[K]
@@ -150,7 +150,7 @@ export const serviceRegistry = new ServiceHookRegistry()
 export class HookableBaseService {
   protected async executeWithHooks<T>(
     table: string,
-    operation: string,
+    _operation: string,
     queryFn: () => Promise<ServiceResponse<T>>,
     data?: any
   ): Promise<ServiceResponse<T>> {
@@ -159,12 +159,12 @@ export class HookableBaseService {
     try {
       // Execute permission checks
       if (operation === 'create' || operation === 'update' || operation === 'delete') {
-        const canWrite = await serviceRegistry.execute('canWrite', table, operation, data)
+        const canWrite = await serviceRegistry.execute('canWrite', _table, _operation, data)
         if (!canWrite) {
           return { data: null, error: 'Permission denied', success: false }
         }
       } else {
-        const canRead = await serviceRegistry.execute('canRead', table, data)
+        const canRead = await serviceRegistry.execute('canRead', _table, data)
         if (!canRead) {
           return { data: null, error: 'Permission denied', success: false }
         }
@@ -172,8 +172,8 @@ export class HookableBaseService {
       
       // Check cache for read operations
       if (operation === 'getAll' || operation === 'getById') {
-        const cacheKey = await serviceRegistry.execute('getCacheKey', table, data) || `${table}:${operation}:${JSON.stringify(data)}`
-        const shouldCache = await serviceRegistry.execute('shouldCache', table, operation)
+        const cacheKey = await serviceRegistry.execute('getCacheKey', _table, data) || `${table}:${operation}:${JSON.stringify(data)}`
+        const shouldCache = await serviceRegistry.execute('shouldCache', _table, _operation)
         
         if (shouldCache) {
           const cached = await serviceRegistry.getFromCache(cacheKey) as T
@@ -184,59 +184,59 @@ export class HookableBaseService {
       }
       
       // Transform input
-      const transformedData = await serviceRegistry.execute('transformInput', table, operation, data)
+      const transformedData = await serviceRegistry.execute('transformInput', _table, _operation, data)
       
       // Execute hooks before operation
       if (operation === 'create' || operation === 'update' || operation === 'delete') {
-        await serviceRegistry.execute('beforeMutation', table, operation, transformedData)
+        await serviceRegistry.execute('beforeMutation', _table, _operation, transformedData)
       } else {
-        await serviceRegistry.execute('beforeQuery', table, transformedData)
+        await serviceRegistry.execute('beforeQuery', _table, transformedData)
       }
       
       // Performance monitoring
-      await serviceRegistry.execute('onQueryStart', table, operation)
+      await serviceRegistry.execute('onQueryStart', _table, _operation)
       
       // Execute the actual operation
       let result = await queryFn()
       
       // Transform output
       if (result.success && result.data) {
-        result.data = await serviceRegistry.execute('transformOutput', table, operation, result.data) || result.data
+        result.data = await serviceRegistry.execute('transformOutput', _table, _operation, result.data) || result.data
       }
       
       // Execute hooks after operation
       if (operation === 'create' || operation === 'update' || operation === 'delete') {
-        result = await serviceRegistry.execute('afterMutation', table, operation, result) || result
+        result = await serviceRegistry.execute('afterMutation', _table, _operation, result) || result
         
         // Invalidate related cache entries
-        const invalidationKeys = await serviceRegistry.execute('onCacheInvalidate', table, operation, data) || [table]
+        const invalidationKeys = await serviceRegistry.execute('onCacheInvalidate', _table, _operation, data) || [table]
         invalidationKeys.forEach(key => serviceRegistry.invalidateCache(key))
       } else {
-        result = await serviceRegistry.execute('afterQuery', table, result) || result
+        result = await serviceRegistry.execute('afterQuery', _table, result) || result
         
         // Cache successful read results
-        const shouldCache = await serviceRegistry.execute('shouldCache', table, operation)
+        const shouldCache = await serviceRegistry.execute('shouldCache', _table, _operation)
         if (shouldCache && result.success && result.data) {
-          const cacheKey = await serviceRegistry.execute('getCacheKey', table, data) || `${table}:${operation}:${JSON.stringify(data)}`
+          const cacheKey = await serviceRegistry.execute('getCacheKey', _table, data) || `${table}:${operation}:${JSON.stringify(data)}`
           serviceRegistry.setCache(cacheKey, result.data)
         }
       }
       
       // Audit logging
-      await serviceRegistry.execute('onAuditLog', table, operation, data)
+      await serviceRegistry.execute('onAuditLog', _table, _operation, data)
       
       return result
       
     } catch (error) {
       // Try error recovery hooks
-      const recovered = await serviceRegistry.execute('onError', error, { table, operation, data })
+      const recovered = await serviceRegistry.execute('onError', error, { table, _operation, data })
       if (recovered) return recovered
       
       // Return original error
       return { data: null, error: error instanceof Error ? error.message : 'Unknown error', success: false }
     } finally {
       const duration = Date.now() - startTime
-      await serviceRegistry.execute('onQueryEnd', table, operation, duration)
+      await serviceRegistry.execute('onQueryEnd', _table, _operation, duration)
     }
   }
 }
@@ -251,22 +251,22 @@ export function createServiceHooks(config: {
 }) {
   // Default caching behavior
   if (config.enableCaching) {
-    serviceRegistry.register('shouldCache', (table, operation) => {
-      return ['getAll', 'getById'].includes(operation)
+    serviceRegistry.register('shouldCache', (_table, _operation) => {
+      return ['getAll', 'getById'].includes(_operation)
     })
     
-    serviceRegistry.register('getCacheKey', (table, query) => {
+    serviceRegistry.register('getCacheKey', (_table, query) => {
       return `${table}:${JSON.stringify(query)}`
     })
     
-    serviceRegistry.register('onCacheInvalidate', (table, operation) => {
+    serviceRegistry.register('onCacheInvalidate', (_table, _operation) => {
       return [table] // Invalidate all cache entries for this table
     })
   }
   
   // Audit logging
   if (config.enableAuditLog) {
-    serviceRegistry.register('onAuditLog', (table, operation, data) => {
+    serviceRegistry.register('onAuditLog', (_table, _operation, data) => {
       console.log(`[AUDIT] ${table}.${operation}:`, data)
     })
   }
@@ -275,11 +275,11 @@ export function createServiceHooks(config: {
   if (config.enablePerformanceMonitoring) {
     const startTimes = new Map<string, number>()
     
-    serviceRegistry.register('onQueryStart', (table, operation) => {
+    serviceRegistry.register('onQueryStart', (_table, _operation) => {
       startTimes.set(`${table}:${operation}`, Date.now())
     })
     
-    serviceRegistry.register('onQueryEnd', (table, operation, duration) => {
+    serviceRegistry.register('onQueryEnd', (_table, _operation, duration) => {
       console.log(`[PERF] ${table}.${operation}: ${duration}ms`)
       if (duration > 1000) {
         console.warn(`[PERF] Slow query detected: ${table}.${operation} took ${duration}ms`)

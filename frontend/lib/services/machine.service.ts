@@ -92,7 +92,8 @@ export class MachineService extends BaseService {
     }
   }
 
-  async delete(id: string): Promise<ServiceResponse<void>> {
+  // AGENT-3: Fixed delete method return type
+  async delete(id: string): Promise<ServiceResponse<boolean>> {
     try {
       const client = await this.getClient({ fallbackToAnon: true })
       
@@ -105,7 +106,7 @@ export class MachineService extends BaseService {
         return this.createResponseSync(null, this.handleError(error))
       }
 
-      return this.createResponseSync(null)
+      return this.createResponseSync(true)
     } catch (error) {
       return this.createResponseSync(null, this.handleError(error))
     }
@@ -114,7 +115,8 @@ export class MachineService extends BaseService {
   async toggleActive(id: string): Promise<ServiceResponse<Machine>> {
     try {
       // First get current status
-      const { data: current, error: fetchError } = await await this.getClient({ fallbackToAnon: true })
+      const client = await this.getClient({ fallbackToAnon: true })
+      const { data: current, error: fetchError } = await client
         .from('machines')
         .select('is_active')
         .eq('machine_resource_id', id)
@@ -125,8 +127,6 @@ export class MachineService extends BaseService {
       }
 
       // Toggle the status
-      const client = await this.getClient({ fallbackToAnon: true })
-      
       const { data, error } = await client
         .from('machines')
         .update({ is_active: !current.is_active })

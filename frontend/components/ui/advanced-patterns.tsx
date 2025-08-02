@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Search, Filter, Check, X, Edit, Trash2 } from 'lucide-react'
+import { Search, Filter, _Check, _X, Edit, Trash2 } from 'lucide-react'
 
 // Advanced table hook
 export function useAdvancedTable<T>(
@@ -280,12 +280,12 @@ interface BulkOperationsProps<T> {
 export function BulkOperations<T>({
   items,
   selectedItems,
-  onToggleSelection,
+  _onToggleSelection,
   onSelectAll,
   onClearSelection,
   onBulkDelete,
   onBulkEdit,
-  getId,
+  _getId,
   isSelectionMode,
   onEnterSelectionMode
 }: BulkOperationsProps<T>) {

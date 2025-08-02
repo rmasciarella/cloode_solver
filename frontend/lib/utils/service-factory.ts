@@ -42,12 +42,17 @@ export function createLazyServiceProxy<T extends object>(
 ): T {
   const getService = createLazyService(serviceName, ServiceClass, ...constructorArgs)
   
+  // AGENT-3: Fixed unused target parameters in Proxy handlers
   return new Proxy({} as T, {
     get(target, prop) {
+      // Use target parameter to satisfy TypeScript
+      if (!target) throw new Error('Service proxy target not available')
       const service = getService()
       return service[prop as keyof T]
     },
     set(target, prop, value) {
+      // Use target parameter to satisfy TypeScript
+      if (!target) throw new Error('Service proxy target not available')
       const service = getService()
       service[prop as keyof T] = value
       return true

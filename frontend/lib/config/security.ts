@@ -45,7 +45,7 @@ export const securityHelpers = {
   /**
    * Check if operation should be allowed based on current security config
    */
-  isOperationAllowed(operation: 'read' | 'write' | 'delete', userRole?: string): boolean {
+  isOperationAllowed(_operation: 'read' | 'write' | 'delete', userRole: _userRole?: string): boolean {
     const config = getSecurityConfig()
     
     // In development mode, allow everything

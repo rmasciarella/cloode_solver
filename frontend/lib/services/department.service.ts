@@ -23,12 +23,12 @@ export class DepartmentService extends BaseService {
       const { data, error } = await query
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<Department[]>(this.handleError(error))
       }
 
       return this.createResponseSync(data || [])
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<Department[]>(this.handleError(error))
     }
   }
 
@@ -44,12 +44,12 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<Department>(this.handleError(error))
       }
 
       return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<Department>(this.handleError(error))
     }
   }
 
@@ -65,12 +65,12 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<Department>(this.handleError(error))
       }
 
       return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<Department>(this.handleError(error))
     }
   }
 
@@ -87,16 +87,17 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<Department>(this.handleError(error))
       }
 
       return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<Department>(this.handleError(error))
     }
   }
 
-  async delete(id: string): Promise<ServiceResponse<void>> {
+  // AGENT-1: Fixed delete method return type and error responses
+  async delete(id: string): Promise<ServiceResponse<boolean>> {
     try {
       // Use auth-aware client with fallback to anonymous access
       const client = await this.getClient({ fallbackToAnon: true })
@@ -107,12 +108,12 @@ export class DepartmentService extends BaseService {
         .eq('department_id', id)
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<boolean>(this.handleError(error))
       }
 
-      return this.createResponseSync(null)
+      return this.createResponseSync(true)
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<boolean>(this.handleError(error))
     }
   }
 
@@ -129,7 +130,7 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (fetchError) {
-        return this.createResponseSync(null, this.handleError(fetchError))
+        return this.createErrorResponse<Department>(this.handleError(fetchError))
       }
 
       // Toggle the status
@@ -141,12 +142,12 @@ export class DepartmentService extends BaseService {
         .single()
 
       if (error) {
-        return this.createResponseSync(null, this.handleError(error))
+        return this.createErrorResponse<Department>(this.handleError(error))
       }
 
       return this.createResponseSync(data)
     } catch (error) {
-      return this.createResponseSync(null, this.handleError(error))
+      return this.createErrorResponse<Department>(this.handleError(error))
     }
   }
 }

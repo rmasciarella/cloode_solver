@@ -52,7 +52,7 @@ export class OptimizedPrecedenceService extends BaseService {
       const { data, error } = await client
         .from('optimized_precedences')
         .select('*')
-        .eq('precedence_id', id)
+        .eq('optimized_precedence_id', id)
         .single()
 
       if (error) {
@@ -92,7 +92,7 @@ export class OptimizedPrecedenceService extends BaseService {
       const { data, error } = await client
         .from('optimized_precedences')
         .update(precedence)
-        .eq('precedence_id', id)
+        .eq('optimized_precedence_id', id)
         .select()
         .single()
 
@@ -113,7 +113,7 @@ export class OptimizedPrecedenceService extends BaseService {
       const { error } = await client
         .from('optimized_precedences')
         .delete()
-        .eq('precedence_id', id)
+        .eq('optimized_precedence_id', id)
 
       if (error) {
         return this.createResponseSync(null, this.handleError(error))

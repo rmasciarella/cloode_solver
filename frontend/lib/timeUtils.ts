@@ -51,8 +51,9 @@ export function indexToTime12(index: number): string {
  */
 export function time24ToIndex(timeStr: string): number {
   const [hoursStr, minutesStr] = timeStr.split(':');
-  const hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
+  // AGENT-3: Added null checks for undefined array elements
+  const hours = parseInt(hoursStr || '0', 10);
+  const minutes = parseInt(minutesStr || '0', 10);
   
   if (hours < 0 || hours > 23) {
     throw new Error('Hours must be between 0 and 23');
@@ -85,9 +86,10 @@ export function time12ToIndex(timeStr: string): number {
     throw new Error('Invalid time format. Use h:MM AM/PM format');
   }
   
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const ampm = match[3].toUpperCase();
+  // AGENT-3: Added null checks for match array elements
+  let hours = parseInt(match[1] || '0', 10);
+  const minutes = parseInt(match[2] || '0', 10);
+  const ampm = match[3]?.toUpperCase();
   
   if (hours < 1 || hours > 12) {
     throw new Error('Hours must be between 1 and 12');
@@ -98,10 +100,13 @@ export function time12ToIndex(timeStr: string): number {
   }
   
   // Convert to 24-hour format
+  // AGENT-3: Added null check for ampm
   if (ampm === 'AM' && hours === 12) {
     hours = 0;
   } else if (ampm === 'PM' && hours !== 12) {
     hours += 12;
+  } else if (!ampm) {
+    throw new Error('Invalid AM/PM designation');
   }
   
   return time24ToIndex(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);

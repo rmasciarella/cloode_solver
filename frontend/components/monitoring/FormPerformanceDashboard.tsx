@@ -25,13 +25,13 @@ interface FormStats {
 }
 
 export function FormPerformanceDashboard() {
-  const performanceData = useFormPerformance('FormPerformanceDashboard')
+  const performanceData: _performanceData = useFormPerformance('FormPerformanceDashboard')
   
   // Mock functions for missing methods
   const getAllMetrics = () => [] as any[]
-  const getFormStats = (formName: string) => null as FormStats | null
-  const getValidationMetrics = () => []
-  const getSubmissionMetrics = () => []
+  const getFormStats = (_formName: string) => null as FormStats | null
+  const getValidationMetrics: _getValidationMetrics = () => []
+  const getSubmissionMetrics: _getSubmissionMetrics = () => []
   const clearMetrics = () => {}
 
   const [formStats, setFormStats] = useState<FormStats[]>([])
@@ -43,7 +43,7 @@ export function FormPerformanceDashboard() {
     const allMetrics = getAllMetrics()
     const formNames = Array.from(new Set(allMetrics.map(m => m.formName)))
     
-    const stats = formNames.map(formName => getFormStats(formName)).filter(Boolean) as FormStats[]
+    const stats = formNames.map(formName => getFormStats(_formName)).filter(Boolean) as FormStats[]
     setFormStats(stats)
   }
 

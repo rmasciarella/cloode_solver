@@ -21,7 +21,7 @@ const ContextMenuRadioGroup = ContextMenuPrimitive.RadioGroup;
 const ContextMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
-    inset?: boolean;
+    inset?: boolean | undefined | undefined | undefined;
   }
 >(({ className, inset, children, ...props }, ref) => (
   <ContextMenuPrimitive.SubTrigger

@@ -6,7 +6,7 @@ import { FeatureName } from '@/lib/auth/config'
 import { LoginDialog } from './login-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Shield, ShieldOff, Lock } from 'lucide-react'
+import { Shield, Lock } from 'lucide-react' // AGENT-1: Removed unused ShieldOff
 
 interface FeatureGuardProps {
   feature: FeatureName
@@ -23,7 +23,8 @@ export function FeatureGuard({
   showAuthPrompt = true,
   className = '' 
 }: FeatureGuardProps) {
-  const { canAccess, requiresAuth, securityLevel, isAuthenticated, isGuest } = useFeatureAccess(feature)
+  // AGENT-1: Removed unused variables: securityLevel, isAuthenticated, isGuest
+  const { canAccess, requiresAuth } = useFeatureAccess(feature)
 
   // Always allow access if user can access the feature
   if (canAccess) {

@@ -43,19 +43,19 @@ class CacheManager {
     if (!this.config.enableServiceCache) return
 
     // Cache key generation
-    serviceRegistry.register('getCacheKey', (table: string, query: any) => {
+    serviceRegistry.register('getCacheKey', (_table: string, query: any) => {
       const queryString = typeof query === 'object' ? JSON.stringify(query) : String(query)
       return `${table}:${Buffer.from(queryString).toString('base64')}`
     }, 1)
 
     // Determine what should be cached
-    serviceRegistry.register('shouldCache', (table: string, operation: string) => {
+    serviceRegistry.register('shouldCache', (_table: string, operation: string) => {
       // Cache read operations but not writes
       return ['getAll', 'getById', 'search', 'filter'].includes(operation)
     }, 1)
 
     // Cache hit/miss tracking
-    serviceRegistry.register('onCacheHit', (key: string, data: any) => {
+    serviceRegistry.register('onCacheHit', (key: string, _data: any) => {
       const entry = this.cache.get(key)
       if (entry) {
         entry.hits++
@@ -74,7 +74,7 @@ class CacheManager {
     }, 1)
 
     // Cache invalidation patterns
-    serviceRegistry.register('onCacheInvalidate', (table: string, operation: string, data: any) => {
+    serviceRegistry.register('onCacheInvalidate', (_table: string, operation: string, _data: any) => {
       const patterns = [table]
       
       // Add specific invalidation patterns based on operation
@@ -95,9 +95,9 @@ class CacheManager {
     }, 1)
 
     // Override the built-in cache methods with our enhanced implementation
-    const originalGetFromCache = serviceRegistry.getFromCache.bind(serviceRegistry)
-    const originalSetCache = serviceRegistry.setCache.bind(serviceRegistry)
-    const originalInvalidateCache = serviceRegistry.invalidateCache.bind(serviceRegistry)
+    const _originalGetFromCache = serviceRegistry.getFromCache.bind(serviceRegistry)
+    const _originalSetCache = serviceRegistry.setCache.bind(serviceRegistry)
+    const _originalInvalidateCache = serviceRegistry.invalidateCache.bind(serviceRegistry)
 
     serviceRegistry.getFromCache = async (key: string) => {
       const entry = this.cache.get(key)
@@ -116,7 +116,7 @@ class CacheManager {
       return entry.data
     }
 
-    serviceRegistry.setCache = (key: string, data: any, ttl: number = this.config.defaultTTL) => {
+    serviceRegistry.setCache = (key: string, _data: any, ttl: number = this.config.defaultTTL) => {
       // Implement LRU eviction if at capacity
       if (this.cache.size >= this.config.maxCacheSize) {
         this.evictLRU()

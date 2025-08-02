@@ -18,8 +18,8 @@ export function AuthDemo() {
   
   // Test different feature access levels
   const departmentAccess = useFeatureAccess('departments')
-  const exportAccess = useFeatureAccess('dataExport')
-  const settingsAccess = useFeatureAccess('systemSettings')
+  const exportAccess: _exportAccess = useFeatureAccess('dataExport')
+  const settingsAccess: _settingsAccess = useFeatureAccess('systemSettings')
 
   return (
     <div className="space-y-6">

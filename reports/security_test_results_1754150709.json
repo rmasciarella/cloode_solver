@@ -1,0 +1,49 @@
+{
+  "config_validation": {
+    "passed": false,
+    "details": [
+      "\u2717 Configuration validation failed",
+      "\u2717 SUPABASE_ANON_KEY is required"
+    ]
+  },
+  "authentication_tests": {
+    "passed": true,
+    "details": [
+      "\u2713 Permissive mode: Anonymous admin access granted",
+      "\u2713 Token authentication successful",
+      "\u2713 User role: admin",
+      "\u2717 Invalid token accepted"
+    ]
+  },
+  "authorization_tests": {
+    "passed": true,
+    "details": [
+      "\u2713 Admin read access authorized",
+      "\u2713 Admin write access authorized",
+      "\u2717 User delete access improperly allowed"
+    ]
+  },
+  "audit_logging": {
+    "passed": true,
+    "details": [
+      "\u2713 Audit log contains 2 entries",
+      "\u2713 Audit entries have required fields"
+    ]
+  },
+  "gui_compatibility": {
+    "passed": false,
+    "details": [
+      "\u2717 GUI compatibility test failed: SUPABASE_ANON_KEY must be set for client access"
+    ]
+  },
+  "performance_impact": {
+    "passed": false,
+    "details": [
+      "\u2717 Performance test failed: SUPABASE_ANON_KEY must be set for client access"
+    ]
+  },
+  "overall": {
+    "passed": false,
+    "score": 50.0
+  }
+}

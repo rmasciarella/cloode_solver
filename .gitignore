@@ -109,3 +109,4 @@ optimization_output*.log
 diagnostic_output.log
 constraint_validation_output.log
 optimization_log.txt
+env

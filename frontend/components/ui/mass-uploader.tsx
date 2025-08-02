@@ -60,16 +60,14 @@ export function MassUploader({
         dataToExport = [sampleData]
         toast({
           title: "Using Sample Data",
-          description: "No existing data found, template includes sample data",
-          duration: 3000
+          description: "No existing data found, template includes sample data"
         })
       } else {
         // Use actual data from database
         dataToExport = existingData
         toast({
           title: "Exporting Current Data",
-          description: `Exporting ${existingData.length} existing ${entityName.toLowerCase()}${existingData.length !== 1 ? 's' : ''}`,
-          duration: 3000
+          description: `Exporting ${existingData.length} existing ${entityName.toLowerCase()}${existingData.length !== 1 ? 's' : ''}`
         })
       }
       
@@ -95,7 +93,7 @@ export function MassUploader({
                 value[13] === '-' && 
                 value[18] === '-' && 
                 value[23] === '-') {
-              autoExcludeFields.push(field)
+              autoExcludeFields.push(_field)
             }
           }
         })
@@ -212,7 +210,7 @@ export function MassUploader({
     const result = Papa.parse<Record<string, any>>(text, {
       header: true,
       skipEmptyLines: true,
-      transform: (value: string, field: string) => {
+      transform: (value: string, _field: string) => {
         // Convert empty strings to null
         if (value === '') return null
         
@@ -244,12 +242,12 @@ export function MassUploader({
     return result.data
   }
 
-  const validateRow = (row: Record<string, any>, rowIndex: number): string[] => {
+  const validateRow = (row: Record<string, any>, _rowIndex: number): string[] => {
     const errors: string[] = []
     
     // Check required fields
     requiredFields.forEach(field => {
-      if (!row.hasOwnProperty(field) || row[field] === null || row[field] === '') {
+      if (!row.hasOwnProperty(_field) || row[field] === null || row[field] === '') {
         errors.push(`Missing required field: ${field}`)
       }
     })

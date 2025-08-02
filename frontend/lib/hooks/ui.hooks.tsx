@@ -4,49 +4,49 @@ import React from 'react'
 
 export interface UIHooks {
   // Component rendering hooks
-  beforeRender: (componentName: string, props: any) => any | Promise<any>
-  afterRender: (componentName: string, element: React.ReactElement, props: any) => React.ReactElement
-  wrapComponent: (componentName: string, element: React.ReactElement, props: any) => React.ReactElement
+  beforeRender: (_componentName: string, _props: any) => any | Promise<any>
+  afterRender: (_componentName: string, element: React.ReactElement, _props: any) => React.ReactElement
+  wrapComponent: (_componentName: string, element: React.ReactElement, _props: any) => React.ReactElement
   
   // Theme and styling hooks
-  getThemeVariables: (componentName: string, variant?: string) => Record<string, any>
-  transformClassNames: (componentName: string, classNames: string, props: any) => string
-  injectStyles: (componentName: string, props: any) => React.CSSProperties
+  getThemeVariables: (_componentName: string, variant?: string) => Record<string, any>
+  transformClassNames: (_componentName: string, classNames: string, _props: any) => string
+  injectStyles: (_componentName: string, _props: any) => React.CSSProperties
   
   // Behavior hooks
-  onComponentMount: (componentName: string, ref: any, props: any) => void
-  onComponentUnmount: (componentName: string, ref: any, props: any) => void
-  onPropsChange: (componentName: string, prevProps: any, nextProps: any) => void
+  onComponentMount: (_componentName: string, ref: any, _props: any) => void
+  onComponentUnmount: (_componentName: string, ref: any, _props: any) => void
+  onPropsChange: (_componentName: string, prevProps: any, nextProps: any) => void
   
   // Event handling hooks
-  interceptEvent: (componentName: string, eventName: string, event: any, originalHandler?: Function) => boolean
-  beforeEventHandler: (componentName: string, eventName: string, event: any) => any
-  afterEventHandler: (componentName: string, eventName: string, event: any, result: any) => void
+  interceptEvent: (_componentName: string, eventName: string, event: any, originalHandler?: Function) => boolean
+  beforeEventHandler: (_componentName: string, eventName: string, event: any) => any
+  afterEventHandler: (_componentName: string, eventName: string, event: any, result: any) => void
   
   // Accessibility hooks
-  enhanceA11y: (componentName: string, props: any) => Record<string, any>
-  announceChange: (componentName: string, change: string, props: any) => void
+  enhanceA11y: (_componentName: string, _props: any) => Record<string, any>
+  announceChange: (_componentName: string, change: string, _props: any) => void
   
   // Validation and form hooks
-  validateProps: (componentName: string, props: any) => string[]
-  transformFormValue: (componentName: string, fieldName: string, value: any) => any
+  validateProps: (_componentName: string, _props: any) => string[]
+  transformFormValue: (_componentName: string, fieldName: string, value: any) => any
   
   // Extension point hooks
-  renderAdditionalContent: (componentName: string, position: 'before' | 'after' | 'replace', props: any) => React.ReactNode
-  addContextMenuItems: (componentName: string, props: any) => Array<{label: string, action: Function, icon?: React.ReactNode}>
+  renderAdditionalContent: (_componentName: string, position: 'before' | 'after' | 'replace', _props: any) => React.ReactNode
+  addContextMenuItems: (_componentName: string, _props: any) => Array<{label: string, action: Function, icon?: React.ReactNode}>
 }
 
 type UIHookHandler<K extends keyof UIHooks> = UIHooks[K]
 
 class UIHookRegistry {
-  private hooks: Map<keyof UIHooks, Array<{ handler: UIHookHandler<any>, priority: number, condition?: (componentName: string, props: any) => boolean }>> = new Map()
+  private hooks: Map<keyof UIHooks, Array<{ handler: UIHookHandler<any>, priority: number, condition?: (_componentName: string, _props: any) => boolean }>> = new Map()
   
   register<K extends keyof UIHooks>(
     hookName: K,
     handler: UIHookHandler<K>,
     options: {
       priority?: number
-      condition?: (componentName: string, props: any) => boolean
+      condition?: (_componentName: string, _props: any) => boolean
       components?: string[]
     } = {}
   ): () => void {
@@ -57,7 +57,7 @@ class UIHookRegistry {
     }
     
     const effectiveCondition = components 
-      ? (componentName: string) => components.includes(componentName)
+      ? (_componentName: string) => components.includes(_componentName)
       : condition
     
     const handlers = this.hooks.get(hookName)!
@@ -73,12 +73,12 @@ class UIHookRegistry {
   
   async execute<K extends keyof UIHooks>(
     hookName: K,
-    componentName: string,
+    _componentName: string,
     ...args: any[]
   ): Promise<any> {
     const handlers = this.hooks.get(hookName) || []
     const applicableHandlers = handlers.filter(({ condition }) => 
-      !condition || condition(componentName, args[0])
+      !condition || condition(_componentName, args[0])
     )
     
     if (applicableHandlers.length === 0) {
@@ -89,21 +89,21 @@ class UIHookRegistry {
     if (['beforeRender', 'transformClassNames', 'enhanceA11y', 'transformFormValue'].includes(hookName as string)) {
       return applicableHandlers.reduce(async (result, { handler }) => {
         const data = await result
-        return handler(componentName, data, ...args.slice(1))
+        return handler(_componentName, data, ...args.slice(1))
       }, Promise.resolve(args[0]))
     }
     
     // Component wrapping hooks (chain)
     if (['afterRender', 'wrapComponent'].includes(hookName as string)) {
       return applicableHandlers.reduce((element, { handler }) => {
-        return handler(componentName, element, ...args.slice(1))
+        return handler(_componentName, element, ...args.slice(1))
       }, args[0] as React.ReactElement)
     }
     
     // Object merging hooks (merge all results)
     if (['getThemeVariables', 'injectStyles'].includes(hookName as string)) {
       const results = await Promise.all(
-        applicableHandlers.map(({ handler }) => handler(componentName, ...args))
+        applicableHandlers.map(({ handler }) => handler(_componentName, ...args))
       )
       return results.reduce((merged, result) => ({ ...merged, ...result }), {})
     }
@@ -111,7 +111,7 @@ class UIHookRegistry {
     // Array merging hooks (concatenate results)
     if (['validateProps', 'addContextMenuItems'].includes(hookName as string)) {
       const results = await Promise.all(
-        applicableHandlers.map(({ handler }) => handler(componentName, ...args))
+        applicableHandlers.map(({ handler }) => handler(_componentName, ...args))
       )
       return results.flat()
     }
@@ -119,7 +119,7 @@ class UIHookRegistry {
     // Content rendering hooks (render all)
     if (hookName === 'renderAdditionalContent') {
       const results = await Promise.all(
-        applicableHandlers.map(({ handler }) => handler(componentName, ...args))
+        applicableHandlers.map(({ handler }) => handler(_componentName, ...args))
       )
       return results.filter(Boolean)
     }
@@ -127,7 +127,7 @@ class UIHookRegistry {
     // Event interception hooks (first false stops chain)
     if (hookName === 'interceptEvent') {
       for (const { handler } of applicableHandlers) {
-        const result = await handler(componentName, ...args)
+        const result = await handler(_componentName, ...args)
         if (result === false) return false
       }
       return true
@@ -135,7 +135,7 @@ class UIHookRegistry {
     
     // Notification hooks (fire all)
     await Promise.all(
-      applicableHandlers.map(({ handler }) => handler(componentName, ...args))
+      applicableHandlers.map(({ handler }) => handler(_componentName, ...args))
     )
   }
   
@@ -172,8 +172,8 @@ export function withUIHooks<P extends object>(
   componentName: string,
   WrappedComponent: React.ComponentType<P>
 ): React.ForwardRefExoticComponent<React.PropsWithoutRef<P> & React.RefAttributes<any>> {
-  return React.forwardRef<any, P>((props, ref) => {
-    const [enhancedProps, setEnhancedProps] = React.useState(props)
+  return React.forwardRef<any, P>((_props, ref) => {
+    const [enhancedProps, setEnhancedProps] = React.useState(_props)
     const componentRef = React.useRef<any>(null)
     
     // Merge forwarded ref with internal ref
@@ -189,15 +189,15 @@ export function withUIHooks<P extends object>(
     React.useEffect(() => {
       const processProps = async () => {
         // Execute beforeRender hook
-        const modifiedProps = await uiRegistry.execute('beforeRender', componentName, props)
+        const modifiedProps = await uiRegistry.execute('beforeRender', _componentName, _props)
         
         // Enhance accessibility
-        const a11yProps = await uiRegistry.execute('enhanceA11y', componentName, modifiedProps)
+        const a11yProps = await uiRegistry.execute('enhanceA11y', _componentName, modifiedProps)
         
         // Validate props
-        const validationErrors = await uiRegistry.execute('validateProps', componentName, modifiedProps)
+        const validationErrors = await uiRegistry.execute('validateProps', _componentName, modifiedProps)
         if (validationErrors.length > 0) {
-          console.warn(`[${componentName}] Validation errors:`, validationErrors)
+          console.warn(`[${_componentName}] Validation errors:`, validationErrors)
         }
         
         setEnhancedProps({ ...modifiedProps, ...a11yProps })
@@ -208,17 +208,17 @@ export function withUIHooks<P extends object>(
     
     React.useEffect(() => {
       // Component mount hook
-      uiRegistry.execute('onComponentMount', componentName, componentRef.current, enhancedProps)
+      uiRegistry.execute('onComponentMount', _componentName, componentRef.current, enhancedProps)
       
       return () => {
         // Component unmount hook
-        uiRegistry.execute('onComponentUnmount', componentName, componentRef.current, enhancedProps)
+        uiRegistry.execute('onComponentUnmount', _componentName, componentRef.current, enhancedProps)
       }
     }, [enhancedProps])
     
     React.useEffect(() => {
       // Props change hook
-      uiRegistry.execute('onPropsChange', componentName, props, enhancedProps)
+      uiRegistry.execute('onPropsChange', _componentName, _props, enhancedProps)
     }, [props, enhancedProps])
     
     // Get theme variables and inject styles
@@ -228,8 +228,8 @@ export function withUIHooks<P extends object>(
     
     React.useEffect(() => {
       const loadThemeAndStyles = async () => {
-        const theme = await uiRegistry.execute('getThemeVariables', componentName, (enhancedProps as any).variant)
-        const styles = await uiRegistry.execute('injectStyles', componentName, enhancedProps)
+        const theme = await uiRegistry.execute('getThemeVariables', _componentName, (enhancedProps as any).variant)
+        const styles = await uiRegistry.execute('injectStyles', _componentName, enhancedProps)
         setThemeVars(theme || {})
         setInjectedStyles(styles || {})
       }
@@ -239,7 +239,7 @@ export function withUIHooks<P extends object>(
     React.useEffect(() => {
       const loadClassName = async () => {
         if ('className' in enhancedProps) {
-          const className = await uiRegistry.execute('transformClassNames', componentName, (enhancedProps as any).className as string, enhancedProps)
+          const className = await uiRegistry.execute('transformClassNames', _componentName, (enhancedProps as any).className as string, enhancedProps)
           setTransformedClassName(className)
         } else {
           setTransformedClassName(undefined)
@@ -252,11 +252,11 @@ export function withUIHooks<P extends object>(
     const createEnhancedHandler = React.useCallback((eventName: string, originalHandler?: Function) => {
       return async (event: any) => {
         // Check if event should be intercepted
-        const shouldContinue = await uiRegistry.execute('interceptEvent', componentName, eventName, event, originalHandler)
+        const shouldContinue = await uiRegistry.execute('interceptEvent', _componentName, eventName, event, originalHandler)
         if (!shouldContinue) return
         
         // Execute beforeEventHandler
-        const modifiedEvent = await uiRegistry.execute('beforeEventHandler', componentName, eventName, event)
+        const modifiedEvent = await uiRegistry.execute('beforeEventHandler', _componentName, eventName, event)
         
         // Execute original handler if provided
         let result
@@ -265,7 +265,7 @@ export function withUIHooks<P extends object>(
         }
         
         // Execute afterEventHandler
-        await uiRegistry.execute('afterEventHandler', componentName, eventName, modifiedEvent || event, result)
+        await uiRegistry.execute('afterEventHandler', _componentName, eventName, modifiedEvent || event, result)
         
         return result
       }
@@ -298,13 +298,13 @@ export function withUIHooks<P extends object>(
         })
         
         // Execute afterRender and wrapComponent hooks
-        element = await uiRegistry.execute('afterRender', componentName, element, enhancedProps) as React.ReactElement || element
-        element = await uiRegistry.execute('wrapComponent', componentName, element, enhancedProps) as React.ReactElement || element
+        element = await uiRegistry.execute('afterRender', _componentName, element, enhancedProps) as React.ReactElement || element
+        element = await uiRegistry.execute('wrapComponent', _componentName, element, enhancedProps) as React.ReactElement || element
         
         // Render additional content
-        const beforeContent = await uiRegistry.execute('renderAdditionalContent', componentName, 'before', enhancedProps)
-        const afterContent = await uiRegistry.execute('renderAdditionalContent', componentName, 'after', enhancedProps)
-        const replaceContent = await uiRegistry.execute('renderAdditionalContent', componentName, 'replace', enhancedProps)
+        const beforeContent = await uiRegistry.execute('renderAdditionalContent', _componentName, 'before', enhancedProps)
+        const afterContent = await uiRegistry.execute('renderAdditionalContent', _componentName, 'after', enhancedProps)
+        const replaceContent = await uiRegistry.execute('renderAdditionalContent', _componentName, 'replace', enhancedProps)
         
         if (replaceContent) {
           setFinalElement(replaceContent as React.ReactElement)
@@ -347,9 +347,9 @@ export function useUIHooks() {
 export function createUIHookPatterns() {
   // Debug overlay for development
   if (process.env.NODE_ENV === 'development') {
-    uiRegistry.register('wrapComponent', (componentName, element, props) => {
+    uiRegistry.register('wrapComponent', (_componentName, element, _props) => {
       return (
-        <div data-component={componentName} title={`Component: ${componentName}`}>
+        <div data-component={_componentName} title={`Component: ${_componentName}`}>
           {element}
         </div>
       )
@@ -357,14 +357,14 @@ export function createUIHookPatterns() {
   }
   
   // Focus management
-  uiRegistry.register('onComponentMount', (componentName, ref, props) => {
+  uiRegistry.register('onComponentMount', (_componentName, ref, _props) => {
     if (props.autoFocus && ref && ref.focus) {
       setTimeout(() => ref.focus(), 0)
     }
   }, { components: ['Input', 'Textarea', 'Select'] })
   
   // Keyboard navigation
-  uiRegistry.register('beforeEventHandler', (componentName, eventName, event) => {
+  uiRegistry.register('beforeEventHandler', (_componentName, eventName, event) => {
     if (eventName === 'keydown' && event.key === 'Escape') {
       const activeElement = document.activeElement as HTMLElement
       if (activeElement && activeElement.blur) {

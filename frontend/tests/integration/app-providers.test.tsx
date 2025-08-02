@@ -31,7 +31,7 @@ test.describe('AppProviders Integration', () => {
 
   test('should activate React Query with devtools in development', async ({ page }) => {
     // In development, React Query devtools should be available
-    const devTools = page.locator('[data-testid="react-query-devtools"]');
+    const devTools: _devTools = page.locator('[data-testid="react-query-devtools"]');
     
     // Devtools might be collapsed by default but should exist
     // Check if the toggle button exists

@@ -1,9 +1,26 @@
 import { BaseService, ServiceResponse } from './base.service'
 import { Database } from '@/lib/database.types'
 
-type InstanceTaskAssignment = Database['public']['Tables']['instance_task_assignments']['Row']
-type InstanceTaskAssignmentInsert = Database['public']['Tables']['instance_task_assignments']['Insert']
-type InstanceTaskAssignmentUpdate = Database['public']['Tables']['instance_task_assignments']['Update']
+// TODO: The instance_task_assignments table doesn't exist in the database yet
+// Using temporary type definitions until the table is created
+type InstanceTaskAssignment = {
+  assignment_id: string
+  instance_id: string
+  task_id: string
+  assigned_operator_id: string | null
+  assigned_resource_id: string | null
+  status: string
+  started_at: string | null
+  completed_at: string | null
+  created_at: string
+}
+
+type InstanceTaskAssignmentInsert = Omit<InstanceTaskAssignment, 'assignment_id' | 'created_at'> & {
+  assignment_id?: string
+  created_at?: string
+}
+
+type InstanceTaskAssignmentUpdate = Partial<InstanceTaskAssignmentInsert>
 
 export class InstanceTaskAssignmentService extends BaseService {
   async getAll(): Promise<ServiceResponse<InstanceTaskAssignment[]>> {

@@ -11,7 +11,7 @@ import { Database } from '@/lib/database.types'
 export interface SolverJobRequest {
   pattern_id: string
   instances: JobInstanceRequest[]
-  constraints?: ConstraintSettings
+  constraints?: ConstraintSettings | undefined
 }
 
 export interface JobInstanceRequest {
@@ -22,18 +22,18 @@ export interface JobInstanceRequest {
 }
 
 export interface ConstraintSettings {
-  enable_setup_times?: boolean
-  enable_skill_matching?: boolean
-  enable_multi_objective?: boolean
-  max_overtime_hours?: number
-  wip_limits?: { [department_id: string]: number }
+  enable_setup_times?: boolean | undefined
+  enable_skill_matching?: boolean | undefined
+  enable_multi_objective?: boolean | undefined
+  max_overtime_hours?: number | undefined
+  wip_limits?: { [department_id: string]: number | undefined}
 }
 
 export interface SolverResponse {
   success: boolean
-  solution?: SolutionResult
-  error?: string
-  performance_metrics?: PerformanceMetrics
+  solution?: SolutionResult | undefined
+  error?: string | undefined| undefined| undefined| undefined| undefined| undefined
+  performance_metrics?: PerformanceMetrics | undefined
 }
 
 export interface SolutionResult {
@@ -113,7 +113,7 @@ export class SolverIntegrationService {
   /**
    * Get available job patterns from the solver
    */
-  async getAvailablePatterns(): Promise<{ success: boolean; patterns?: any[]; error?: string }> {
+  async getAvailablePatterns(): Promise<{ success: boolean; patterns?: any[] | undefined; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/patterns`)
       
@@ -162,8 +162,8 @@ export class SolverIntegrationService {
    */
   transformFormDataToSolverRequest(
     departments: Database['public']['Tables']['departments']['Row'][],
-    machines: Database['public']['Tables']['machines']['Row'][],
-    workCells: Database['public']['Tables']['work_cells']['Row'][],
+    _machines: Database['public']['Tables']['machines']['Row'][],
+    _workCells: Database['public']['Tables']['work_cells']['Row'][],
     jobInstances: any[]
   ): SolverJobRequest {
     // This is a basic transformation - extend based on actual form structure
